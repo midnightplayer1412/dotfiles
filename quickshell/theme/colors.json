@@ -1,0 +1,11 @@
+{
+    "primary": "#8dd5b2",
+    "onPrimary": "#003825",
+    "primaryContainer": "#005137",
+    "secondary": "#b4ccbd",
+    "onSecondary": "#1f352a",
+    "surface": "#0f1511",
+    "onSurface": "#dee4de",
+    "surfaceContainer": "#1b211d",
+    "outline": "#8a938c"
+}
