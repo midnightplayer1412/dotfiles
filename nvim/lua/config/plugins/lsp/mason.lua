@@ -14,6 +14,21 @@ return {
 		local capabilities = cmp_nvim_lsp.default_capabilities()
 
 		-- 2. Configure LSP servers using vim.lsp.config() (new API)
+
+    vim.lsp.config("qmlls", {
+      capabilities = capabilities,
+      settings = {
+        -- This tells the LSP where to look for Quickshell & Qt modules
+        qml = {
+          importPaths = {
+            "/usr/lib/qt6/qml",
+            "/usr/lib/quickshell",
+            "./",
+          },
+        },
+      },
+    })
+
 		-- Lua
 		vim.lsp.config("lua_ls", {
 			capabilities = capabilities,
@@ -111,6 +126,7 @@ return {
 				"ts_ls",
 				"pyright",
 				"clangd",
+				"qmlls",
 			},
 			automatic_enable = true, -- Automatically enable installed servers
 		})
@@ -128,7 +144,7 @@ return {
 			severity_sort = true, -- sort by severity
 			float = {
 				border = "rounded", -- border style for floating window
-				source = "always", -- show source (LSP server name) in float
+				source = true, -- show source (LSP server name) in float
 				header = "",
 				prefix = "",
 			},
@@ -153,8 +169,6 @@ return {
 				keymap.set("n", "K", vim.lsp.buf.hover, opts)
 				keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
 				keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
-				keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
-				keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
 				keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts)
 				keymap.set("n", "<leader>q", vim.diagnostic.setloclist, opts) -- send all diagnostics to location list
 				keymap.set("n", "<leader>gg", function()
