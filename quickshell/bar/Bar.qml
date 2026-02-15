@@ -12,11 +12,13 @@ PanelWindow {
         bottom: true
     }
 
-    implicitWidth: Theme.barWidth
-    margins.left: Theme.barMargin
-    margins.top: Theme.barMargin
-    margins.bottom: Theme.barMargin
+    margins {
+      left: Theme.barMargin
+      top: Theme.barMargin
+      bottom: Theme.barMargin
+    }
 
+    implicitWidth: Theme.barWidth
     exclusionMode: ExclusionMode.Auto
     color: "transparent"
 
@@ -31,6 +33,7 @@ PanelWindow {
             spacing: 4
 
             Workspaces {
+                Layout.margins: Theme.barMargin
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
                 Layout.fillWidth: true
                 barScreen: barWindow.screen
@@ -45,10 +48,9 @@ PanelWindow {
 
             Item { Layout.fillHeight: true }
 
-            Tray {
+            Battery {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
                 Layout.fillWidth: true
-                barWindow: barWindow
             }
         }
     }

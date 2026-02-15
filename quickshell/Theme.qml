@@ -20,11 +20,11 @@ Singleton {
 
     // Bar geometry
     readonly property int barWidth: 48
-    readonly property int barMargin: 8
+    readonly property int barMargin: 4
     readonly property int barRadius: 12
     readonly property int iconSize: 20
     readonly property int workspaceDotSize: 8
-    readonly property int workspaceDotActiveSize: 20
+    readonly property int workspaceDotActiveSize: 8
 
     // Launcher geometry
     readonly property int launcherWidth: 600
@@ -32,7 +32,7 @@ Singleton {
     readonly property int launcherRadius: 16
     readonly property int launcherItemHeight: 48
     readonly property int launcherSearchHeight: 44
-    readonly property int launcherMargin: 12
+    readonly property int launcherMargin: 4
 
     // Fonts
     readonly property string fontFamily: "sans-serif"

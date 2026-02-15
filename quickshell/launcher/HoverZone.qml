@@ -11,7 +11,7 @@ PanelWindow {
     anchors.bottom: true
     anchors.left: true
     anchors.right: true
-    height: 4
+    implicitHeight: 4
 
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Top
