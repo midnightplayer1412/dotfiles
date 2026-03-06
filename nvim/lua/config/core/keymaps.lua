@@ -33,7 +33,7 @@ vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]])
 vim.keymap.set("x", "<leader>p", [["_dP]])
 
 vim.keymap.set("n", "<leader>ee", "<Cmd>Neotree<CR>")
-vim.keymap.set("i", "<C-H>", "<C-w>", { desc = "Delete previous word" })
+vim.keymap.set("i", "<C-BS>", "<C-w>", { desc = "Delete previous word" })
 
 -- Map <leader>w to behave like <C-w>
 vim.keymap.set("n", "<leader>w", "<C-w>", { noremap = true, silent = false })
