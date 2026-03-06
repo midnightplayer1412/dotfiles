@@ -1,0 +1,31 @@
+# Custom GRUB theme
+# Background: /boot/grub/themes/custom/main.png
+# Font: Monaspace Radon Bold (compiled to /boot/grub/fonts/monaspace_radon.pf2)
+
+desktop-image: "main.png"
+
++ boot_menu {
+    left = 60%
+    width = 35%
+    top = 25%
+    height = 50%
+    item_font = "MonaspaceRadon Bold 24"
+    item_color = "#000000"
+    selected_item_font = "MonaspaceRadon Bold 24"
+    selected_item_color = "#ffffff"
+    selected_item_pixmap_style = "select_*.png"
+    item_height = 56
+    item_spacing = 6
+    item_padding = 12
+}
+
++ label {
+    top = 90%
+    left = 0
+    width = 100%
+    height = 42
+    align = "center"
+    text = "@TIMEOUT_NOTIFICATION_LONG@"
+    font = "MonaspaceRadon Bold 24"
+    color = "#000000"
+}
