@@ -134,7 +134,25 @@ PanelWindow {
                     id: filteredModel
 
                     values: {
-                        const apps = DesktopEntries.applications.values;
+                        const blacklist = new Set([
+                            // Add app IDs to hide, e.g.: "org.gnome.Mines", "cmake-gui"
+                            "avahi-discover",
+                            "bvnc",
+                            "bssh",
+                            "xfce4-about",
+                            "kcm_fcitx5",
+                            "cmake-gui",
+                            "uuctl",
+                            "imv",
+                        ]);
+
+                        const seen = new Set();
+                        const apps = DesktopEntries.applications.values.filter(app => {
+                            if (blacklist.has(app.id)) return false;
+                            if (seen.has(app.id)) return false;
+                            seen.add(app.id);
+                            return true;
+                        });
                         const query = searchInput.text.toLowerCase().trim();
 
                         if (!query) {

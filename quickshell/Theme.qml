@@ -33,6 +33,12 @@ Singleton {
     readonly property int launcherItemHeight: 48
     readonly property int launcherSearchHeight: 44
     readonly property int launcherMargin: 4
+    readonly property int launcherHoverHeight: 12
+    readonly property int launcherHoverWidth: 700
+
+    // HUD geometry
+    readonly property int hudTriggerWidth: 4
+    readonly property int hudTriggerHeight: 120
 
     // Fonts
     readonly property string fontFamily: "sans-serif"

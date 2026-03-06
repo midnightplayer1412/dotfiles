@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Hyprland
 import "bar" as Bar
 import "launcher" as Launcher
+import "hud" as HUD
 
 ShellRoot {
     function focusedScreen() {
@@ -47,6 +48,26 @@ ShellRoot {
         }
 
         Launcher.Launcher {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // HUD windows on each screen
+    Variants {
+        model: Quickshell.screens
+
+        HUD.HUD {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // HUD hover zones on each screen
+    Variants {
+        model: Quickshell.screens
+
+        HUD.HudHoverZone {
             required property var modelData
             screen: modelData
         }

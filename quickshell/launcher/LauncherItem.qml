@@ -27,7 +27,7 @@ Rectangle {
         spacing: 12
 
         Image {
-            source: Quickshell.iconPath(root.entry.icon, 28)
+            source: root.entry.icon.startsWith("/") ? root.entry.icon : Quickshell.iconPath(root.entry.icon, 28)
             sourceSize.width: 28
             sourceSize.height: 28
             Layout.preferredWidth: 28

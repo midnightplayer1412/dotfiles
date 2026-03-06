@@ -8,11 +8,11 @@ PanelWindow {
 
     required property var screen
 
-    anchors.bottom: true
-    anchors.left: false
-    anchors.right: false
-    implicitHeight: Theme.launcherHoverHeight
-    implicitWidth: Theme.launcherHoverWidth
+    anchors.right: true
+    anchors.top: false
+    anchors.bottom: false
+    implicitWidth: Theme.hudTriggerWidth
+    implicitHeight: Theme.hudTriggerHeight
 
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Top
@@ -24,9 +24,7 @@ PanelWindow {
         anchors.fill: parent
         hoverEnabled: true
         onEntered: {
-            if (!LauncherState.visible) {
-                LauncherState.toggle(root.screen);
-            }
+            HudState.show(root.screen);
         }
     }
 }
