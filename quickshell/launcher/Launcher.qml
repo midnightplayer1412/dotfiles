@@ -91,10 +91,10 @@ PanelWindow {
 
                         Text {
                             anchors.fill: parent
-                            text: "Search applications..."
+                            text: searchInput.text.startsWith("/") ? "  Type a command..." : "Search applications..."
                             color: Theme.outline
                             font: searchInput.font
-                            visible: !searchInput.text
+                            visible: !searchInput.text || (searchInput.text === "/")
                             verticalAlignment: Text.AlignVCenter
                         }
 
@@ -106,7 +106,10 @@ PanelWindow {
                                 resultsList.decrementCurrentIndex();
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                if (resultsList.currentIndex >= 0 && resultsList.currentIndex < filteredModel.values.length) {
+                                if (searchInput.text.startsWith("/")) {
+                                    Commands.execute(searchInput.text);
+                                    LauncherState.close();
+                                } else if (resultsList.currentIndex >= 0 && resultsList.currentIndex < filteredModel.values.length) {
                                     filteredModel.values[resultsList.currentIndex].execute();
                                     LauncherState.close();
                                 }
@@ -134,8 +137,15 @@ PanelWindow {
                     id: filteredModel
 
                     values: {
+                        const text = searchInput.text;
+
+                        // Command mode
+                        if (text.startsWith("/")) {
+                            return Commands.filter(text);
+                        }
+
+                        // App mode
                         const blacklist = new Set([
-                            // Add app IDs to hide, e.g.: "org.gnome.Mines", "cmake-gui"
                             "avahi-discover",
                             "bvnc",
                             "bssh",
@@ -153,7 +163,7 @@ PanelWindow {
                             seen.add(app.id);
                             return true;
                         });
-                        const query = searchInput.text.toLowerCase().trim();
+                        const query = text.toLowerCase().trim();
 
                         if (!query) {
                             return [...apps].sort((a, b) => a.name.localeCompare(b.name));
@@ -190,7 +200,11 @@ PanelWindow {
                     selected: index === resultsList.currentIndex
 
                     onClicked: {
-                        modelData.execute();
+                        if (searchInput.text.startsWith("/")) {
+                            Commands.execute(searchInput.text);
+                        } else {
+                            modelData.execute();
+                        }
                         LauncherState.close();
                     }
 

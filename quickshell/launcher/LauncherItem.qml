@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import ".."
 
 Rectangle {
@@ -27,11 +28,43 @@ Rectangle {
         spacing: 12
 
         Image {
-            source: root.entry.icon.startsWith("/") ? root.entry.icon : Quickshell.iconPath(root.entry.icon, 28)
+            id: iconImage
+            property string iconName: root.entry.icon ?? ""
+            property string resolvedPath: iconName.startsWith("/") ? iconName : Quickshell.iconPath(iconName, 28)
+            source: resolvedPath
+
             sourceSize.width: 28
             sourceSize.height: 28
             Layout.preferredWidth: 28
             Layout.preferredHeight: 28
+            asynchronous: true
+
+            // Fallback: if Quickshell.iconPath() returns empty, find icon via shell
+            onResolvedPathChanged: {
+                if (resolvedPath === "" && iconName !== "") {
+                    iconFinder.running = true;
+                }
+            }
+
+            Component.onCompleted: {
+                if (resolvedPath === "" && iconName !== "") {
+                    iconFinder.running = true;
+                }
+            }
+
+            Process {
+                id: iconFinder
+                command: ["find", "/usr/share/icons/Papirus/32x32", "/usr/share/icons/Papirus/48x48", "/usr/share/icons/Papirus/24x24", "/usr/share/icons/hicolor/scalable", "/usr/share/icons/hicolor/48x48", "-name", iconImage.iconName + ".*", "-print", "-quit"]
+                running: false
+                stdout: SplitParser {
+                    onRead: data => {
+                        const path = data.trim();
+                        if (path) {
+                            iconImage.source = path;
+                        }
+                    }
+                }
+            }
         }
 
         Text {
