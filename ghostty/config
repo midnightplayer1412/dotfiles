@@ -1,0 +1,34 @@
+# ── Font ──────────────────────────────────────────────────────────────────────
+font-family = Monaspace Neon NF Bold
+font-size = 13
+
+# ── Window ────────────────────────────────────────────────────────────────────
+window-decoration = true
+window-padding-x = 8
+window-padding-y = 8
+background-opacity = 0.5
+background-blur-radius = 20
+
+# ── Cursor ────────────────────────────────────────────────────────────────────
+cursor-style = block
+cursor-style-blink = false
+
+# ── Shell integration ─────────────────────────────────────────────────────────
+shell-integration = detect
+shell-integration-features = cursor,sudo,title
+
+# ── Theme ─────────────────────────────────────────────────────────────────────
+theme = Ayu
+
+# ── Keybinds ─────────────────────────────────────────────────────────────────────
+keybind = ctrl+shift+r=reload_config
+
+keybind = ctrl+shift+h=new_split:left
+keybind = ctrl+shift+l=new_split:right
+keybind = ctrl+shift+k=new_split:up
+keybind = ctrl+shift+j=new_split:down
+
+keybind = ctrl+h=goto_split:left
+keybind = ctrl+j=goto_split:down
+keybind = ctrl+k=goto_split:up
+keybind = ctrl+l=goto_split:right
