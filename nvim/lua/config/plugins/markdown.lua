@@ -10,9 +10,9 @@ return {
         debounce_ms = 300,
       })
       -- Key mappings for starting, stopping, and refreshing the preview
-      vim.keymap.set("n", "<leader>mps", "<cmd>MarkdownPreview<cr>", { desc = "Markdown: Start preview" })
-      vim.keymap.set("n", "<leader>mpS", "<cmd>MarkdownPreviewStop<cr>", { desc = "Markdown: Stop preview" })
-      vim.keymap.set("n", "<leader>mpr", "<cmd>MarkdownPreviewRefresh<cr>", { desc = "Markdown: Refresh preview" })
+      vim.keymap.set("n", "<leader>md", "<cmd>MarkdownPreview<cr>", { desc = "Markdown: Start preview" })
+      vim.keymap.set("n", "<leader>mds", "<cmd>MarkdownPreviewStop<cr>", { desc = "Markdown: Stop preview" })
+      vim.keymap.set("n", "<leader>mdr", "<cmd>MarkdownPreviewRefresh<cr>", { desc = "Markdown: Refresh preview" })
     end,
   }
 }
