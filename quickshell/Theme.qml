@@ -37,8 +37,10 @@ Singleton {
     readonly property int launcherHoverWidth: 700
 
     // HUD geometry
-    readonly property int hudTriggerWidth: 4
-    readonly property int hudTriggerHeight: 120
+    readonly property int hudWidth: 300
+    readonly property int hudHeight: 50
+    readonly property int hudRadius: 25
+    readonly property int hudBottomMargin: 40
 
     // Fonts
     readonly property string fontFamily: "sans-serif"

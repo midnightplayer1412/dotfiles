@@ -7,18 +7,20 @@ QtObject {
 
     property bool visible: false
     property var activeScreens: ({})
+    // "volume" or "brightness" — which indicator to show
+    property string activeIndicator: "volume"
 
-    function show(screen) {
+    function show(screen, indicator) {
         activeScreens[screen.name] = true;
         activeScreensChanged();
         visible = true;
+        if (indicator) activeIndicator = indicator;
     }
 
     function hide(screen) {
         delete activeScreens[screen.name];
         activeScreensChanged();
 
-        // Check if any screens still have HUD visible
         var hasVisible = false;
         for (var key in activeScreens) {
             if (activeScreens[key]) {

@@ -62,14 +62,4 @@ ShellRoot {
             screen: modelData
         }
     }
-
-    // HUD hover zones on each screen
-    Variants {
-        model: Quickshell.screens
-
-        HUD.HudHoverZone {
-            required property var modelData
-            screen: modelData
-        }
-    }
 }

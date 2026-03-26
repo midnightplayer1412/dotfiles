@@ -8,28 +8,24 @@ PanelWindow {
 
     required property var screen
 
-    // Positioning
+    // Bottom-center positioning
     anchors {
-        right: true
-        top: true
         bottom: true
+        left: true
+        right: true
     }
 
-    // Window properties
-    implicitWidth: 100
-    implicitHeight: 300
-    margins.right: 20
-    margins.top: (screen.height - implicitHeight) / 2
-    margins.bottom: (screen.height - implicitHeight) / 2
+    implicitWidth: screen.width
+    implicitHeight: 100
+    margins.bottom: 40
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
-    // State to hide/show
+    // State
     property bool active: HudState.isVisibleOnScreen(screen)
     property bool mouseInside: false
     visible: active
 
-    // Watch for state changes
     Connections {
         target: HudState
         function onActiveScreensChanged() {
@@ -42,7 +38,6 @@ PanelWindow {
         id: hideTimer
         interval: 2000
         onTriggered: {
-            // Only hide if mouse is not inside
             if (!hudWindow.mouseInside) {
                 HudState.hide(screen);
             }
@@ -55,7 +50,7 @@ PanelWindow {
     property real previousVolume: 0.5
     property real previousBrightness: 0.5
 
-    // Process for getting volume
+    // Volume process
     property string volumeOutput: ""
 
     Process {
@@ -70,18 +65,16 @@ PanelWindow {
 
         onExited: code => {
             var output = hudWindow.volumeOutput.trim();
-            hudWindow.volumeOutput = ""; // Clear buffer
-
+            hudWindow.volumeOutput = "";
             if (!output) return;
 
             var match = output.match(/Volume:\s+([\d.]+)/);
             if (match) {
                 var newVolume = parseFloat(match[1]);
-                // Show HUD if volume changed
                 if (Math.abs(newVolume - hudWindow.previousVolume) > 0.01) {
                     hudWindow.previousVolume = newVolume;
                     hudWindow.volumeValue = newVolume;
-                    showHUD();
+                    showHUD("volume");
                 } else {
                     hudWindow.volumeValue = newVolume;
                 }
@@ -89,13 +82,11 @@ PanelWindow {
         }
     }
 
-    // Process for setting volume
     Process {
         id: setVolumeProc
-        // command set dynamically
     }
 
-    // Process for getting brightness current value
+    // Brightness processes
     property string brightnessCurrentOutput: ""
 
     Process {
@@ -121,7 +112,6 @@ PanelWindow {
         }
     }
 
-    // Process for getting brightness max value
     property string brightnessMaxOutput: ""
 
     Process {
@@ -137,8 +127,8 @@ PanelWindow {
         onExited: code => {
             var maxOutput = hudWindow.brightnessMaxOutput.trim();
             var currentOutput = hudWindow.brightnessCurrentOutput.trim();
-            hudWindow.brightnessMaxOutput = ""; // Clear buffer
-            hudWindow.brightnessCurrentOutput = ""; // Clear current buffer too
+            hudWindow.brightnessMaxOutput = "";
+            hudWindow.brightnessCurrentOutput = "";
 
             if (!maxOutput || !currentOutput) return;
 
@@ -147,11 +137,10 @@ PanelWindow {
 
             if (!isNaN(max) && !isNaN(current) && max > 0) {
                 var newBrightness = current / max;
-                // Show HUD if brightness changed
                 if (Math.abs(newBrightness - hudWindow.previousBrightness) > 0.01) {
                     hudWindow.previousBrightness = newBrightness;
                     hudWindow.brightnessValue = newBrightness;
-                    showHUD();
+                    showHUD("brightness");
                 } else {
                     hudWindow.brightnessValue = newBrightness;
                 }
@@ -159,13 +148,11 @@ PanelWindow {
         }
     }
 
-    // Process for setting brightness
     Process {
         id: setBrightnessProc
-        // command set dynamically
     }
 
-    // Update timer - poll volume/brightness periodically
+    // Poll timer
     Timer {
         id: updateTimer
         interval: 500
@@ -181,7 +168,7 @@ PanelWindow {
         volumeValue = value;
         setVolumeProc.command = ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", value.toFixed(2)];
         setVolumeProc.running = true;
-        showHUD();
+        showHUD("volume");
     }
 
     function setBrightness(value) {
@@ -189,40 +176,54 @@ PanelWindow {
         var percentage = Math.round(value * 100);
         setBrightnessProc.command = ["brightnessctl", "set", percentage + "%"];
         setBrightnessProc.running = true;
-        showHUD();
+        showHUD("brightness");
     }
 
-    function showHUD() {
-        HudState.show(screen);
+    function showHUD(indicator) {
+        HudState.show(screen, indicator);
         hideTimer.restart();
     }
 
-    // Main container
+    // Current display values
+    property real displayValue: HudState.activeIndicator === "volume" ? volumeValue : brightnessValue
+    property string displayIcon: HudState.activeIndicator === "volume" ? "󰕾" : "󰃟"
+    property string displayPercent: Math.round(displayValue * 100) + "%"
+    property color indicatorColor: HudState.activeIndicator === "volume" ? Theme.primary : Theme.secondary
+
+    // Main container — centered horizontal pill
     Rectangle {
-        anchors.centerIn: parent
-        width: 80
-        height: 250
+        id: container
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        width: 300
+        height: 50
         color: Theme.surface
-        radius: Theme.barRadius
+        radius: 25
         border.color: Theme.outline
         border.width: 1
 
-        // Mouse area to detect hover
+        // Slide-up animation
+        anchors.bottomMargin: active ? 0 : -60
+        opacity: active ? 1.0 : 0.0
+
+        Behavior on anchors.bottomMargin {
+            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        }
+        Behavior on opacity {
+            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        }
+
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
             propagateComposedEvents: true
 
-            onEntered: {
-                hudWindow.mouseInside = true;
-            }
-
+            onEntered: hudWindow.mouseInside = true
             onExited: {
                 hudWindow.mouseInside = false;
                 hideTimer.restart();
             }
 
-            // Block mouse events from propagating to children
             onPressed: mouse => mouse.accepted = false
             onReleased: mouse => mouse.accepted = false
             onClicked: mouse => mouse.accepted = false
@@ -230,93 +231,75 @@ PanelWindow {
 
         Row {
             anchors.centerIn: parent
-            spacing: 20
+            anchors.leftMargin: 20
+            anchors.rightMargin: 20
+            spacing: 14
+            width: parent.width - 40
 
-            // Volume Slider
-            Column {
-                spacing: 8
+            // Icon
+            Text {
+                text: hudWindow.displayIcon
+                font.family: "MonaspiceKr NF"
+                font.pixelSize: 20
+                color: hudWindow.indicatorColor
+                anchors.verticalCenter: parent.verticalCenter
+                width: 24
+                horizontalAlignment: Text.AlignHCenter
+            }
 
-                Text {
-                    text: "🎧"
-                    font.family: "MonaspiceKr NF"
-                    font.pixelSize: 16
-                    color: Theme.primary
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
+            // Progress bar
+            Rectangle {
+                id: track
+                width: parent.width - 24 - 46 - 28  // icon - percent text - spacing
+                height: 8
+                radius: 4
+                color: Theme.surfaceContainer
+                anchors.verticalCenter: parent.verticalCenter
 
                 Rectangle {
-                    id: volumeTrack
-                    width: 20
-                    height: 200
-                    color: Theme.surfaceContainer
-                    radius: 10
+                    width: parent.width * hudWindow.displayValue
+                    height: parent.height
+                    radius: 4
+                    color: hudWindow.indicatorColor
 
-                    // Volume level indicator
-                    Rectangle {
-                        width: parent.width
-                        height: parent.height * hudWindow.volumeValue
-                        color: Theme.primary
-                        radius: 10
-                        anchors.bottom: parent.bottom
+                    Behavior on width {
+                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
                     }
+                }
 
-                    // Interaction
-                    MouseArea {
-                        anchors.fill: parent
-                        onPositionChanged: (mouse) => {
-                            let rawValue = 1.0 - (mouse.y / height);
-                            let clampedValue = Math.max(0, Math.min(1, rawValue));
-                            hudWindow.setVolume(clampedValue);
-                        }
-                        onPressed: showHUD()
+                // Click to set value
+                MouseArea {
+                    anchors.fill: parent
+                    onPositionChanged: (mouse) => {
+                        let value = Math.max(0, Math.min(1, mouse.x / width));
+                        if (HudState.activeIndicator === "volume")
+                            hudWindow.setVolume(value);
+                        else
+                            hudWindow.setBrightness(value);
+                    }
+                    onPressed: (mouse) => {
+                        let value = Math.max(0, Math.min(1, mouse.x / width));
+                        if (HudState.activeIndicator === "volume")
+                            hudWindow.setVolume(value);
+                        else
+                            hudWindow.setBrightness(value);
                     }
                 }
             }
 
-            // Brightness Slider
-            Column {
-                spacing: 8
-
-                Text {
-                    text: "☀︎"
-                    font.family: "MonaspiceKr NF"
-                    font.pixelSize: 16
-                    color: Theme.primary
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-
-                Rectangle {
-                    id: brightnessTrack
-                    width: 20
-                    height: 200
-                    color: Theme.surfaceContainer
-                    radius: 10
-
-                    // Brightness level indicator
-                    Rectangle {
-                        width: parent.width
-                        height: parent.height * hudWindow.brightnessValue
-                        color: Theme.secondary
-                        radius: 10
-                        anchors.bottom: parent.bottom
-                    }
-
-                    // Interaction
-                    MouseArea {
-                        anchors.fill: parent
-                        onPositionChanged: (mouse) => {
-                            let rawValue = 1.0 - (mouse.y / height);
-                            let clampedValue = Math.max(0, Math.min(1, rawValue));
-                            hudWindow.setBrightness(clampedValue);
-                        }
-                        onPressed: showHUD()
-                    }
-                }
+            // Percentage
+            Text {
+                text: hudWindow.displayPercent
+                font.family: "MonaspiceKr NF"
+                font.pixelSize: 14
+                color: Theme.primary
+                anchors.verticalCenter: parent.verticalCenter
+                width: 46
+                horizontalAlignment: Text.AlignRight
             }
         }
     }
 
-    // Initialize on startup
     Component.onCompleted: {
         getVolumeProc.running = true;
         getBrightnessProc.running = true;
