@@ -15,6 +15,9 @@ while true; do
 
         # Regenerate matugen colors from the new wallpaper
         matugen image --source-color-index 0 "$wallpaper"
+
+        # Reload tmux config to pick up new colors
+        tmux source-file ~/.config/tmux/tmux.conf 2>/dev/null
     fi
 
     sleep "$INTERVAL"

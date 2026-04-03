@@ -4,3 +4,7 @@
 input_path = "~/.config/matugen/templates/quickshell-colors.json"
 output_path = "~/.config/quickshell/theme/colors.json"
 
+[templates.tmux-colors]
+input_path = "~/.config/matugen/templates/tmux-colors.conf"
+output_path = "~/.config/tmux/colors.conf"
+
