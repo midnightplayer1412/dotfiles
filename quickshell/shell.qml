@@ -4,6 +4,7 @@ import "bar" as Bar
 import "launcher" as Launcher
 import "hud" as HUD
 import "notifications" as Notifications
+import "calendar" as Calendar
 
 ShellRoot {
     function focusedScreen() {
@@ -96,6 +97,21 @@ ShellRoot {
         }
 
         Notifications.Drawer {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Calendar popup — only on target screen when visible
+    Variants {
+        model: {
+            if (Calendar.CalendarState.visible && Calendar.CalendarState.targetScreen) {
+                return [Calendar.CalendarState.targetScreen];
+            }
+            return [];
+        }
+
+        Calendar.Calendar {
             required property var modelData
             screen: modelData
         }

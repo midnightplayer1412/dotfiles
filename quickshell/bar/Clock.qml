@@ -1,14 +1,35 @@
 import Quickshell
+import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import ".."
+import "../calendar" as Calendar
 
 ColumnLayout {
+    id: root
     spacing: 2
 
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        z: -1
+        onClicked: {
+            const monitorName = Hyprland.focusedMonitor?.name ?? "";
+            for (const s of Quickshell.screens) {
+                if (s.name === monitorName) {
+                    Calendar.CalendarState.toggle(s);
+                    return;
+                }
+            }
+            if (Quickshell.screens.length > 0) {
+                Calendar.CalendarState.toggle(Quickshell.screens[0]);
+            }
+        }
     }
 
     Text {
