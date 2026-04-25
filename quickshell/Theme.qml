@@ -8,13 +8,17 @@ Singleton {
     id: root
 
     // Material You color roles — fallbacks used until matugen generates colors.json
+    // NOTE: QML reserves property names starting with `on<Capital>` for signal
+    // handlers, so Material You's `onPrimary` / `onSurface` are renamed to
+    // `*Text` here. The matugen JSON keys keep the original names — only QML
+    // property names need the prefix dropped.
     readonly property color primary:          colors?.primary          ?? "#8aadf4"
-    readonly property color onPrimary:        colors?.onPrimary        ?? "#003258"
+    readonly property color primaryText:      colors?.onPrimary        ?? "#003258"
     readonly property color primaryContainer: colors?.primaryContainer ?? "#114a7a"
     readonly property color secondary:        colors?.secondary        ?? "#b4befe"
-    readonly property color onSecondary:      colors?.onSecondary      ?? "#1e1e2e"
+    readonly property color secondaryText:    colors?.onSecondary      ?? "#1e1e2e"
     readonly property color surface:          colors?.surface          ?? "#1e1e2e"
-    readonly property color onSurface:        colors?.onSurface        ?? "#cdd6f4"
+    readonly property color surfaceText:      colors?.onSurface        ?? "#cdd6f4"
     readonly property color surfaceContainer: colors?.surfaceContainer ?? "#2b2b3d"
     readonly property color outline:          colors?.outline          ?? "#6c7086"
 

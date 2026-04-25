@@ -3,6 +3,7 @@ import Quickshell.Hyprland
 import "bar" as Bar
 import "launcher" as Launcher
 import "hud" as HUD
+import "notifications" as Notifications
 
 ShellRoot {
     function focusedScreen() {
@@ -16,6 +17,11 @@ ShellRoot {
     GlobalShortcut {
         name: "launcher_toggle"
         onPressed: LauncherState.toggle(focusedScreen())
+    }
+
+    GlobalShortcut {
+        name: "notifications_toggle"
+        onPressed: Notifications.NotificationCenterState.toggle(focusedScreen())
     }
 
     // Status bar on each screen
@@ -58,6 +64,38 @@ ShellRoot {
         model: Quickshell.screens
 
         HUD.HUD {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Notification popups — focused screen only
+    Variants {
+        model: {
+            const name = Hyprland.focusedMonitor?.name ?? "";
+            for (const s of Quickshell.screens) {
+                if (s.name === name) return [s];
+            }
+            return Quickshell.screens.length > 0 ? [Quickshell.screens[0]] : [];
+        }
+
+        Notifications.Popups {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Notification center drawer — only on target screen when visible
+    Variants {
+        model: {
+            if (Notifications.NotificationCenterState.visible
+                && Notifications.NotificationCenterState.targetScreen) {
+                return [Notifications.NotificationCenterState.targetScreen];
+            }
+            return [];
+        }
+
+        Notifications.Drawer {
             required property var modelData
             screen: modelData
         }

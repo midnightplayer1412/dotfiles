@@ -50,6 +50,6 @@ ColumnLayout {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeMedium
         font.bold: true
-        color: Theme.onSurface
+        color: Theme.surfaceText
     }
 }
