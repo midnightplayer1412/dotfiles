@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import Quickshell.Services.Mpris
 
 QtObject {
     readonly property var commands: [
@@ -16,7 +17,40 @@ QtObject {
             comment: "Search and play on YouTube Music",
             match: "ytmusic",
         },
+        {
+            name: "/play",
+            icon: "media-playback-start",
+            comment: "Play / pause active media",
+            match: "play",
+        },
+        {
+            name: "/pause",
+            icon: "media-playback-pause",
+            comment: "Pause active media",
+            match: "pause",
+        },
+        {
+            name: "/next",
+            icon: "media-skip-forward",
+            comment: "Skip to next track",
+            match: "next",
+        },
+        {
+            name: "/prev",
+            icon: "media-skip-backward",
+            comment: "Previous track",
+            match: "prev",
+        },
     ]
+
+    function activePlayer() {
+        const players = Mpris.players.values;
+        if (players.length === 0) return null;
+        for (const p of players) {
+            if (p.playbackState === MprisPlaybackState.Playing) return p;
+        }
+        return players[0];
+    }
 
     function execute(text) {
         const input = text.substring(1); // remove leading /
@@ -36,6 +70,18 @@ QtObject {
             } else {
                 Qt.openUrlExternally("https://music.youtube.com");
             }
+        } else if (cmd === "play") {
+            const p = activePlayer();
+            if (p && p.canTogglePlaying) p.togglePlaying();
+        } else if (cmd === "pause") {
+            const p = activePlayer();
+            if (p && p.canPause) p.pause();
+        } else if (cmd === "next") {
+            const p = activePlayer();
+            if (p && p.canGoNext) p.next();
+        } else if (cmd === "prev") {
+            const p = activePlayer();
+            if (p && p.canGoPrevious) p.previous();
         }
     }
 

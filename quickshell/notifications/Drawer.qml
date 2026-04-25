@@ -98,6 +98,11 @@ PanelWindow {
                 }
             }
 
+            // Media player (auto-hides when no MPRIS player)
+            MediaPlayer {
+                Layout.fillWidth: true
+            }
+
             // Empty state
             Item {
                 Layout.fillWidth: true
