@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import Quickshell
 import Quickshell.Services.Mpris
 
 QtObject {
@@ -10,12 +11,14 @@ QtObject {
             icon: "spotify",
             comment: "Search and play on Spotify",
             match: "spotify",
+            takesArgs: true,
         },
         {
             name: "/ytmusic",
             icon: "youtube-music",
             comment: "Search and play on YouTube Music",
             match: "ytmusic",
+            takesArgs: true,
         },
         {
             name: "/play",
@@ -83,6 +86,21 @@ QtObject {
             const p = activePlayer();
             if (p && p.canGoPrevious) p.previous();
         }
+    }
+
+    function filterShell(text) {
+        const cmd = text.substring(1);
+        return [{
+            name: cmd ? "! " + cmd : "!",
+            icon: "utilities-terminal",
+            comment: "Run in terminal",
+        }];
+    }
+
+    function runShell(text) {
+        const cmd = text.substring(1).trim();
+        if (!cmd) return;
+        Quickshell.execDetached(["ghostty", "-e", "sh", "-c", cmd + "; exec $SHELL"]);
     }
 
     function filter(text) {

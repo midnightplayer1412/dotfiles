@@ -35,16 +35,6 @@ ShellRoot {
         }
     }
 
-    // Hover trigger zone on each screen
-    Variants {
-        model: Quickshell.screens
-
-        Launcher.HoverZone {
-            required property var modelData
-            screen: modelData
-        }
-    }
-
     // Launcher panel — only on target screen when visible
     Variants {
         model: {

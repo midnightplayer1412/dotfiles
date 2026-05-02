@@ -10,18 +10,16 @@ PanelWindow {
 
     required property var screen
 
-    anchors.bottom: true
-    width: Theme.launcherWidth
-    height: Theme.launcherHeight
-    margins.bottom: Theme.launcherMargin
-
-    // Center horizontally
-    margins.left: (screen.width - Theme.launcherWidth) / 2
-    margins.right: (screen.width - Theme.launcherWidth) / 2
+    anchors {
+        left: true
+        right: true
+        top: true
+        bottom: true
+    }
 
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
     color: "transparent"
 
@@ -32,26 +30,42 @@ PanelWindow {
         onCleared: LauncherState.close()
     }
 
+    // Click-outside-to-close: covers the whole screen, sits behind the panel
+    MouseArea {
+        anchors.fill: parent
+        onClicked: LauncherState.close()
+    }
+
     Rectangle {
         id: content
 
-        width: parent.width
-        height: parent.height
+        width: Theme.launcherWidth
+        height: Theme.launcherHeight
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Theme.launcherMargin
         opacity: 0
-        y: 30
 
         Component.onCompleted: entryAnim.start()
+
+        transform: Translate { id: slideTransform; y: 30 }
 
         ParallelAnimation {
             id: entryAnim
             NumberAnimation { target: content; property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
-            NumberAnimation { target: content; property: "y"; from: 30; to: 0; duration: 200; easing.type: Easing.OutCubic }
+            NumberAnimation { target: slideTransform; property: "y"; from: 30; to: 0; duration: 200; easing.type: Easing.OutCubic }
         }
         radius: Theme.launcherRadius
         color: Theme.surface
         border.color: Theme.outline
         border.width: 1
         clip: true
+
+        // Absorb clicks on the panel's empty padding so they don't bubble to the outer click-catcher
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {}
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -91,23 +105,40 @@ PanelWindow {
 
                         Text {
                             anchors.fill: parent
-                            text: searchInput.text.startsWith("/") ? "  Type a command..." : "Search applications..."
+                            text: searchInput.text.startsWith("/") ? "  Type a command..."
+                                : searchInput.text.startsWith("!") ? "  Type a shell command..."
+                                : "Search applications..."
                             color: Theme.outline
                             font: searchInput.font
-                            visible: !searchInput.text || (searchInput.text === "/")
+                            visible: !searchInput.text || searchInput.text === "/" || searchInput.text === "!"
                             verticalAlignment: Text.AlignVCenter
                         }
 
+                        Keys.priority: Keys.BeforeItem
                         Keys.onPressed: event => {
-                            if (event.key === Qt.Key_Down || event.key === Qt.Key_Tab) {
+                            if (event.key === Qt.Key_Down
+                                    || (event.key === Qt.Key_J && (event.modifiers & Qt.ControlModifier))) {
                                 resultsList.incrementCurrentIndex();
                                 event.accepted = true;
-                            } else if (event.key === Qt.Key_Up) {
+                            } else if (event.key === Qt.Key_Tab) {
+                                if (searchInput.text.startsWith("/") && !searchInput.text.includes(" ")
+                                        && resultsList.currentIndex >= 0
+                                        && resultsList.currentIndex < filteredModel.values.length) {
+                                    const item = filteredModel.values[resultsList.currentIndex];
+                                    searchInput.text = item.name + (item.takesArgs ? " " : "");
+                                    searchInput.cursorPosition = searchInput.text.length;
+                                }
+                                event.accepted = true;
+                            } else if (event.key === Qt.Key_Up
+                                    || (event.key === Qt.Key_K && (event.modifiers & Qt.ControlModifier))) {
                                 resultsList.decrementCurrentIndex();
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 if (searchInput.text.startsWith("/")) {
                                     Commands.execute(searchInput.text);
+                                    LauncherState.close();
+                                } else if (searchInput.text.startsWith("!")) {
+                                    Commands.runShell(searchInput.text);
                                     LauncherState.close();
                                 } else if (resultsList.currentIndex >= 0 && resultsList.currentIndex < filteredModel.values.length) {
                                     filteredModel.values[resultsList.currentIndex].execute();
@@ -142,6 +173,11 @@ PanelWindow {
                         // Command mode
                         if (text.startsWith("/")) {
                             return Commands.filter(text);
+                        }
+
+                        // Shell mode
+                        if (text.startsWith("!")) {
+                            return Commands.filterShell(text);
                         }
 
                         // App mode
@@ -202,6 +238,8 @@ PanelWindow {
                     onClicked: {
                         if (searchInput.text.startsWith("/")) {
                             Commands.execute(searchInput.text);
+                        } else if (searchInput.text.startsWith("!")) {
+                            Commands.runShell(searchInput.text);
                         } else {
                             modelData.execute();
                         }
