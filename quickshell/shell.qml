@@ -5,6 +5,7 @@ import "launcher" as Launcher
 import "hud" as HUD
 import "notifications" as Notifications
 import "calendar" as Calendar
+import "wifi" as Wifi
 
 ShellRoot {
     function focusedScreen() {
@@ -102,6 +103,21 @@ ShellRoot {
         }
 
         Calendar.Calendar {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Wifi drawer — only on target screen when visible
+    Variants {
+        model: {
+            if (Wifi.WifiState.visible && Wifi.WifiState.targetScreen) {
+                return [Wifi.WifiState.targetScreen];
+            }
+            return [];
+        }
+
+        Wifi.Drawer {
             required property var modelData
             screen: modelData
         }
