@@ -1,1 +1,2 @@
 singleton VpnService 1.0 VpnService.qml
+VpnRow 1.0 VpnRow.qml
