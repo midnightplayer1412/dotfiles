@@ -6,6 +6,7 @@ import Quickshell.Hyprland
 import ".."
 import "../wifi"
 import "../bluetooth"
+import "../vpn"
 
 PanelWindow {
     id: root
@@ -59,7 +60,7 @@ PanelWindow {
                 switch (ConnectionState.activeTab) {
                 case "wifi":      return wifiPanel;
                 case "bluetooth": return bluetoothPanel;
-                // vpnPanel component added in Task 21
+                case "vpn":       return vpnPanel;
                 }
                 return null;
             }
@@ -67,5 +68,6 @@ PanelWindow {
 
         Component { id: wifiPanel; WifiPanel {} }
         Component { id: bluetoothPanel; BluetoothPanel {} }
+        Component { id: vpnPanel; VpnPanel {} }
     }
 }

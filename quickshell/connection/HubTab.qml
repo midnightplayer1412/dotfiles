@@ -2,6 +2,7 @@ import QtQuick
 import ".."
 import "../wifi"
 import "../bluetooth"
+import "../vpn"
 
 Item {
     id: root
@@ -41,7 +42,7 @@ Item {
         switch (tabKey) {
         case "wifi":      return 1.0;
         case "bluetooth": return 1.0;
-        case "vpn":       return 0.5;     // dim until VPN service lands
+        case "vpn":       return VpnService.activeName !== "" ? 1.0 : 0.5;
         }
         return 1.0;
     }
