@@ -1,6 +1,7 @@
 import QtQuick
 import ".."
 import "../wifi"
+import "../bluetooth"
 
 Item {
     id: root
@@ -22,7 +23,10 @@ Item {
             if (s > 25) return "\u{F0922}";                     // wifi-strength-2
             return "\u{F091F}";                                  // wifi-strength-1
         case "bluetooth":
-            return "\u{F00AF}";                                  // bluetooth (placeholder until BluetoothService lands)
+            if (!BluetoothService.enabled) return "\u{F00B2}";  // bluetooth-off
+            const anyConn = BluetoothService.devices.some(d => d.connected);
+            if (anyConn) return "\u{F00B0}";                    // bluetooth-connect
+            return "\u{F00AF}";                                  // bluetooth
         case "vpn":
             return "\u{F0582}";                                  // vpn (placeholder until VpnService lands)
         }
@@ -36,7 +40,7 @@ Item {
     readonly property real iconOpacity: {
         switch (tabKey) {
         case "wifi":      return 1.0;
-        case "bluetooth": return 0.5;     // dim until BT service lands
+        case "bluetooth": return 1.0;
         case "vpn":       return 0.5;     // dim until VPN service lands
         }
         return 1.0;
