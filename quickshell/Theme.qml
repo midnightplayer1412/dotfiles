@@ -51,7 +51,7 @@ Singleton {
     readonly property int hubTriggerWidth:  180   // wider than hub for easier hover target
     readonly property int hubWidth:         140
     readonly property int hubHeight:        44
-    readonly property int hubMargin:        20
+    readonly property int hubMargin:        4
     readonly property int hubDrawerGap:     10
     readonly property int drawerWidth:      380
     readonly property int drawerRadius:     16
