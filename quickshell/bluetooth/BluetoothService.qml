@@ -120,6 +120,14 @@ Singleton {
         // Refresh periodically while scanning so newly-discovered devices
         // surface in the panel.
         onRunningChanged: scanRefreshTimer.running = running
+        // If bluetoothctl exits unexpectedly (crash, external kill, or after
+        // we wrote "exit"), clear the scanning flag so the UI doesn't stay stuck.
+        onExited: {
+            if (svc.scanning) {
+                svc.scanning = false;
+                scanAutoStop.stop();
+            }
+        }
     }
 
     Timer {
@@ -165,4 +173,9 @@ Singleton {
     function clearError()     { lastError = ""; }
 
     Component.onCompleted: refresh()
+
+    Component.onDestruction: {
+        // Don't leave bluetoothctl scanning after quickshell exits.
+        if (scanning) stopScan();
+    }
 }
