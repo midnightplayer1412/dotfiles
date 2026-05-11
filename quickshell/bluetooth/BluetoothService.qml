@@ -13,6 +13,7 @@ Singleton {
     property string pendingConfirmDevice: ""
     property string pendingConfirmCode: ""
     property var devices: []
+    property bool _enriching: false
 
     // ── refresh: read controller power state + paired/known devices ──
     Process {
@@ -75,6 +76,7 @@ Singleton {
                     pairedConnectedProc.running = true;
                 } else {
                     svc.devices = pairedConnectedProc.working.slice();
+                    svc._enriching = false;
                 }
             }
         }
@@ -82,6 +84,8 @@ Singleton {
 
     function _enrichConnectedFlags() {
         if (devices.length === 0) return;
+        if (_enriching) return;     // already running; skip — next refresh will re-trigger
+        _enriching = true;
         pairedConnectedProc.working = devices.slice();
         pairedConnectedProc.cursor = 0;
         pairedConnectedProc.command = ["bluetoothctl", "info", devices[0].mac];
