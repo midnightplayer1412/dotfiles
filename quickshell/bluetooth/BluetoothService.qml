@@ -228,12 +228,30 @@ Singleton {
         svc.pendingConfirmCode = "";
     }
 
-    // ── unimplemented (filled in later tasks) ──
-    function trust(mac)       {}
-    function connect(mac)     {}
-    function disconnect(mac)  {}
-    function forget(mac)      {}
-    function clearError()     { lastError = ""; }
+    // ── one-shot commands ────────────────────────────────────────────
+    Process {
+        id: oneShot
+        command: ["true"]
+        property string action: ""
+        property string mac: ""
+        onExited: (code) => {
+            if (code !== 0) svc.lastError = oneShot.action + " failed for " + oneShot.mac;
+            svc.refresh();
+        }
+    }
+
+    function _runOneShot(action, mac) {
+        oneShot.action = action;
+        oneShot.mac = mac;
+        oneShot.command = ["bluetoothctl", action, mac];
+        oneShot.running = true;
+    }
+
+    function connect(mac)    { _runOneShot("connect", mac); }
+    function disconnect(mac) { _runOneShot("disconnect", mac); }
+    function trust(mac)      { _runOneShot("trust", mac); }
+    function forget(mac)     { _runOneShot("remove", mac); }
+    function clearError()    { lastError = ""; }
 
     Component.onCompleted: refresh()
 
