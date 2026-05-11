@@ -112,9 +112,50 @@ Singleton {
         powerProc.running = true;
     }
 
+    // ── scan: long-lived bluetoothctl session ───────────────────────
+    Process {
+        id: scanProc
+        command: ["bluetoothctl"]
+        stdinEnabled: true
+        // Refresh periodically while scanning so newly-discovered devices
+        // surface in the panel.
+        onRunningChanged: scanRefreshTimer.running = running
+    }
+
+    Timer {
+        id: scanRefreshTimer
+        interval: 2000
+        repeat: true
+        onTriggered: svc.refresh()
+    }
+
+    function startScan() {
+        if (scanning) return;
+        scanProc.running = true;
+        scanProc.write("scan on\n");
+        scanning = true;
+        // Auto-stop after 10s to limit battery cost.
+        scanAutoStop.restart();
+    }
+
+    function stopScan() {
+        if (!scanning) return;
+        if (scanProc.running) {
+            scanProc.write("scan off\n");
+            scanProc.write("exit\n");
+        }
+        scanning = false;
+        scanAutoStop.stop();
+        refresh();
+    }
+
+    Timer {
+        id: scanAutoStop
+        interval: 10000
+        onTriggered: svc.stopScan()
+    }
+
     // ── unimplemented (filled in later tasks) ──
-    function startScan()      {}
-    function stopScan()       {}
     function pair(mac)        {}
     function confirmPair(yes) {}
     function trust(mac)       {}
