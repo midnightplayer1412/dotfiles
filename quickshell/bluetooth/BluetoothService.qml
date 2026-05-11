@@ -193,9 +193,23 @@ Singleton {
                 }
             }
         }
+
+        onExited: {
+            // bluetoothctl ended (either by our own "exit\n" after success/failure,
+            // or unexpectedly). Clear any pending-confirm state so the UI doesn't
+            // strand a dialog over a dead session.
+            if (svc.pendingConfirmDevice !== "") {
+                if (svc.lastError === "") svc.lastError = "Pairing process exited";
+                svc.pendingConfirmDevice = "";
+                svc.pendingConfirmCode = "";
+            }
+        }
     }
 
     function pair(mac) {
+        // Don't start a second pairing while one is in flight — the SplitParser
+        // would see confirm-passkey lines for both and mix up the codes.
+        if (pairProc.running) return;
         pairProc.targetMac = mac;
         svc.pendingConfirmDevice = "";
         svc.pendingConfirmCode = "";
@@ -226,5 +240,7 @@ Singleton {
     Component.onDestruction: {
         // Don't leave bluetoothctl scanning after quickshell exits.
         if (scanning) stopScan();
+        // Tear down any in-flight pairing so we don't orphan a bluetoothctl agent.
+        if (pairProc.running) pairProc.running = false;
     }
 }
