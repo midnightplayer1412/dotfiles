@@ -5,7 +5,7 @@ import "launcher" as Launcher
 import "hud" as HUD
 import "notifications" as Notifications
 import "calendar" as Calendar
-import "wifi" as Wifi
+import "connection" as Connection
 
 ShellRoot {
     function focusedScreen() {
@@ -108,16 +108,38 @@ ShellRoot {
         }
     }
 
-    // Wifi drawer — only on target screen when visible
+    // Connection trigger zone — transparent, always per-screen
+    Variants {
+        model: Quickshell.screens
+
+        Connection.HubTrigger {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Connection hub — only on the screen that's hovered or has the drawer open
+    Variants {
+        model: Connection.ConnectionState.hubVisible
+            ? [Connection.ConnectionState.hubScreen] : []
+
+        Connection.Hub {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Connection drawer — only on target screen when a tab is active
     Variants {
         model: {
-            if (Wifi.WifiState.visible && Wifi.WifiState.targetScreen) {
-                return [Wifi.WifiState.targetScreen];
+            if (Connection.ConnectionState.activeTab !== ""
+                && Connection.ConnectionState.targetScreen) {
+                return [Connection.ConnectionState.targetScreen];
             }
             return [];
         }
 
-        Wifi.Drawer {
+        Connection.Drawer {
             required property var modelData
             screen: modelData
         }
