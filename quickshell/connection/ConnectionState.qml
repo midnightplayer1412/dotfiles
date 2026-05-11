@@ -28,14 +28,12 @@ Singleton {
     property var hubWindows: ({})
 
     function registerHub(screen, win) {
-        const m = hubWindows;
-        m[screen.name] = win;
-        hubWindows = m;     // reassign so QML emits the change signal
+        hubWindows[screen.name] = win;
+        hubWindowsChanged();
     }
     function unregisterHub(screen) {
-        const m = hubWindows;
-        delete m[screen.name];
-        hubWindows = m;
+        delete hubWindows[screen.name];
+        hubWindowsChanged();
     }
 
     // ── Hover bridging ───────────────────────────────────────────────
