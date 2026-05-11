@@ -1,2 +1,3 @@
 singleton ConnectionState 1.0 ConnectionState.qml
 HubTab 1.0 HubTab.qml
+Hub 1.0 Hub.qml
