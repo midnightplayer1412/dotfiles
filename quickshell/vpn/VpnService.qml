@@ -55,6 +55,7 @@ Singleton {
     }
 
     function activate(name) {
+        if (actProc.running) return;
         // If another VPN is up, deactivate it first.
         if (svc.activeName !== "" && svc.activeName !== name) {
             actProc.action = "down";
@@ -72,6 +73,7 @@ Singleton {
     }
 
     function deactivate(name) {
+        if (actProc.running) return;
         actProc.action = "down";
         actProc.name = name;
         actProc.command = ["nmcli", "connection", "down", name];

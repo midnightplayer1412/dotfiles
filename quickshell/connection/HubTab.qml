@@ -29,7 +29,7 @@ Item {
             if (anyConn) return "\u{F00B0}";                    // bluetooth-connect
             return "\u{F00AF}";                                  // bluetooth
         case "vpn":
-            return "\u{F0582}";                                  // vpn (placeholder until VpnService lands)
+            return "\u{F0582}";                                  // vpn
         }
         return "?";
     }

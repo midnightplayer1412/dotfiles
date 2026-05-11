@@ -39,7 +39,7 @@ Singleton {
                     const parts = line.substring("Device ".length).split(" ");
                     const mac = parts.shift();
                     const name = parts.join(" ") || mac;
-                    out.push({ mac: mac, name: name, paired: true,
+                    out.push({ mac: mac, name: name, paired: false,
                                connected: false, rssi: 0, icon: "" });
                 }
                 // Replace; per-device connected/icon enrichment in next batch
@@ -60,12 +60,14 @@ Singleton {
             onStreamFinished: {
                 const mac = pairedConnectedProc.working[pairedConnectedProc.cursor]?.mac ?? "";
                 const cm = text.match(/Connected:\s*(yes|no)/);
+                const pm = text.match(/Paired:\s*(yes|no)/);
                 const im = text.match(/Icon:\s*(\S+)/);
                 if (mac) {
                     const arr = pairedConnectedProc.working;
                     const idx = arr.findIndex(d => d.mac === mac);
                     if (idx >= 0) {
                         arr[idx].connected = cm ? (cm[1] === "yes") : false;
+                        arr[idx].paired = pm ? (pm[1] === "yes") : false;
                         arr[idx].icon = im ? im[1] : "";
                     }
                 }
@@ -78,6 +80,13 @@ Singleton {
                     svc.devices = pairedConnectedProc.working.slice();
                     svc._enriching = false;
                 }
+            }
+        }
+        onExited: {
+            // If the chain was interrupted (e.g. bluetoothctl killed), unstick the
+            // re-entry guard so the next refresh() can retry enrichment.
+            if (svc._enriching && pairedConnectedProc.cursor < pairedConnectedProc.working.length) {
+                svc._enriching = false;
             }
         }
     }
@@ -241,6 +250,7 @@ Singleton {
     }
 
     function _runOneShot(action, mac) {
+        if (oneShot.running) return;
         oneShot.action = action;
         oneShot.mac = mac;
         oneShot.command = ["bluetoothctl", action, mac];

@@ -23,7 +23,10 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
     Component.onCompleted: ConnectionState.registerHub(root.screen, root)
-    Component.onDestruction: ConnectionState.unregisterHub(root.screen)
+    Component.onDestruction: {
+        ConnectionState.unregisterHub(root.screen);
+        ConnectionState.hubExited();   // clear hubHovered so leaveTimer can fire on the next hover
+    }
 
     Rectangle {
         id: surface
