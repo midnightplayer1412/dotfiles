@@ -163,9 +163,58 @@ Singleton {
         onTriggered: svc.stopScan()
     }
 
+    // ── pairing: interactive bluetoothctl session per attempt ───────
+    Process {
+        id: pairProc
+        command: ["bluetoothctl"]
+        stdinEnabled: true
+        property string targetMac: ""
+
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: (line) => {
+                // Confirm-passkey prompts look like:
+                //   "[agent] Confirm passkey 123456 (yes/no):"
+                let m = line.match(/Confirm passkey (\d+)/);
+                if (m) {
+                    svc.pendingConfirmDevice = pairProc.targetMac;
+                    svc.pendingConfirmCode = m[1];
+                    return;
+                }
+                if (/Pairing successful/.test(line)) {
+                    svc.lastError = "";
+                    pairProc.write("trust " + pairProc.targetMac + "\n");
+                    pairProc.write("exit\n");
+                    svc.refresh();
+                }
+                if (/Failed to pair/.test(line) || /AuthenticationFailed/.test(line)) {
+                    svc.lastError = "Pairing failed for " + pairProc.targetMac;
+                    pairProc.write("exit\n");
+                }
+            }
+        }
+    }
+
+    function pair(mac) {
+        pairProc.targetMac = mac;
+        svc.pendingConfirmDevice = "";
+        svc.pendingConfirmCode = "";
+        pairProc.running = true;
+        pairProc.write("pair " + mac + "\n");
+    }
+
+    function confirmPair(yes) {
+        if (!pairProc.running) return;
+        pairProc.write((yes ? "yes" : "no") + "\n");
+        if (!yes) {
+            pairProc.write("exit\n");
+            svc.lastError = "Pairing cancelled";
+        }
+        svc.pendingConfirmDevice = "";
+        svc.pendingConfirmCode = "";
+    }
+
     // ── unimplemented (filled in later tasks) ──
-    function pair(mac)        {}
-    function confirmPair(yes) {}
     function trust(mac)       {}
     function connect(mac)     {}
     function disconnect(mac)  {}
