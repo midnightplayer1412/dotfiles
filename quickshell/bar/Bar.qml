@@ -48,11 +48,6 @@ PanelWindow {
 
             Item { Layout.fillHeight: true }
 
-            WifiIndicator {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.fillWidth: true
-            }
-
             Battery {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
                 Layout.fillWidth: true
