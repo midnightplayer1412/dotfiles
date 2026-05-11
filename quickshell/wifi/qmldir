@@ -3,3 +3,4 @@ singleton WifiService 1.0 WifiService.qml
 Drawer 1.0 Drawer.qml
 NetworkRow 1.0 NetworkRow.qml
 PasswordPrompt 1.0 PasswordPrompt.qml
+WifiPanel 1.0 WifiPanel.qml
