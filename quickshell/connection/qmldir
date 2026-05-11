@@ -2,3 +2,4 @@ singleton ConnectionState 1.0 ConnectionState.qml
 HubTab 1.0 HubTab.qml
 Hub 1.0 Hub.qml
 HubTrigger 1.0 HubTrigger.qml
+Drawer 1.0 Drawer.qml
