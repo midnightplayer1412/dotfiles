@@ -1,2 +1,3 @@
 singleton BluetoothService 1.0 BluetoothService.qml
 DeviceRow 1.0 DeviceRow.qml
+PairConfirm 1.0 PairConfirm.qml
