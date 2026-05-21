@@ -6,6 +6,7 @@ import "hud" as HUD
 import "notifications" as Notifications
 import "calendar" as Calendar
 import "connection" as Connection
+import "overview" as Overview
 
 ShellRoot {
     function focusedScreen() {
@@ -24,6 +25,11 @@ ShellRoot {
     GlobalShortcut {
         name: "notifications_toggle"
         onPressed: Notifications.NotificationCenterState.toggle(focusedScreen())
+    }
+
+    GlobalShortcut {
+        name: "overview_toggle"
+        onPressed: Overview.OverviewState.toggle(focusedScreen())
     }
 
     // Status bar on each screen
@@ -103,6 +109,21 @@ ShellRoot {
         }
 
         Calendar.Calendar {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Overview — fullscreen panel on target screen when visible
+    Variants {
+        model: {
+            if (Overview.OverviewState.visible && Overview.OverviewState.targetScreen) {
+                return [Overview.OverviewState.targetScreen];
+            }
+            return [];
+        }
+
+        Overview.Overview {
             required property var modelData
             screen: modelData
         }

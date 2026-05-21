@@ -1,0 +1,4 @@
+singleton OverviewState 1.0 OverviewState.qml
+OverviewWindow 1.0 OverviewWindow.qml
+OverviewWidget 1.0 OverviewWidget.qml
+Overview 1.0 Overview.qml

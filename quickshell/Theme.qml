@@ -46,6 +46,16 @@ Singleton {
     readonly property int hudRadius: 25
     readonly property int hudBottomMargin: 40
 
+    // Overview geometry
+    readonly property int overviewCellWidth:  240
+    readonly property int overviewCellHeight: 150
+    readonly property int overviewCellGap:    10
+    readonly property int overviewPadding:    20
+    readonly property int overviewRadius:     16
+    readonly property int overviewCellInset:  4    // tile area inside each cell
+    readonly property int overviewWindowMinSize: 20
+    readonly property bool overviewLivePreviews: true
+
     // Connection hub geometry
     readonly property int hubTriggerHeight: 20    // fits inside gaps_out: 20
     readonly property int hubTriggerWidth:  180   // wider than hub for easier hover target
