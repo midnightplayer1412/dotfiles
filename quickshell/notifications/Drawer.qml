@@ -129,74 +129,13 @@ PanelWindow {
                 model: NotificationService.notifications
                 verticalLayoutDirection: ListView.BottomToTop
 
-                delegate: Rectangle {
-                    id: card
+                delegate: NotificationCard {
                     required property var modelData
-
                     width: ListView.view ? ListView.view.width : 0
-                    height: itemContent.implicitHeight + 20
-                    radius: 10
-                    color: Theme.surfaceContainer
-
-                    ColumnLayout {
-                        id: itemContent
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.margins: 10
-                        spacing: 4
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-
-                            Text {
-                                Layout.fillWidth: true
-                                text: card.modelData?.appName || "Notification"
-                                color: Theme.primary
-                                font.family: Theme.fontFamily
-                                font.bold: true
-                                font.pixelSize: 11
-                                elide: Text.ElideRight
-                            }
-
-                            Text {
-                                text: "✕"
-                                color: dismissMouse.containsMouse ? Theme.primary : Theme.outline
-                                font.pixelSize: 12
-
-                                MouseArea {
-                                    id: dismissMouse
-                                    anchors.fill: parent
-                                    anchors.margins: -4
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: NotificationService.dismiss(card.modelData)
-                                }
-                            }
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: card.modelData?.summary || ""
-                            color: Theme.surfaceText
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 13
-                            font.bold: true
-                            wrapMode: Text.WordWrap
-                            visible: text.length > 0
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: card.modelData?.body || ""
-                            color: Theme.surfaceText
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 11
-                            wrapMode: Text.WordWrap
-                            visible: text.length > 0
-                        }
-                    }
+                    notif: modelData
+                    compact: true
+                    borderColor: Theme.outline
+                    onDismissRequested: NotificationService.dismiss(modelData)
                 }
             }
         }

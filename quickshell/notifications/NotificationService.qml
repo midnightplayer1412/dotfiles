@@ -57,12 +57,27 @@ Singleton {
         notification.dismiss();
     }
 
+    function invokeAction(notification, identifier) {
+        if (!notification || !notification.actions) return;
+        for (let i = 0; i < notification.actions.length; i++) {
+            if (notification.actions[i].identifier === identifier) {
+                notification.actions[i].invoke();
+                // freedesktop spec: close after action unless 'resident' hint set
+                if (!notification.resident) dismiss(notification);
+                return;
+            }
+        }
+    }
+
     function clearAll() {
         const list = server.trackedNotifications.values.slice();
-        dismissedPopups.clear();
-        dismissedRev++;
+        let cleared = false;
         for (let i = list.length - 1; i >= 0; i--) {
+            if (list[i].urgency === NotificationUrgency.Critical) continue;
+            dismissedPopups.delete(list[i]);
             list[i].dismiss();
+            cleared = true;
         }
+        if (cleared) dismissedRev++;
     }
 }

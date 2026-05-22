@@ -26,6 +26,17 @@ grouped by date since this repo is unreleased / rolling.
   armed (visual confirmation that `C-a` was received), git branch and
   clock added to status-right, `prefix r` reloads config.
 - **hyprlock** — minor outer/check color refresh.
+- **Notifications** (quickshell) — popups and drawer now render the
+  notification's icon (`image` with `appIcon` fallback that handles
+  both theme names and absolute paths, or a fallback initial letter),
+  action buttons as primary-tinted pill chips, and invoke the
+  freedesktop `default` action on body click. Critical-urgency
+  notifications get an `error`-colored border, never auto-dismiss,
+  and survive "Clear all" (per-card ✕ still works). Drawer entries
+  use a softer `outline` border to read as a list; popups keep the
+  brighter `primary` accent. Shared card layout extracted into
+  `NotificationCard.qml` and parametrized via Theme geometry tokens
+  (`notifRadius`, `notifPadding`, `notifIconSize`, etc.).
 
 ### 2026-05-21
 

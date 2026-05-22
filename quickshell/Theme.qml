@@ -21,6 +21,7 @@ Singleton {
     readonly property color surfaceText:      colors?.onSurface        ?? "#cdd6f4"
     readonly property color surfaceContainer: colors?.surfaceContainer ?? "#2b2b3d"
     readonly property color outline:          colors?.outline          ?? "#6c7086"
+    readonly property color error:            colors?.error            ?? "#f38ba8"
 
     // Bar geometry
     readonly property int barWidth: 48
@@ -79,6 +80,22 @@ Singleton {
     readonly property int wallpaperPickerTitleSize: 11
     readonly property int wallpaperPickerBodySize: 13
     readonly property int wallpaperPickerRowHeight: 30
+
+    // Notifications geometry
+    readonly property int notifRadius: 12              // card (matches barRadius — medium container)
+    readonly property int notifIconRadius: 6           // icon slot (small thumb)
+    readonly property int notifChipRadius: 12          // pill (radius ≥ chip height/2)
+    readonly property int notifPadding: 12             // popup outer padding
+    readonly property int notifPaddingCompact: 8       // drawer outer padding
+    readonly property int notifIconSize: 48            // popup
+    readonly property int notifIconSizeCompact: 32     // drawer
+    readonly property int notifIconGap: 12             // icon → text
+    readonly property int notifSectionGap: 8           // between bodyArea and chips, between chips
+    readonly property int notifTextGap: 4              // between summary and body
+    readonly property int notifChipPadding: 10         // chip horizontal padding (per side)
+    readonly property int notifChipHeight: 24
+    readonly property int notifChipHeightCompact: 22
+    readonly property int notifBorderCritical: 2
 
     // Fonts
     readonly property string fontFamily: "sans-serif"
