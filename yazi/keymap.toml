@@ -1,0 +1,4 @@
+[[mgr.prepend_keymap]]
+on   = [ "g", "i" ]
+run  = "shell --block --orphan lazygit"
+desc = "Open lazygit at current directory"

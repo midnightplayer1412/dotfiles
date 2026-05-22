@@ -10,6 +10,8 @@ quickshell/.qmlls.ini
 # Matugen-regenerated theme files (rebuilt on every wallpaper change)
 quickshell/theme/colors.json
 tmux/colors.conf
+yazi/theme.toml
 
-# tmux plugin manager output
+# Plugin manager output
 tmux/plugins/
+yazi/plugins/
