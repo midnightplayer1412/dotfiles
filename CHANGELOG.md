@@ -6,6 +6,27 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-05-22
+
+#### Added
+- **README** — project stack overview and structure documentation.
+- **yazi** — file manager config (`init.lua`, `keymap.toml`, `yazi.toml`,
+  `package.toml`) and matugen-driven theme template, so the file manager
+  re-themes with every wallpaper change.
+- **tmux plugins** — `tmux-continuum` (auto-restore sessions every 15min)
+  and `tmux-yank` (system clipboard integration), managed via tpm.
+- **nvim** — `conform.lua` formatter plugin config.
+
+#### Changed
+- **hypr** — monitor configuration switched from connector names
+  (`HDMI-A-1`) to EDID descriptions, so monitor rules survive connector
+  renames. Per-site rules: internal panel, home (Prism+ F270i PRO 1440p),
+  office (MSI MP275 E2 1080p), plus a `preferred,auto` fallback.
+- **tmux** — status bar glows in the primary color while the prefix is
+  armed (visual confirmation that `C-a` was received), git branch and
+  clock added to status-right, `prefix r` reloads config.
+- **hyprlock** — minor outer/check color refresh.
+
 ### 2026-05-21
 
 #### Added
