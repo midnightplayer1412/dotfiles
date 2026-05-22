@@ -66,6 +66,20 @@ Singleton {
     readonly property int drawerWidth:      380
     readonly property int drawerRadius:     16
 
+    // Wallpaper picker geometry
+    readonly property int wallpaperPickerWidth:  720
+    readonly property int wallpaperPickerHeight: 520
+    readonly property int wallpaperPickerRadius: 16
+    readonly property int wallpaperPickerPadding: 14
+    readonly property int wallpaperThumbColumns: 5
+    readonly property int wallpaperThumbGap: 6
+    readonly property int wallpaperThumbRadius: 5
+    readonly property int wallpaperThumbBorder: 2
+    readonly property string wallpaperPickerFontFamily: "Monaspace Argon NF"
+    readonly property int wallpaperPickerTitleSize: 11
+    readonly property int wallpaperPickerBodySize: 13
+    readonly property int wallpaperPickerRowHeight: 30
+
     // Fonts
     readonly property string fontFamily: "sans-serif"
     readonly property int fontSizeSmall: 10

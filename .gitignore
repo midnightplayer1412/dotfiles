@@ -1,0 +1,15 @@
+.superpowers/
+
+# Wallpaper image library — large binaries, machine-local
+wallpapers/
+
+# Runtime state
+quickshell/wallpaper-state.json
+quickshell/.qmlls.ini
+
+# Matugen-regenerated theme files (rebuilt on every wallpaper change)
+quickshell/theme/colors.json
+tmux/colors.conf
+
+# tmux plugin manager output
+tmux/plugins/

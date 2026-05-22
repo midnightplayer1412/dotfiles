@@ -1,3 +1,4 @@
+import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import "bar" as Bar
@@ -7,6 +8,7 @@ import "notifications" as Notifications
 import "calendar" as Calendar
 import "connection" as Connection
 import "overview" as Overview
+import "wallpaper" as Wallpaper
 
 ShellRoot {
     function focusedScreen() {
@@ -164,5 +166,29 @@ ShellRoot {
             required property var modelData
             screen: modelData
         }
+    }
+
+    // Wallpaper picker — fullscreen overlay on target screen when visible
+    Variants {
+        model: {
+            if (Wallpaper.WallpaperService.pickerVisible
+                && Wallpaper.WallpaperService.targetScreen) {
+                return [Wallpaper.WallpaperService.targetScreen];
+            }
+            return [];
+        }
+
+        Wallpaper.PickerWindow {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Wake WallpaperService at startup so state.json is loaded and the
+    // cycle Timer runs from boot. ShellRoot doesn't support attached
+    // Component lifecycle, so host the wake-up on an inert Item.
+    Item {
+        visible: false
+        Component.onCompleted: void Wallpaper.WallpaperService.statePath
     }
 }

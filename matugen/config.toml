@@ -1,10 +1,17 @@
 [config]
 
 [templates.quickshell-colors]
-input_path = "~/.config/matugen/templates/quickshell-colors.json"
+input_path  = "~/.config/matugen/templates/quickshell-colors.json"
 output_path = "~/.config/quickshell/theme/colors.json"
 
 [templates.tmux-colors]
-input_path = "~/.config/matugen/templates/tmux-colors.conf"
+input_path  = "~/.config/matugen/templates/tmux-colors.conf"
 output_path = "~/.config/tmux/colors.conf"
 
+[templates.yazi-theme]
+input_path  = "~/.config/matugen/templates/yazi-theme.toml"
+output_path = "~/.config/yazi/theme.toml"
+
+[templates.hyprlock]
+input_path  = "~/.config/matugen/templates/hyprlock.conf"
+output_path = "~/.config/hypr/hyprlock.conf"

@@ -9,6 +9,12 @@ grouped by date since this repo is unreleased / rolling.
 ### 2026-05-21
 
 #### Added
+- **Wallpaper picker** (quickshell) — launcher-summoned popup with a dense
+  5-column grid, animated GIF support, and a GIF badge per cell. Click any
+  thumbnail to pin it as the active wallpaper (cycling turns off automatically);
+  toggle **Cycle** to resume random rotation; interval dropdown lets you choose
+  1 / 5 / 15 / 30 / 60 min. State (`current`, `cycle`, `intervalSeconds`)
+  persists across restarts via `~/.config/quickshell/wallpaper-state.json`.
 - **Workspace overview** (quickshell) — SUPER+TAB toggles a centered 2×5 grid
   of all workspaces. Each cell mirrors its monitor: window tiles are sized and
   positioned proportionally to the real window's `at`/`size`, with live
@@ -16,6 +22,18 @@ grouped by date since this repo is unreleased / rolling.
   to jump, click a tile to focus, drag a tile across cells to move windows
   between workspaces.
 - **bashrc** — initial shell rc config.
+
+#### Changed
+- **Matugen** — consolidated from split `config.toml` + `config-lock.toml` into
+  a single `config.toml`. Every wallpaper change now re-themes quickshell,
+  tmux, yazi, and hyprlock from the active wallpaper; yazi and hyprlock were
+  previously orphaned / frozen on a stale palette.
+
+#### Removed
+- **bash wallpaper-cycle daemon** (`hypr/scripts/wallpaper-cycle.sh`) — retired
+  in favour of a Quickshell-owned `Timer` inside `WallpaperService`. A one-shot
+  boot-apply fires on startup so the saved wallpaper is always re-applied after
+  a reboot or quickshell restart.
 
 #### Fixed
 - **hypr** — version-update patch fix.
