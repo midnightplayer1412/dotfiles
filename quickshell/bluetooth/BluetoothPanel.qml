@@ -57,7 +57,9 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: btErrText.implicitHeight + 16
-            visible: BluetoothService.lastError.length > 0 && BluetoothService.pendingConfirmDevice.length === 0
+            visible: BluetoothService.lastError.length > 0
+                && BluetoothService.pendingConfirmDevice.length === 0
+                && BluetoothService.pendingForgetMac.length === 0
             radius: 8
             color: Qt.rgba(1.0, 0.4, 0.4, 0.15)
             border.color: Qt.rgba(1.0, 0.4, 0.4, 0.4)
@@ -159,5 +161,10 @@ Item {
     PairConfirm {
         anchors.fill: parent
         visible: BluetoothService.pendingConfirmDevice.length > 0
+    }
+
+    ForgetConfirm {
+        anchors.fill: parent
+        visible: BluetoothService.pendingForgetMac.length > 0
     }
 }

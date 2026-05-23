@@ -12,8 +12,17 @@ Singleton {
     property string lastError: ""
     property string pendingConfirmDevice: ""
     property string pendingConfirmCode: ""
+    property string pendingForgetMac: ""
+    property string pendingForgetName: ""
     property var devices: []
+    // MACs of devices that currently have a PipeWire bluez_card — i.e. the
+    // audio profile actually bound. bluez's `Connected` flag tracks the ACL
+    // link, which can be "yes" briefly even when AVDTP profile setup failed.
+    property var audioMacs: []
+    property string inFlightMac: ""
+    property string inFlightAction: ""
     property bool _enriching: false
+    property string _pendingReconnectMac: ""
 
     // ── refresh: read controller power state + paired/known devices ──
     Process {
@@ -101,9 +110,38 @@ Singleton {
         pairedConnectedProc.running = true;
     }
 
+    // ── pactl: enumerate bluez_card.* for audio-profile truth ───────
+    Process {
+        id: cardsProc
+        command: ["pactl", "list", "cards", "short"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const macs = [];
+                const lines = text.split("\n");
+                for (const line of lines) {
+                    const fields = line.split(/\s+/);
+                    for (const f of fields) {
+                        const m = f.match(/^bluez_card\.([0-9A-Fa-f_]+)$/);
+                        if (m) macs.push(m[1].replace(/_/g, ":").toUpperCase());
+                    }
+                }
+                svc.audioMacs = macs;
+            }
+        }
+    }
+
     function refresh() {
         showProc.running = true;
         devicesProc.running = true;
+        cardsProc.running = true;
+    }
+
+    // Re-poll a couple seconds after connect/disconnect so a late AVDTP
+    // failure (bluez says Connected briefly, then drops) updates the UI.
+    Timer {
+        id: delayedRefresh
+        interval: 2500
+        onTriggered: svc.refresh()
     }
 
     // ── setEnabled ──────────────────────────────────────────────────
@@ -245,23 +283,61 @@ Singleton {
         property string mac: ""
         onExited: (code) => {
             if (code !== 0) svc.lastError = oneShot.action + " failed for " + oneShot.mac;
+            const reconMac = svc._pendingReconnectMac;
+            const wasDisconnect = oneShot.action === "disconnect";
+            svc._pendingReconnectMac = "";
+            svc.inFlightMac = "";
+            svc.inFlightAction = "";
             svc.refresh();
+            delayedRefresh.restart();
+            if (wasDisconnect && code === 0 && reconMac.length > 0 && reconMac === oneShot.mac) {
+                reconnectTimer.mac = reconMac;
+                reconnectTimer.restart();
+            }
         }
+    }
+
+    Timer {
+        id: reconnectTimer
+        interval: 600
+        property string mac: ""
+        onTriggered: if (mac.length > 0) svc.connect(mac)
     }
 
     function _runOneShot(action, mac) {
         if (oneShot.running) return;
         oneShot.action = action;
         oneShot.mac = mac;
+        if (action === "connect" || action === "disconnect") {
+            inFlightMac = mac;
+            inFlightAction = action;
+        }
         oneShot.command = ["bluetoothctl", action, mac];
         oneShot.running = true;
     }
 
     function connect(mac)    { _runOneShot("connect", mac); }
     function disconnect(mac) { _runOneShot("disconnect", mac); }
+    function reconnect(mac) {
+        if (oneShot.running) return;
+        _pendingReconnectMac = mac;
+        _runOneShot("disconnect", mac);
+    }
     function trust(mac)      { _runOneShot("trust", mac); }
     function forget(mac)     { _runOneShot("remove", mac); }
     function clearError()    { lastError = ""; }
+
+    function requestForget(mac, name) {
+        pendingForgetMac = mac;
+        pendingForgetName = name && name.length > 0 ? name : mac;
+    }
+
+    function confirmForget(yes) {
+        const mac = pendingForgetMac;
+        pendingForgetMac = "";
+        pendingForgetName = "";
+        if (yes && mac.length > 0) forget(mac);
+    }
 
     Component.onCompleted: refresh()
 
