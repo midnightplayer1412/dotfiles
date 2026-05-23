@@ -6,6 +6,36 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-05-23
+
+#### Added
+- **bluetooth** (quickshell) — forget/unpair device. Trash icon
+  (nf-md-delete) on paired-device rows opens a confirmation dialog
+  before running `bluetoothctl remove`. Service exposes
+  `requestForget(mac, name)` / `confirmForget(yes)`; dialog mirrors
+  `PairConfirm` layout with a red-tinted destructive action.
+- **bluetooth** (quickshell) — half-connected detection. Service polls
+  `pactl list cards short` for `bluez_card.<mac>` alongside
+  `bluetoothctl info`, so when bluez briefly reports `Connected: yes`
+  at the ACL layer but AVDTP profile setup fails, the row shows
+  "Connected (no audio)" in orange instead of a misleading "Connected".
+  The action pill becomes "Reconnect" and chains disconnect → connect.
+  "Connecting…" / "Disconnecting…" intermediate state appears while a
+  one-shot is in flight. A 2.5s delayed re-poll catches late AVDTP
+  drops that surface after the connect command exits.
+- **audio** (quickshell) — new 4th tab in the connection hub for
+  selecting audio output. Lists all `pactl` sinks (built-in / HDMI /
+  bluetooth) with type-aware icons (speaker / headphones / monitor /
+  bluetooth-audio) and active-port subtext. Active sink shows accent
+  background + "Active" label. Click switches default sink and moves
+  any playing streams to it. Hub tab icon mirrors the currently-active
+  output so audio routing is visible at a glance.
+
+#### Changed
+- **connection hub** (quickshell) — `Theme.hubWidth` bumped 140 → 188
+  and `hubTriggerWidth` 180 → 220 to fit the new audio tab without
+  cramping the existing icons.
+
 ### 2026-05-22
 
 #### Added
