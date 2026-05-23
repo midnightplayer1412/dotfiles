@@ -1,0 +1,3 @@
+singleton AudioService 1.0 AudioService.qml
+OutputRow 1.0 OutputRow.qml
+AudioPanel 1.0 AudioPanel.qml

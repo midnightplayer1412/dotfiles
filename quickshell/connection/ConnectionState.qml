@@ -7,7 +7,7 @@ Singleton {
     id: state
 
     // ── Drawer state ─────────────────────────────────────────────────
-    property string activeTab: ""        // "" | "wifi" | "bluetooth" | "vpn"
+    property string activeTab: ""        // "" | "wifi" | "bluetooth" | "audio" | "vpn"
     property var targetScreen: null
 
     // ── Hub visibility state (driven by hover) ───────────────────────

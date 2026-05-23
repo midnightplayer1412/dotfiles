@@ -59,8 +59,8 @@ Singleton {
 
     // Connection hub geometry
     readonly property int hubTriggerHeight: 20    // fits inside gaps_out: 20
-    readonly property int hubTriggerWidth:  180   // wider than hub for easier hover target
-    readonly property int hubWidth:         140
+    readonly property int hubTriggerWidth:  220   // wider than hub for easier hover target
+    readonly property int hubWidth:         188
     readonly property int hubHeight:        44
     readonly property int hubMargin:        4
     readonly property int hubDrawerGap:     10

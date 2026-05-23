@@ -2,12 +2,13 @@ import QtQuick
 import ".."
 import "../wifi"
 import "../bluetooth"
+import "../audio"
 import "../vpn"
 
 Item {
     id: root
 
-    required property string tabKey   // "wifi" | "bluetooth" | "vpn"
+    required property string tabKey   // "wifi" | "bluetooth" | "audio" | "vpn"
     required property var parentScreen
 
     width: 36
@@ -28,6 +29,13 @@ Item {
             const anyConn = BluetoothService.devices.some(d => d.connected);
             if (anyConn) return "\u{F00B0}";                    // bluetooth-connect
             return "\u{F00AF}";                                  // bluetooth
+        case "audio":
+            const cur = AudioService.sinks.find(s => s.name === AudioService.defaultSink);
+            if (!cur) return "\u{F057E}";                       // volume-high
+            if (cur.kind === "bluetooth") return "\u{F0AB7}";   // bluetooth-audio
+            if (cur.kind === "hdmi") return "\u{F0379}";        // monitor
+            if (cur.portLabel === "Headphones") return "\u{F02CB}"; // headphones
+            return "\u{F04C3}";                                  // speaker
         case "vpn":
             return "\u{F0582}";                                  // vpn
         }
@@ -42,6 +50,7 @@ Item {
         switch (tabKey) {
         case "wifi":      return 1.0;
         case "bluetooth": return 1.0;
+        case "audio":     return 1.0;
         case "vpn":       return VpnService.activeName !== "" ? 1.0 : 0.5;
         }
         return 1.0;

@@ -52,6 +52,7 @@ PanelWindow {
 
             HubTab { tabKey: "wifi";      parentScreen: root.screen; Layout.fillWidth: true; Layout.fillHeight: true }
             HubTab { tabKey: "bluetooth"; parentScreen: root.screen; Layout.fillWidth: true; Layout.fillHeight: true }
+            HubTab { tabKey: "audio";     parentScreen: root.screen; Layout.fillWidth: true; Layout.fillHeight: true }
             HubTab { tabKey: "vpn";       parentScreen: root.screen; Layout.fillWidth: true; Layout.fillHeight: true }
         }
 
