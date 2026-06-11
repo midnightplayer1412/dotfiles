@@ -6,6 +6,23 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-06-11
+
+#### Added
+- **mascot** (quickshell) — desktop pet ("Oreo Cat"). A sprite-based cat
+  roams the configured screen with gravity, can be picked up and dropped,
+  and reacts to system state: low battery (curls up to sleep), new
+  notifications (ears-up "alert"), and clicks (pet). New
+  `quickshell/mascot/` module: a full-screen transparent layer-shell
+  overlay with a click-through input mask everywhere except the sprite, so
+  it floats over apps without stealing clicks. Pure movement / gravity /
+  state-selection logic lives in a dependency-free `brain.js` covered by 12
+  `node:test` unit tests; the QML layer (`MascotBrain`, `MascotSprite`,
+  `Mascot`) consumes it. Animations play as unsliced regions of the
+  licensed Aichan sprite sheet via `AnimatedSprite` (art is git-ignored,
+  not redistributed). Mounted one window per screen like the bar so the
+  overlay reliably lands on the configured monitor (`MascotConfig.screenName`).
+
 ### 2026-05-23
 
 #### Added

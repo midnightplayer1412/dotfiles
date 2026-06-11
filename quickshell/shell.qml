@@ -9,6 +9,7 @@ import "calendar" as Calendar
 import "connection" as Connection
 import "overview" as Overview
 import "wallpaper" as Wallpaper
+import "mascot" as Mascot
 
 ShellRoot {
     function focusedScreen() {
@@ -179,6 +180,18 @@ ShellRoot {
         }
 
         Wallpaper.PickerWindow {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Desktop mascot — one window per screen (same pattern as the bar, for
+    // reliable layer-shell output placement). Each window shows itself only on
+    // the configured screen (MascotConfig.screenName), falling back to primary.
+    Variants {
+        model: Quickshell.screens
+
+        Mascot.Mascot {
             required property var modelData
             screen: modelData
         }

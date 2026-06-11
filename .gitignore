@@ -15,3 +15,8 @@ yazi/theme.toml
 # Plugin manager output
 tmux/plugins/
 yazi/plugins/
+
+# Desktop mascot — licensed sprite ART is not redistributable (ignored);
+# the license text itself IS tracked to preserve attribution.
+quickshell/mascot/sprites/*
+!quickshell/mascot/sprites/Aichan's Asset License.txt
