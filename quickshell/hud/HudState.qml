@@ -7,7 +7,7 @@ QtObject {
 
     property bool visible: false
     property var activeScreens: ({})
-    // "volume" or "brightness" — which indicator to show
+    // "volume", "mic", or "brightness" — which indicator to show
     property string activeIndicator: "volume"
 
     function show(screen, indicator) {
