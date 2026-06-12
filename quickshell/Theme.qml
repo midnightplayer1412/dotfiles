@@ -99,6 +99,7 @@ Singleton {
 
     // Fonts
     readonly property string fontFamily: "sans-serif"
+    readonly property string glyphFont: "Monaspace Argon NF"   // Nerd Font (nf-md-* glyphs)
     readonly property int fontSizeSmall: 10
     readonly property int fontSizeMedium: 12
 

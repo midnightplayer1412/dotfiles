@@ -51,6 +51,97 @@ Rectangle {
     border.color: root.isCritical ? Theme.error : root.borderColor
     border.width: root.isCritical ? Theme.notifBorderCritical : 1
 
+    // ── Swipe to dismiss ──────────────────────────────────────────────
+    // A horizontal drag past the threshold flings the card off-screen and
+    // dismisses it. DragHandler composes with the inner MouseAreas — taps still
+    // hit the buttons; only a horizontal drag steals the grab. yAxis is disabled
+    // so the drawer's vertical scroll keeps working. x rests at 0 in both the
+    // drawer Column and the popup Item, so it's free to animate.
+    property real swipeThreshold: width * 0.3
+    property real _flingTo: 0
+
+    // Clip so the content squishes cleanly while the slot collapses on dismiss.
+    clip: true
+
+    // Fade as the card is dragged away. In popups the parent owns opacity
+    // (entrance animation), so this binding is overridden there — slide only.
+    opacity: 1 - Math.min(0.8, Math.abs(x) / Math.max(1, width))
+
+    DragHandler {
+        id: swipe
+        target: root
+        xAxis.enabled: true
+        yAxis.enabled: false
+        cursorShape: Qt.ClosedHandCursor
+        onActiveChanged: {
+            if (active) {
+                settleAnim.stop();
+                flingAnim.stop();
+                return;
+            }
+            if (Math.abs(root.x) > root.swipeThreshold) root.flingOut();
+            else settleAnim.start();
+        }
+    }
+
+    // Swipe dismiss: slide off-screen while the slot collapses, then remove —
+    // one continuous motion so the cards below follow in real time.
+    function flingOut() {
+        _flingTo = x > 0 ? width + 24 : -(width + 24);
+        flingAnim.start();
+    }
+
+    // Non-swipe dismiss (the ✕ glyph): just collapse the slot, then remove.
+    function collapseDismiss() {
+        collapseAnim.start();
+    }
+
+    NumberAnimation {
+        id: settleAnim
+        target: root
+        property: "x"
+        to: 0
+        duration: 180
+        easing.type: Easing.OutCubic
+    }
+
+    SequentialAnimation {
+        id: flingAnim
+        ParallelAnimation {
+            NumberAnimation {
+                target: root
+                property: "x"
+                to: root._flingTo
+                duration: 200
+                easing.type: Easing.OutCubic
+            }
+            SequentialAnimation {
+                // Let the card start moving before the gap begins closing.
+                PauseAnimation { duration: 70 }
+                NumberAnimation {
+                    target: root
+                    property: "height"
+                    to: 0
+                    duration: 150
+                    easing.type: Easing.InOutCubic
+                }
+            }
+        }
+        ScriptAction { script: root.dismissRequested() }
+    }
+
+    SequentialAnimation {
+        id: collapseAnim
+        NumberAnimation {
+            target: root
+            property: "height"
+            to: 0
+            duration: 160
+            easing.type: Easing.InOutCubic
+        }
+        ScriptAction { script: root.dismissRequested() }
+    }
+
     Row {
         id: rowLayout
         anchors.left: parent.left
@@ -119,7 +210,7 @@ Rectangle {
 
                 Text {
                     anchors.left: parent.left
-                    anchors.right: dismissText.left
+                    anchors.right: timeText.left
                     anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.notif?.appName || "Notification"
@@ -130,12 +221,29 @@ Rectangle {
                     elide: Text.ElideRight
                 }
 
+                // Relative arrival time — re-reads nowMs so it ticks on its own.
+                Text {
+                    id: timeText
+                    anchors.right: dismissText.left
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: {
+                        NotificationService.nowMs;
+                        return root.notif ? NotificationService.relativeTime(root.notif) : "";
+                    }
+                    color: Theme.outline
+                    font.pixelSize: compact ? 10 : 11
+                    font.family: Theme.fontFamily
+                    visible: text.length > 0
+                }
+
                 Text {
                     id: dismissText
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "✕"
+                    text: "\u{F0156}"   // nf-md-close
                     color: dismissMouse.containsMouse ? Theme.primary : Theme.surfaceText
+                    font.family: Theme.glyphFont
                     font.pixelSize: compact ? 12 : 14
 
                     MouseArea {
@@ -144,7 +252,7 @@ Rectangle {
                         anchors.margins: -4
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.dismissRequested()
+                        onClicked: root.collapseDismiss()
                     }
                 }
             }

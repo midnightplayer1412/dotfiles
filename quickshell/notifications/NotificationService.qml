@@ -19,6 +19,57 @@ Singleton {
     property var dismissedPopups: new Set()
     property int dismissedRev: 0
 
+    // Do Not Disturb — when on, incoming notifications skip the popup and land
+    // straight in history (still tracked). Persists only for the session.
+    property bool doNotDisturb: false
+
+    // Arrival timestamps (ms since epoch) keyed by Notification QObject identity,
+    // used to render relative time on each card. nowMs ticks so those bindings
+    // refresh without per-card timers.
+    property var arrivalTimes: new Map()
+    property double nowMs: Date.now()
+
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+        onTriggered: root.nowMs = Date.now()
+    }
+
+    // History bucketed by app, newest-first, newest group first. JS array model
+    // for the drawer — one entry per app: { key, app, items: [Notification…] }.
+    readonly property var grouped: {
+        const vals = server.trackedNotifications.values;
+        const order = [];
+        const byApp = ({});
+        for (let i = vals.length - 1; i >= 0; i--) {
+            const n = vals[i];
+            const key = n.appName || "Notification";
+            if (!(key in byApp)) {
+                byApp[key] = { key: key, app: key, items: [] };
+                order.push(byApp[key]);
+            }
+            byApp[key].items.push(n);
+        }
+        return order;
+    }
+
+    function relativeTime(notification) {
+        const t = arrivalTimes.get(notification);
+        if (t === undefined) return "";
+        const s = Math.floor(Math.max(0, nowMs - t) / 1000);
+        if (s < 60) return "now";
+        const m = Math.floor(s / 60);
+        if (m < 60) return m + "m";
+        const h = Math.floor(m / 60);
+        if (h < 24) return h + "h";
+        return Math.floor(h / 24) + "d";
+    }
+
+    function toggleDoNotDisturb() {
+        doNotDisturb = !doNotDisturb;
+    }
+
     readonly property int activePopupCount: {
         dismissedRev;
         const items = server.trackedNotifications.values;
@@ -41,6 +92,11 @@ Singleton {
 
         onNotification: notif => {
             notif.tracked = true;
+            root.arrivalTimes.set(notif, Date.now());
+            // Do Not Disturb: collect into history without popping up — but let
+            // critical notifications (e.g. low battery) through.
+            if (root.doNotDisturb && notif.urgency !== NotificationUrgency.Critical)
+                root.markPopupDismissed(notif);
         }
     }
 
@@ -54,6 +110,7 @@ Singleton {
     function dismiss(notification) {
         if (!notification) return;
         if (dismissedPopups.delete(notification)) dismissedRev++;
+        arrivalTimes.delete(notification);
         notification.dismiss();
     }
 
@@ -75,6 +132,7 @@ Singleton {
         for (let i = list.length - 1; i >= 0; i--) {
             if (list[i].urgency === NotificationUrgency.Critical) continue;
             dismissedPopups.delete(list[i]);
+            arrivalTimes.delete(list[i]);
             list[i].dismiss();
             cleared = true;
         }
