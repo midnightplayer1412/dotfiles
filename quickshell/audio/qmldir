@@ -1,3 +1,6 @@
 singleton AudioService 1.0 AudioService.qml
 OutputRow 1.0 OutputRow.qml
 AudioPanel 1.0 AudioPanel.qml
+VolumeSlider 1.0 VolumeSlider.qml
+AppVolumeRow 1.0 AppVolumeRow.qml
+AppMixer 1.0 AppMixer.qml

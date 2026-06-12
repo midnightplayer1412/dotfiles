@@ -165,13 +165,24 @@ Rectangle {
                 anchors.fill: parent
                 // notif.image is the rich image hint (album art, contact photo).
                 // notif.appIcon may be a theme name OR an absolute path / file: URI.
-                // Theme names go through Quickshell.iconPath; paths go straight to Image.
+                // Theme names are existence-checked (iconPath(_, true) returns ""
+                // when missing) so an unresolved name yields the letter-avatar
+                // fallback below instead of a broken-icon placeholder; the app
+                // name (lowercased) is tried as a second candidate.
                 source: {
                     if (root.notif?.image) return root.notif.image;
                     const icon = root.notif?.appIcon;
-                    if (!icon) return "";
-                    if (icon.startsWith("/") || icon.startsWith("file:")) return icon;
-                    return Quickshell.iconPath(icon, "");
+                    if (icon) {
+                        if (icon.startsWith("/") || icon.startsWith("file:")) return icon;
+                        const p = Quickshell.iconPath(icon, true);
+                        if (p) return p;
+                    }
+                    const nm = root.notif?.appName;
+                    if (nm) {
+                        const p2 = Quickshell.iconPath(nm.toLowerCase(), true);
+                        if (p2) return p2;
+                    }
+                    return "";
                 }
                 sourceSize.width: parent.width
                 sourceSize.height: parent.height

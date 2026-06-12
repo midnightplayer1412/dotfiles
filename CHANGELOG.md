@@ -9,6 +9,16 @@ grouped by date since this repo is unreleased / rolling.
 ### 2026-06-12
 
 #### Added
+- **audio** (quickshell) — per-application volume mixer in the Connection Hub's
+  Audio tab. The tab is now a full mixer: a **master** slider, the existing
+  **output-device** switcher, and an **Apps** section with one row per playing
+  stream — app icon, live volume slider, level-aware mute, and an inline
+  **output picker** to route that app to a different sink. Volume and mute bind
+  directly to the native PipeWire service (`Quickshell.Services.Pipewire`, kept
+  bound via `PwObjectTracker`); routing uses `pactl move-sink-input` keyed by the
+  stream's `object.serial` (which pipewire-pulse uses as the sink-input index, so
+  it maps directly). New `VolumeSlider.qml`, `AppVolumeRow.qml`, `AppMixer.qml`;
+  `AudioPanel` restructured and made scrollable; `AudioService.moveStream` added.
 - **notifications** (quickshell) — notification center enhancements:
   - **Grouping by app** — the center drawer buckets notifications under a
     per-app header with a count badge; multi-item groups collapse/expand on
@@ -77,6 +87,16 @@ grouped by date since this repo is unreleased / rolling.
   `MascotSignals` singleton. `brain.js` unit coverage grew from 12 to 37
   `node:test` cases; all 24 sprite-sheet animation regions verified against
   the actual pixels.
+
+#### Fixed
+- **app icons** (quickshell) — application icons (mixer rows, notification
+  cards) no longer render as a broken-icon placeholder when a name doesn't
+  resolve. Icon lookups are now existence-checked (`Quickshell.iconPath(name,
+  true)`) and try the app name as a second candidate, falling back to a letter
+  avatar. Also added `env = QT_QPA_PLATFORMTHEME,qt6ct` to `hyprland.conf` so
+  Quickshell actually uses the qt6ct icon theme (Papirus) in the Hyprland
+  session — `.bashrc`/`.profile` export it, but the session never sourced them,
+  so Qt fell back to a theme without those app icons.
 
 ### 2026-06-11
 

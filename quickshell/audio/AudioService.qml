@@ -90,6 +90,30 @@ Singleton {
         setDefaultProc.running = true;
     }
 
+    // Move one playback stream to another sink. pipewire-pulse uses the stream's
+    // object.serial (exposed on the native node via properties) as the pactl
+    // sink-input index, so it maps directly — no lookup needed.
+    Process {
+        id: moveStreamProc
+        onExited: (code) => {
+            if (code !== 0) svc.lastError = "Failed to move audio stream";
+        }
+    }
+
+    function moveStream(serial, sinkName) {
+        if (!/^[0-9]+$/.test(String(serial))) {
+            lastError = "Invalid stream id";
+            return;
+        }
+        if (!/^[a-zA-Z0-9._-]+$/.test(sinkName)) {
+            lastError = "Invalid sink name";
+            return;
+        }
+        if (moveStreamProc.running) return;
+        moveStreamProc.command = ["pactl", "move-sink-input", String(serial), sinkName];
+        moveStreamProc.running = true;
+    }
+
     function clearError() { lastError = ""; }
 
     Component.onCompleted: refresh()
