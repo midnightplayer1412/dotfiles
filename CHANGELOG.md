@@ -9,6 +9,25 @@ grouped by date since this repo is unreleased / rolling.
 ### 2026-06-12
 
 #### Added
+- **notifications** (quickshell) — notification center enhancements:
+  - **Grouping by app** — the center drawer buckets notifications under a
+    per-app header with a count badge; multi-item groups collapse/expand on
+    click, single notifications render bare. New `NotificationGroup.qml`; the
+    list is a `Flickable` + `Repeater` over a `grouped` model (per-app collapse
+    state lives in `NotificationCenterState`).
+  - **Relative timestamps** — each card shows `now` / `3m` / `1h`, refreshed by
+    a single `nowMs` ticker in `NotificationService` (no per-card timers).
+  - **Swipe to dismiss** — drag a card either direction past a threshold to
+    fling it off and remove it; releasing short snaps back. A `DragHandler`
+    (yAxis disabled) composes with the existing tap targets and the drawer's
+    vertical scroll. Dismissal animates the card's own `height` to 0 so the
+    cards below — and the scroll area — reflow in one continuous motion; the ✕
+    button routes through the same collapse.
+  - **Do Not Disturb** — header bell toggle that suppresses popups while still
+    collecting them into history; critical notifications still pop through.
+  - **Nerd Font glyphs** — media transport (state-aware play/pause), dismiss,
+    empty state, and DND all use `nf-md-*` glyphs (verified against the
+    installed font), replacing the previous emoji. New `Theme.glyphFont` token.
 - **cheatsheet** (quickshell) — a full-screen keybinding cheatsheet overlay,
   toggled with **Super + /** (Esc / click-outside to close). New
   `quickshell/cheatsheet/` module following the Overview pattern (a

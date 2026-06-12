@@ -66,6 +66,7 @@ Hyprland compositor config split into modular files:
 | Super + Arrow keys | Move focus |
 | Super + C | Toggle float & center |
 | Super + / | Keybinding cheatsheet |
+| Super + N | Notification center |
 
 ---
 
@@ -77,6 +78,12 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
 - **Bar** — Left sidebar panel (48px wide) with workspaces, clock, battery
 - **Launcher** — Bottom-center search panel (600×400px), fuzzy app search
 - **HUD** — Right-edge panel, volume and brightness sliders (auto-hide)
+- **Notifications** — Popup toasts plus a right-side center drawer (`Super + N`)
+  with an MPRIS media player. Notifications are **grouped by app** (collapsible,
+  with a count badge), show a relative **timestamp**, and can be **swiped away**
+  (drag in either direction; the slot collapses as the card leaves). A header
+  **Do Not Disturb** toggle silences popups while still collecting history
+  (critical notifications still pop through).
 - **Cheatsheet** — Full-screen keybinding overlay (`Super + /`). Per-app tabs
   (Hyprland, nvim, tmux, ghostty, yazi) highlight each app's bound keys on a
   CSS-drawn keyboard; hover a key to see its binding in the detail bar.

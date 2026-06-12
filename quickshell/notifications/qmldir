@@ -1,6 +1,7 @@
 singleton NotificationService 1.0 NotificationService.qml
 singleton NotificationCenterState 1.0 NotificationCenterState.qml
 NotificationCard 1.0 NotificationCard.qml
+NotificationGroup 1.0 NotificationGroup.qml
 Popups 1.0 Popups.qml
 Drawer 1.0 Drawer.qml
 MediaPlayer 1.0 MediaPlayer.qml

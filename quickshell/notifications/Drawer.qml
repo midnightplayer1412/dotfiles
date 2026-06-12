@@ -71,6 +71,35 @@ PanelWindow {
                     font.bold: true
                 }
 
+                // Do Not Disturb toggle
+                Rectangle {
+                    Layout.preferredWidth: 28
+                    Layout.preferredHeight: 28
+                    radius: 14
+                    color: NotificationService.doNotDisturb
+                        ? Theme.primary
+                        : (dndMouse.containsMouse ? Theme.surfaceContainer : "transparent")
+
+                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        // bell-off when silenced, bell when active
+                        text: NotificationService.doNotDisturb ? "\u{F009C}" : "\u{F009A}"
+                        color: NotificationService.doNotDisturb ? Theme.primaryText : Theme.surfaceText
+                        font.family: Theme.glyphFont
+                        font.pixelSize: 15
+                    }
+
+                    MouseArea {
+                        id: dndMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: NotificationService.toggleDoNotDisturb()
+                    }
+                }
+
                 Rectangle {
                     Layout.preferredWidth: clearLabel.implicitWidth + 20
                     Layout.preferredHeight: 28
@@ -109,33 +138,54 @@ PanelWindow {
                 Layout.fillHeight: true
                 visible: NotificationService.notifications.values.length === 0
 
-                Text {
+                Column {
                     anchors.centerIn: parent
-                    text: "No notifications"
-                    color: Theme.outline
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 14
+                    spacing: 8
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "\u{F009D}"   // nf-md-bell-off-outline
+                        color: Theme.outline
+                        font.family: Theme.glyphFont
+                        font.pixelSize: 40
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: NotificationService.doNotDisturb ? "Do Not Disturb" : "No notifications"
+                        color: Theme.outline
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 14
+                    }
                 }
             }
 
-            // List
-            ListView {
+            // Grouped, scrollable history. Uses Flickable + Repeater (not ListView)
+            // because the model is a reassigned JS array — see project notes on
+            // ListView var-model rendering.
+            Flickable {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-                spacing: 8
+                contentWidth: width
+                contentHeight: groupCol.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
                 visible: NotificationService.notifications.values.length > 0
 
-                model: NotificationService.notifications
-                verticalLayoutDirection: ListView.BottomToTop
+                Column {
+                    id: groupCol
+                    width: parent.width
+                    spacing: 12
 
-                delegate: NotificationCard {
-                    required property var modelData
-                    width: ListView.view ? ListView.view.width : 0
-                    notif: modelData
-                    compact: true
-                    borderColor: Theme.outline
-                    onDismissRequested: NotificationService.dismiss(modelData)
+                    Repeater {
+                        model: NotificationService.grouped
+
+                        delegate: NotificationGroup {
+                            required property var modelData
+                            width: groupCol.width
+                            group: modelData
+                        }
+                    }
                 }
             }
         }

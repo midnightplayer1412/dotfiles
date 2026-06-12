@@ -53,8 +53,9 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: "♪"
+                text: "\u{F075A}"   // nf-md-music
                 color: Theme.outline
+                font.family: Theme.glyphFont
                 font.pixelSize: 24
                 visible: !root.activePlayer?.trackArtUrl
                     || parent.children[0].status !== Image.Ready
@@ -103,9 +104,9 @@ Rectangle {
 
             Repeater {
                 model: [
-                    { glyph: "⏮", action: "previous", enabled: "canGoPrevious" },
-                    { glyph: "⏯", action: "togglePlaying", enabled: "canTogglePlaying" },
-                    { glyph: "⏭", action: "next", enabled: "canGoNext" }
+                    { glyph: "\u{F04AE}", action: "previous", enabled: "canGoPrevious" },        // skip-previous
+                    { glyph: "", action: "togglePlaying", enabled: "canTogglePlaying" },          // play/pause (state-aware)
+                    { glyph: "\u{F04AD}", action: "next", enabled: "canGoNext" }                  // skip-next
                 ]
 
                 delegate: Rectangle {
@@ -128,10 +129,16 @@ Rectangle {
 
                     Text {
                         anchors.centerIn: parent
-                        text: btn.modelData.glyph
+                        // play/pause reflects current playback state; others are static
+                        text: btn.modelData.action === "togglePlaying"
+                            ? (root.activePlayer?.playbackState === MprisPlaybackState.Playing
+                                ? "\u{F03E4}"   // pause
+                                : "\u{F040A}")  // play
+                            : btn.modelData.glyph
                         color: btnMouse.containsMouse && btn.isEnabled
                             ? Theme.primaryText
                             : (btn.isEnabled ? Theme.surfaceText : Theme.outline)
+                        font.family: Theme.glyphFont
                         font.pixelSize: 14
                     }
 
