@@ -50,6 +50,15 @@ PanelWindow {
     property real previousVolume: 0.5
     property real previousBrightness: 0.5
 
+    // Mute state — output sink and microphone source
+    property bool muted: false
+    property bool previousMuted: false
+    property bool micMuted: false
+    property bool previousMicMuted: false
+    // Skip showing the OSD for the very first poll so a muted mic/sink at
+    // login doesn't pop the HUD before the user has touched anything.
+    property bool seeded: false
+
     // Volume process
     property string volumeOutput: ""
 
@@ -69,21 +78,57 @@ PanelWindow {
             if (!output) return;
 
             var match = output.match(/Volume:\s+([\d.]+)/);
-            if (match) {
-                var newVolume = parseFloat(match[1]);
-                if (Math.abs(newVolume - hudWindow.previousVolume) > 0.01) {
-                    hudWindow.previousVolume = newVolume;
-                    hudWindow.volumeValue = newVolume;
-                    showHUD("volume");
-                } else {
-                    hudWindow.volumeValue = newVolume;
-                }
+            if (!match) return;
+
+            var newVolume = parseFloat(match[1]);
+            var isMuted = output.indexOf("[MUTED]") >= 0;
+
+            var volChanged = Math.abs(newVolume - hudWindow.previousVolume) > 0.01;
+            var muteChanged = isMuted !== hudWindow.previousMuted;
+
+            hudWindow.volumeValue = newVolume;
+            hudWindow.muted = isMuted;
+
+            if (hudWindow.seeded && (volChanged || muteChanged)) {
+                showHUD("volume");
             }
+            hudWindow.previousVolume = newVolume;
+            hudWindow.previousMuted = isMuted;
         }
     }
 
     Process {
         id: setVolumeProc
+    }
+
+    // Microphone mute process — source has no level bar, only a mute flag
+    property string micOutput: ""
+
+    Process {
+        id: getMicProc
+        command: ["wpctl", "get-volume", "@DEFAULT_AUDIO_SOURCE@"]
+
+        stdout: SplitParser {
+            onRead: data => {
+                hudWindow.micOutput += data;
+            }
+        }
+
+        onExited: code => {
+            var output = hudWindow.micOutput.trim();
+            hudWindow.micOutput = "";
+            if (!output) return;
+
+            var isMuted = output.indexOf("[MUTED]") >= 0;
+            var changed = isMuted !== hudWindow.previousMicMuted;
+
+            hudWindow.micMuted = isMuted;
+
+            if (hudWindow.seeded && changed) {
+                showHUD("mic");
+            }
+            hudWindow.previousMicMuted = isMuted;
+        }
     }
 
     // Brightness processes
@@ -140,7 +185,7 @@ PanelWindow {
                 if (Math.abs(newBrightness - hudWindow.previousBrightness) > 0.01) {
                     hudWindow.previousBrightness = newBrightness;
                     hudWindow.brightnessValue = newBrightness;
-                    showHUD("brightness");
+                    if (hudWindow.seeded) showHUD("brightness");
                 } else {
                     hudWindow.brightnessValue = newBrightness;
                 }
@@ -160,7 +205,10 @@ PanelWindow {
         repeat: true
         onTriggered: {
             getVolumeProc.running = true;
+            getMicProc.running = true;
             getBrightnessProc.running = true;
+            // After the first full poll cycle, allow the HUD to surface.
+            hudWindow.seeded = true;
         }
     }
 
@@ -184,11 +232,27 @@ PanelWindow {
         hideTimer.restart();
     }
 
-    // Current display values
-    property real displayValue: HudState.activeIndicator === "volume" ? volumeValue : brightnessValue
-    property string displayIcon: HudState.activeIndicator === "volume" ? "󰕾" : "󰃟"
-    property string displayPercent: Math.round(displayValue * 100) + "%"
-    property color indicatorColor: HudState.activeIndicator === "volume" ? Theme.primary : Theme.secondary
+    // ─── Display derivation ─────────────────────────────────────────
+    readonly property string indicator: HudState.activeIndicator
+    readonly property bool isMic: indicator === "mic"
+    readonly property bool isVolume: indicator === "volume"
+    readonly property bool isBrightness: indicator === "brightness"
+    readonly property bool volumeMuted: isVolume && muted
+
+    property real displayValue: isVolume ? volumeValue
+        : isBrightness ? brightnessValue : 0
+    property string displayIcon: {
+        if (isMic) return micMuted ? "\u{F036D}" : "\u{F036C}";  // mic-off / mic
+        if (isVolume) return muted ? "\u{F0581}" : "\u{F057E}";  // volume-off / volume-high
+        return "\u{F00DF}";                                       // brightness
+    }
+    property string displayPercent: volumeMuted ? "Muted" : (Math.round(displayValue * 100) + "%")
+    property string micLabel: micMuted ? "Microphone muted" : "Microphone on"
+    property color indicatorColor: {
+        if (isMic) return micMuted ? Theme.error : Theme.secondary;
+        if (volumeMuted) return Theme.error;
+        return isVolume ? Theme.primary : Theme.secondary;
+    }
 
     // Main container — centered horizontal pill
     Rectangle {
@@ -231,8 +295,6 @@ PanelWindow {
 
         Row {
             anchors.centerIn: parent
-            anchors.leftMargin: 20
-            anchors.rightMargin: 20
             spacing: 14
             width: parent.width - 40
 
@@ -247,61 +309,87 @@ PanelWindow {
                 horizontalAlignment: Text.AlignHCenter
             }
 
-            // Progress bar
-            Rectangle {
-                id: track
-                width: parent.width - 24 - 46 - 28  // icon - percent text - spacing
-                height: 8
-                radius: 4
-                color: Theme.surfaceContainer
+            // Content area — level bar + percent (volume/brightness) or
+            // a centered status label (microphone, which has no level).
+            Item {
+                width: parent.width - 24 - 14
+                height: 24
                 anchors.verticalCenter: parent.verticalCenter
 
+                // Progress bar
                 Rectangle {
-                    width: parent.width * hudWindow.displayValue
-                    height: parent.height
+                    id: track
+                    visible: !hudWindow.isMic
+                    width: parent.width - 56
+                    height: 8
                     radius: 4
+                    color: Theme.surfaceContainer
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Rectangle {
+                        width: parent.width * hudWindow.displayValue
+                        height: parent.height
+                        radius: 4
+                        color: hudWindow.indicatorColor
+                        opacity: hudWindow.volumeMuted ? 0.5 : 1.0
+
+                        Behavior on width {
+                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                        }
+                    }
+
+                    // Click to set value (only meaningful for volume/brightness)
+                    MouseArea {
+                        anchors.fill: parent
+                        onPositionChanged: (mouse) => {
+                            let value = Math.max(0, Math.min(1, mouse.x / width));
+                            if (hudWindow.isVolume)
+                                hudWindow.setVolume(value);
+                            else
+                                hudWindow.setBrightness(value);
+                        }
+                        onPressed: (mouse) => {
+                            let value = Math.max(0, Math.min(1, mouse.x / width));
+                            if (hudWindow.isVolume)
+                                hudWindow.setVolume(value);
+                            else
+                                hudWindow.setBrightness(value);
+                        }
+                    }
+                }
+
+                // Percentage / "Muted"
+                Text {
+                    visible: !hudWindow.isMic
+                    text: hudWindow.displayPercent
+                    font.family: "MonaspiceKr NF"
+                    font.pixelSize: 14
+                    color: hudWindow.volumeMuted ? Theme.error : Theme.primary
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 50
+                    horizontalAlignment: Text.AlignRight
+                }
+
+                // Microphone status label
+                Text {
+                    visible: hudWindow.isMic
+                    text: hudWindow.micLabel
+                    font.family: "MonaspiceKr NF"
+                    font.pixelSize: 14
                     color: hudWindow.indicatorColor
-
-                    Behavior on width {
-                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
-                    }
-                }
-
-                // Click to set value
-                MouseArea {
                     anchors.fill: parent
-                    onPositionChanged: (mouse) => {
-                        let value = Math.max(0, Math.min(1, mouse.x / width));
-                        if (HudState.activeIndicator === "volume")
-                            hudWindow.setVolume(value);
-                        else
-                            hudWindow.setBrightness(value);
-                    }
-                    onPressed: (mouse) => {
-                        let value = Math.max(0, Math.min(1, mouse.x / width));
-                        if (HudState.activeIndicator === "volume")
-                            hudWindow.setVolume(value);
-                        else
-                            hudWindow.setBrightness(value);
-                    }
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
-            }
-
-            // Percentage
-            Text {
-                text: hudWindow.displayPercent
-                font.family: "MonaspiceKr NF"
-                font.pixelSize: 14
-                color: Theme.primary
-                anchors.verticalCenter: parent.verticalCenter
-                width: 46
-                horizontalAlignment: Text.AlignRight
             }
         }
     }
 
     Component.onCompleted: {
         getVolumeProc.running = true;
+        getMicProc.running = true;
         getBrightnessProc.running = true;
     }
 }

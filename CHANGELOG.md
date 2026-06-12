@@ -52,6 +52,20 @@ grouped by date since this repo is unreleased / rolling.
   licensed Aichan sprite sheet via `AnimatedSprite` (art is git-ignored,
   not redistributed). Mounted one window per screen like the bar so the
   overlay reliably lands on the configured monitor (`MascotConfig.screenName`).
+- **hud** (quickshell) — output & microphone mute feedback on the volume
+  OSD. The bottom-center HUD now parses the `[MUTED]` flag from
+  `wpctl get-volume` and pops on a mute toggle even when the level is
+  unchanged: muted output shows a crossed-speaker icon
+  (nf-md-volume-off), a dimmed bar, and a "Muted" readout. The mic-mute
+  key (`XF86AudioMicMute` → `@DEFAULT_AUDIO_SOURCE@`) drives a distinct
+  OSD with a microphone icon and "Microphone muted" / "Microphone on"
+  label.
+
+#### Fixed
+- **hud** (quickshell) — HUD no longer flashes on login. A `seeded` flag
+  suppresses the OSD for the first poll cycle, so initial-state reads of
+  volume / brightness / mute don't surface the pill before any user
+  input.
 
 ### 2026-05-23
 
