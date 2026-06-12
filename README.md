@@ -65,6 +65,7 @@ Hyprland compositor config split into modular files:
 | Super + Shift + 1-0 | Move window to workspace |
 | Super + Arrow keys | Move focus |
 | Super + C | Toggle float & center |
+| Super + / | Keybinding cheatsheet |
 
 ---
 
@@ -76,6 +77,11 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
 - **Bar** — Left sidebar panel (48px wide) with workspaces, clock, battery
 - **Launcher** — Bottom-center search panel (600×400px), fuzzy app search
 - **HUD** — Right-edge panel, volume and brightness sliders (auto-hide)
+- **Cheatsheet** — Full-screen keybinding overlay (`Super + /`). Per-app tabs
+  (Hyprland, nvim, tmux, ghostty, yazi) highlight each app's bound keys on a
+  CSS-drawn keyboard; hover a key to see its binding in the detail bar.
+  Keymaps are JSON files under `cheatsheet/keymaps/` (one per app); the
+  Hyprland map is generated from `binds.conf` by `hypr/scripts/gen-keymap.sh`.
 - **Mascot** — Sprite-based desktop pet ("Oreo Cat") that roams the screen
   with gravity. Wanders with occasional sit/nap idles and a rare box-play
   routine; reacts to clicks (pet / hop), a fast cursor swipe (run away),

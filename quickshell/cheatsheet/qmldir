@@ -1,0 +1,8 @@
+singleton CheatsheetState 1.0 CheatsheetState.qml
+singleton KeymapData 1.0 KeymapData.qml
+KeyCap 1.0 KeyCap.qml
+Keyboard 1.0 Keyboard.qml
+AppTabs 1.0 AppTabs.qml
+DetailBar 1.0 DetailBar.qml
+CheatsheetWidget 1.0 CheatsheetWidget.qml
+Cheatsheet 1.0 Cheatsheet.qml

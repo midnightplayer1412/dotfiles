@@ -9,6 +9,29 @@ grouped by date since this repo is unreleased / rolling.
 ### 2026-06-12
 
 #### Added
+- **cheatsheet** (quickshell) — a full-screen keybinding cheatsheet overlay,
+  toggled with **Super + /** (Esc / click-outside to close). New
+  `quickshell/cheatsheet/` module following the Overview pattern (a
+  `CheatsheetState` singleton + a screen-gated `Variants` block in `shell.qml`):
+  - **Per-app tabs** — a vertical tab strip on the left, one tab per
+    application. Selecting a tab highlights that app's bound keys on a
+    CSS-drawn keyboard in the primary cyan→green gradient; unbound keys stay
+    dimmed. Hovering a key lifts the cap and lists its binding(s) — combo plus
+    description — in a fixed detail bar that wraps for keys with several binds.
+  - **Keyboard render** — beveled keycaps on a rounded chassis "deck", drawn
+    entirely in QML so every key recolors with the Matugen theme and
+    highlights independently (no image assets).
+  - **Data-driven keymaps** — one JSON file per app under
+    `cheatsheet/keymaps/` (uniform `{key, mods, category, desc, combo?}`
+    schema); dropping a new file adds a tab with no code change. Ships with
+    **Hyprland, nvim, tmux, ghostty, yazi**. Sequence/prefix binds (nvim
+    `<leader>`, tmux `C-a`) use the optional `combo` field to show the literal
+    sequence while glowing on the leading key.
+  - **Hyprland keymap auto-generated** — `hypr/scripts/gen-keymap.sh` parses
+    `binds.conf` into `keymaps/hyprland.json`, reading human descriptions from
+    `# @cheat <Category>: <Description>` trailing comments (dispatcher-derived
+    fallback otherwise), skipping submap and mouse binds. Covered by
+    `hypr/scripts/test-gen-keymap.sh`.
 - **mascot** (quickshell) — a big behavior expansion for the desktop pet,
   using the rest of the Aichan sprite sheet (sprite art by **Aichan**, not
   redistributed — see licensing note below):
