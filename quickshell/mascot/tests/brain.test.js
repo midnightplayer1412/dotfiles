@@ -241,3 +241,28 @@ test("nearestEdge returns whichever horizontal edge is closer", () => {
 test("nearestEdge at the midpoint picks the left edge", () => {
     assert.equal(B.nearestEdge(910, 0, 1820), 0);      // exactly halfway -> min
 });
+
+// --- Routine assembly (randomized box play) ---------------------------------
+
+test("assembleRoutine brackets the flattened antic groups with intro/outro", () => {
+    const intro = { s: "jump_in_box", d: "anim" };
+    const outro = { s: "jump_out_box", d: "anim" };
+    const groups = [
+        [{ s: "play_box", d: 1000 }],
+        [{ s: "ear_up", d: "anim" }, { s: "scan", d: 1500 }, { s: "ear_down", d: "anim" }]
+    ];
+    assert.deepEqual(B.assembleRoutine(intro, groups, outro), [
+        { s: "jump_in_box", d: "anim" },
+        { s: "play_box", d: 1000 },
+        { s: "ear_up", d: "anim" },
+        { s: "scan", d: 1500 },
+        { s: "ear_down", d: "anim" },
+        { s: "jump_out_box", d: "anim" }
+    ]);
+});
+
+test("assembleRoutine with no antics is just intro then outro", () => {
+    const intro = { s: "in", d: "anim" };
+    const outro = { s: "out", d: "anim" };
+    assert.deepEqual(B.assembleRoutine(intro, [], outro), [intro, outro]);
+});

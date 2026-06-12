@@ -32,6 +32,7 @@ Item {
     // edge and cleared on the falling edge. Each is a brain.js "player" or null.
     property var    action: null
     property string actionName: ""
+    property var    actionSteps: null   // steps array the current action is playing
     property var    modePlayer: null
     property string modeName: ""
     property bool   _animFinished: false   // set by the sprite, consumed next tick
@@ -81,14 +82,31 @@ Item {
         _notifPrev = notifCount;
     }
 
-    // Capture a transient scripted action (pet, alert, ...). Preempts any current
+    // Play a prebuilt step array as the current action. Preempts any current
     // action; falls back to mode/base when it finishes.
+    function triggerActionSteps(name, steps) {
+        root.actionName = name;
+        root.actionSteps = steps;
+        root.action = Brain.seqEnter(steps, 0, Math.random());
+    }
+
+    // Capture a transient scripted action by name (pet, alert, ...).
     function triggerAction(name) {
         const steps = MascotConfig.actions[name];
-        if (!steps)
-            return;
-        root.actionName = name;
-        root.action = Brain.seqEnter(steps, 0, Math.random());
+        if (steps)
+            triggerActionSteps(name, steps);
+    }
+
+    // Build a fresh, randomized box routine: jump in, a random count of antics
+    // (random order, drawn from the pool), jump out. So every visit differs.
+    function buildBoxSteps() {
+        const pool = MascotConfig.boxAntics;
+        const n = MascotConfig.boxAnticMin
+            + Math.floor(Math.random() * (MascotConfig.boxAnticMax - MascotConfig.boxAnticMin + 1));
+        const groups = [];
+        for (let i = 0; i < n; i++)
+            groups.push(pool[Math.floor(Math.random() * pool.length)]);
+        return Brain.assembleRoutine(MascotConfig.boxIntro, groups, MascotConfig.boxOutro);
     }
 
     // A startled vertical hop (double-click). Reuses the gravity integrator: an
@@ -177,7 +195,7 @@ Item {
 
             // Active action owns the frame and pauses movement.
             if (root.action !== null) {
-                const ra = Brain.seqTick(root.action, MascotConfig.actions[root.actionName],
+                const ra = Brain.seqTick(root.action, root.actionSteps,
                                          16, fin, Math.random());
                 root.action = ra.player;   // null when the sequence ends
                 // A finished idle behavior (sit/nap) hands control back to the
@@ -214,13 +232,16 @@ Item {
                     return;
                 }
                 // Choose what to do during this dwell: plain idle, or an idle
-                // behavior sequence (sit/nap).
+                // behavior sequence (sit / nap / box).
                 const behavior = Brain.pickIdle(MascotConfig.idleWeights, Math.random());
                 if (behavior === "idle") {
                     root.paused = true;
                     pauseTimer.interval = MascotConfig.pauseMinMs
                         + Math.floor(Math.random() * (MascotConfig.pauseMaxMs - MascotConfig.pauseMinMs));
                     pauseTimer.restart();
+                } else if (behavior === "box") {
+                    root._idleAction = true;
+                    triggerActionSteps("box", buildBoxSteps());   // fresh random routine
                 } else {
                     root._idleAction = true;
                     triggerAction(behavior);

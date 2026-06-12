@@ -121,6 +121,17 @@ function exceedsSwipeSpeed(dist, spanMs, minSpanMs, speed) {
     return spanMs >= minSpanMs && dist >= speed * spanMs;
 }
 
+// Flatten randomly-chosen antic groups between a fixed intro and outro step
+// into one sequence. Used to build a varied box-play routine each visit.
+function assembleRoutine(intro, groups, outro) {
+    const steps = [intro];
+    for (let i = 0; i < groups.length; i++)
+        for (let j = 0; j < groups[i].length; j++)
+            steps.push(groups[i][j]);
+    steps.push(outro);
+    return steps;
+}
+
 // The closer horizontal edge to `pos` — where the cat runs to hide. Ties to min.
 function nearestEdge(pos, minX, maxX) {
     return pos <= (minX + maxX) / 2 ? minX : maxX;
@@ -162,6 +173,6 @@ if (typeof module !== "undefined" && module.exports) {
         clamp, walkStep, gravityStep, chooseTarget,
         isLowBattery, notificationArrived, resolveState,
         seqEnter, seqTick, exceedsDragThreshold, pickIdle, fleeTarget,
-        exceedsSwipeSpeed, parseProcStat, cpuBusy, nearestEdge
+        exceedsSwipeSpeed, parseProcStat, cpuBusy, nearestEdge, assembleRoutine
     };
 }

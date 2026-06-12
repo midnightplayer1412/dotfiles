@@ -58,7 +58,16 @@ QtObject {
         "prepare_stealth":{ "y": 320, "n": 3, "dur": 110, "loop": false },
         "stealth":       { "y": 352, "n": 7, "dur": 130, "loop": true },
         "cancel_stealth":{ "y": 384, "n": 3, "dur": 110, "loop": false },
-        "attack":        { "y": 448, "n": 13, "dur": 55, "loop": false }
+        "attack":        { "y": 448, "n": 13, "dur": 55, "loop": false },
+        // Box play (Phase 5) — jump in, mess about, jump out.
+        "jump_in_box":   { "y": 512, "n": 8, "dur": 65,  "loop": false },
+        "push_hand_up":  { "y": 544, "n": 3, "dur": 120, "loop": false },
+        "play_box":      { "y": 576, "n": 5, "dur": 150, "loop": true },
+        "push_hand_down":{ "y": 608, "n": 3, "dur": 120, "loop": false },
+        "ear_up":        { "y": 640, "n": 2, "dur": 130, "loop": false },
+        "scan":          { "y": 672, "n": 4, "dur": 150, "loop": true },
+        "ear_down":      { "y": 704, "n": 2, "dur": 130, "loop": false },
+        "jump_out_box":  { "y": 736, "n": 7, "dur": 65,  "loop": false }
     })
 
     // --- Sequence definitions ---
@@ -85,6 +94,20 @@ QtObject {
                    { "s": "sleep_idle",     "d": [10000, 18000] },
                    { "s": "sleep_to_stand", "d": "anim" } ]
     })
+
+    // Box play (Phase 5) is assembled fresh each visit: jump in, then a random
+    // count of antics drawn from the pool below (in random order), then jump
+    // out — so no two box visits play the same. See MascotBrain.buildBoxSteps.
+    readonly property var boxIntro: ({ "s": "jump_in_box",  "d": "anim" })
+    readonly property var boxOutro: ({ "s": "jump_out_box", "d": "anim" })
+    readonly property int boxAnticMin: 3
+    readonly property int boxAnticMax: 6
+    readonly property var boxAntics: [
+        [ { "s": "play_box", "d": [800, 2200] } ],
+        [ { "s": "push_hand_up",   "d": "anim" }, { "s": "play_box", "d": [600, 1400] } ],
+        [ { "s": "push_hand_down", "d": "anim" }, { "s": "play_box", "d": [600, 1400] } ],
+        [ { "s": "ear_up", "d": "anim" }, { "s": "scan", "d": [1000, 2200] }, { "s": "ear_down", "d": "anim" } ]
+    ]
     readonly property var modes: ({
         "low_battery": [ { "s": "sleep_down", "d": "anim" }, { "s": "low_battery", "d": "loop" } ],
         // Hide/crouch while the focused window is fullscreen (Phase 4).
@@ -99,8 +122,9 @@ QtObject {
     // stand-and-wait; the others are the action sequences above. Weights are
     // relative (need not sum to 1).
     readonly property var idleWeights: [
-        { "name": "idle", "weight": 7 },
-        { "name": "sit",  "weight": 2 },
-        { "name": "nap",  "weight": 1 }
+        { "name": "idle", "weight": 14 },  // most stops are just a plain stand-still
+        { "name": "sit",  "weight": 4 },
+        { "name": "nap",  "weight": 2 },
+        { "name": "box",  "weight": 1 }    // rare treat (~5%)
     ]
 }
