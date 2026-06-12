@@ -1,0 +1,21 @@
+{
+  "app": "yazi",
+  "id": "yazi",
+  "binds": [
+    { "key": "K", "mods": [], "category": "Navigate", "desc": "Move cursor up" },
+    { "key": "J", "mods": [], "category": "Navigate", "desc": "Move cursor down" },
+    { "key": "H", "mods": [], "category": "Navigate", "desc": "Go to parent directory" },
+    { "key": "L", "mods": [], "category": "Navigate", "desc": "Enter directory / open" },
+    { "key": "RETURN", "mods": [], "category": "Navigate", "desc": "Open file" },
+    { "key": "space", "mods": [], "category": "Select", "desc": "Toggle selection" },
+    { "key": "Y", "mods": [], "category": "File", "desc": "Yank (copy)" },
+    { "key": "X", "mods": [], "category": "File", "desc": "Yank (cut)" },
+    { "key": "P", "mods": [], "category": "File", "desc": "Paste" },
+    { "key": "D", "mods": [], "category": "File", "desc": "Trash" },
+    { "key": "A", "mods": [], "category": "File", "desc": "Create file/dir" },
+    { "key": "R", "mods": [], "category": "File", "desc": "Rename" },
+    { "key": "slash", "mods": [], "category": "Search", "desc": "Filter / search" },
+    { "key": "period", "mods": [], "category": "View", "desc": "Toggle hidden files" },
+    { "key": "Q", "mods": [], "category": "App", "desc": "Quit" }
+  ]
+}

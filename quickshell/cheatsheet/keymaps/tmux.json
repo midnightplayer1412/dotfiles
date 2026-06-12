@@ -1,0 +1,20 @@
+{
+  "app": "tmux",
+  "id": "tmux",
+  "binds": [
+    { "key": "A", "mods": ["CTRL"], "category": "Prefix", "desc": "Prefix — press before the keys below" },
+    { "key": "backslash", "mods": [], "combo": "C-a |", "category": "Split", "desc": "Split pane horizontally" },
+    { "key": "minus", "mods": [], "combo": "C-a -", "category": "Split", "desc": "Split pane vertically" },
+    { "key": "R", "mods": [], "combo": "C-a r", "category": "App", "desc": "Reload config" },
+    { "key": "H", "mods": [], "combo": "C-a h", "category": "Pane", "desc": "Select pane left" },
+    { "key": "J", "mods": [], "combo": "C-a j", "category": "Pane", "desc": "Select pane down" },
+    { "key": "K", "mods": [], "combo": "C-a k", "category": "Pane", "desc": "Select pane up" },
+    { "key": "L", "mods": [], "combo": "C-a l", "category": "Pane", "desc": "Select pane right" },
+    { "key": "H", "mods": [], "combo": "C-a H", "category": "Resize", "desc": "Resize pane left (repeatable)" },
+    { "key": "J", "mods": [], "combo": "C-a J", "category": "Resize", "desc": "Resize pane down (repeatable)" },
+    { "key": "K", "mods": [], "combo": "C-a K", "category": "Resize", "desc": "Resize pane up (repeatable)" },
+    { "key": "L", "mods": [], "combo": "C-a L", "category": "Resize", "desc": "Resize pane right (repeatable)" },
+    { "key": "V", "mods": [], "combo": "copy-mode v", "category": "Copy", "desc": "Begin selection" },
+    { "key": "Y", "mods": [], "combo": "copy-mode y", "category": "Copy", "desc": "Copy selection" }
+  ]
+}

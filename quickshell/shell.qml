@@ -8,6 +8,7 @@ import "notifications" as Notifications
 import "calendar" as Calendar
 import "connection" as Connection
 import "overview" as Overview
+import "cheatsheet" as Cheatsheet
 import "wallpaper" as Wallpaper
 import "mascot" as Mascot
 
@@ -33,6 +34,11 @@ ShellRoot {
     GlobalShortcut {
         name: "overview_toggle"
         onPressed: Overview.OverviewState.toggle(focusedScreen())
+    }
+
+    GlobalShortcut {
+        name: "cheatsheet_toggle"
+        onPressed: Cheatsheet.CheatsheetState.toggle(focusedScreen())
     }
 
     // Status bar on each screen
@@ -127,6 +133,21 @@ ShellRoot {
         }
 
         Overview.Overview {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Keybinding cheatsheet — fullscreen overlay on target screen when visible
+    Variants {
+        model: {
+            if (Cheatsheet.CheatsheetState.visible && Cheatsheet.CheatsheetState.targetScreen) {
+                return [Cheatsheet.CheatsheetState.targetScreen];
+            }
+            return [];
+        }
+
+        Cheatsheet.Cheatsheet {
             required property var modelData
             screen: modelData
         }
