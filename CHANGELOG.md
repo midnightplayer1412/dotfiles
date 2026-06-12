@@ -6,6 +6,36 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-06-12
+
+#### Added
+- **mascot** (quickshell) — a big behavior expansion for the desktop pet,
+  using the rest of the Aichan sprite sheet (sprite art by **Aichan**, not
+  redistributed — see licensing note below):
+  - **Idle personality** — at each wander stop the cat usually just stands,
+    but sometimes **sits** or takes a long **nap** (cycle back to standing
+    afterwards), chosen by a weighted picker.
+  - **Interactions** — single-click **pets**, double-click makes it **hop**,
+    a fast cursor swipe scares it into **running away** (from its centre,
+    either direction), and drag still picks it up / drops it. A drag-distance
+    threshold means a click is no longer misread as a drag.
+  - **System reactions** — high **CPU load** makes it run (sampled from
+    `/proc/stat` deltas), a **fullscreen** window makes it run to the nearest
+    corner and crouch in **stealth**, and a new **notification** triggers an
+    **attack** swat.
+  - **Box play** — a rare idle treat: the cat jumps into a box, does a
+    randomized mix of antics (paws, peeking, scanning), and jumps out — built
+    fresh each time so no two visits match.
+
+#### Changed
+- **mascot** (quickshell) — internals generalized into a data-driven
+  **sequence engine**: all scripted animation is now described as data in
+  `MascotConfig` and driven by pure `brain.js` helpers, with `MascotSprite`
+  reduced to a dumb clip player. System signals moved into a new
+  `MascotSignals` singleton. `brain.js` unit coverage grew from 12 to 37
+  `node:test` cases; all 24 sprite-sheet animation regions verified against
+  the actual pixels.
+
 ### 2026-06-11
 
 #### Added
