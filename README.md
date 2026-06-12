@@ -78,6 +78,12 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
 - **Bar** — Left sidebar panel (48px wide) with workspaces, clock, battery
 - **Launcher** — Bottom-center search panel (600×400px), fuzzy app search
 - **HUD** — Right-edge panel, volume and brightness sliders (auto-hide)
+- **Connection Hub** — Top-right drawer with Wi-Fi / Bluetooth / Audio / VPN
+  tabs. The **Audio tab** is a full mixer: a master slider, output-device
+  switching, and a **per-app volume mixer** — each playing app gets a live
+  slider, mute, and an inline picker to route it to a different output. Volume
+  and mute bind directly to the native PipeWire service (`Quickshell.Services.
+  Pipewire`); routing uses `pactl move-sink-input`.
 - **Notifications** — Popup toasts plus a right-side center drawer (`Super + N`)
   with an MPRIS media player. Notifications are **grouped by app** (collapsible,
   with a count badge), show a relative **timestamp**, and can be **swiped away**
