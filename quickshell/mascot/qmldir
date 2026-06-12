@@ -1,4 +1,5 @@
 singleton MascotConfig 1.0 MascotConfig.qml
+singleton MascotSignals 1.0 MascotSignals.qml
 MascotSprite 1.0 MascotSprite.qml
 MascotBrain 1.0 MascotBrain.qml
 Mascot 1.0 Mascot.qml
