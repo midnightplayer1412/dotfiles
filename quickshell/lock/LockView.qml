@@ -19,11 +19,11 @@ Item {
         id: wpState
         path: Quickshell.env("HOME") + "/.config/quickshell/wallpaper-state.json"
         watchChanges: true
-        JsonAdapter { id: wp; property string currentPath: "" }
+        JsonAdapter { id: wp; property string current: "" }
     }
     readonly property string wallpaper:
-        LockConfig.wallpaperSource === "current-desktop" && wp.currentPath !== ""
-            ? wp.currentPath
+        LockConfig.wallpaperSource === "current-desktop" && wp.current !== ""
+            ? wp.current
             : LockConfig.wallpaperPath
 
     // Shared clock tick.

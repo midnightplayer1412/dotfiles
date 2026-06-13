@@ -37,6 +37,10 @@ grouped by date since this repo is unreleased / rolling.
   `VolumeSlider` removed), so an Appearance change re-skins the whole shell.
 
 #### Fixed
+- **lock** (quickshell) — the lockscreen's "current desktop" wallpaper source now
+  works. `LockView` read the wallpaper-state key as `currentPath`, but
+  `WallpaperService` writes it as `current`; the mismatch always resolved to an
+  empty string and silently fell back to the static lock image.
 - **hypr** — `autostart` now `pkill`s both `qs` and `quickshell` before
   relaunching, so a config reload can no longer leave duplicate shell instances
   (which double-registered global shortcuts).
