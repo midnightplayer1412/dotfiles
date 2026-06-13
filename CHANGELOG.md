@@ -9,6 +9,26 @@ grouped by date since this repo is unreleased / rolling.
 ### 2026-06-13
 
 #### Added
+- **bar** (quickshell) — the status **bar is now fully configurable** from a new
+  Settings → **Bar** category. Dock it to any **screen edge**
+  (left/right/top/bottom) with orientation-aware widgets. A **drag-drop board**
+  assigns widgets to three zones (start/center/end) and reorders within a zone,
+  with a **Hidden** pool; the center zone is locked to the bar's true center so it
+  never drifts when a side widget changes width. Appearance sliders tune
+  **thickness**, background **opacity**, **corner radius**, and **end padding**
+  (top/bottom or left/right by orientation); **Reset to defaults** restores a
+  known-good baseline. New widgets join the original Workspaces / Clock / Battery:
+  **System Tray** (StatusNotifierItem), **Volume** (scroll to adjust, click →
+  mixer), **Network** (Wi-Fi + Bluetooth status → hub), **Resources** (CPU/RAM
+  from `/proc`), **Media** (MPRIS transport with a scrolling track title), and
+  **App Name** (focused window, resolved to the friendly desktop-entry name,
+  ellipsised). Layout is a data-driven, reconcilable widget model in `BarConfig`,
+  rendered by `BarZone`; persists to `~/.config/quickshell/bar-config.json`.
+  Bar widget icons share a `Theme.barIconSize`.
+- **ui** (quickshell) — `Ui.Slider` now shows a **value bubble** on hover and
+  during drag that follows the knob. Normalised sliders (volume, opacity, dim)
+  read as a percentage; wider ranges (thickness, radius, …) read as integers.
+  Applies shell-wide — bar, lock screen, and the audio mixer.
 - **lock** (quickshell) — a dedicated Quickshell **lockscreen** replacing
   hyprlock as the primary lock (`Super + Escape`); hyprlock kept as the
   `Super + Shift + Escape` fallback. A separate instance (`lock-screen.qml`,

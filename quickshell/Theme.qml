@@ -28,6 +28,7 @@ Singleton {
     readonly property int barMargin: 4
     readonly property int barRadius: 12
     readonly property int iconSize: 20
+    readonly property int barIconSize: 22   // standalone bar widget icons/glyphs (tray, volume, network)
     readonly property int workspaceDotSize: 8
     readonly property int workspaceDotActiveSize: 8
 

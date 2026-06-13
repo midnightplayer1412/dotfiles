@@ -78,7 +78,16 @@ Hyprland compositor config split into modular files:
 Qt6 QML-based UI shell. Entry point: `shell.qml`.
 
 **Components:**
-- **Bar** — Left sidebar panel (48px wide) with workspaces, clock, battery
+- **Bar** — A fully configurable panel. Dock it to any **screen edge**
+  (left / right / top / bottom); every widget is orientation-aware. A Settings →
+  **Bar** drag-drop board places widgets across three zones (start / center / end,
+  plus a **Hidden** pool) and reorders within a zone — and the center zone stays
+  locked to the bar's true center so it never drifts. Appearance sliders set
+  thickness, background opacity, corner radius, and end padding, with **Reset to
+  defaults**. Widgets: Workspaces, Clock, Battery, **System Tray**, **Volume**
+  (scroll / click → mixer), **Network** (Wi-Fi + Bluetooth → hub), **Resources**
+  (CPU / RAM), **Media** (MPRIS transport with a scrolling title), and **App
+  Name** (focused window). Persists to `~/.config/quickshell/bar-config.json`.
 - **Launcher** — Search panel (`Super + Space`) with **fuzzy** app search ranked
   by **frecency** (your most-used float up). Empty query shows a **Recent**
   section/strip then all apps. Modes: `/` commands, `!` shell, `=` calculator
@@ -120,7 +129,9 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   with live previews — the choice is global and re-skins every component across
   the shell instantly. It also sets the **theme color** — keep Matugen's
   wallpaper-derived palette, or pick a fixed seed color (swatch or hex) that
-  retints the whole shell plus tmux/yazi/hyprlock. **Lock Screen** is a
+  retints the whole shell plus tmux/yazi/hyprlock. **Bar** configures the status
+  bar — screen edge, appearance (thickness / opacity / radius / padding), and a
+  drag-drop widget layout, with reset-to-defaults. **Lock Screen** is a
   live-preview editor that tunes the
   lockscreen config and persists it (lazy-loaded wallpaper grid). **Connection
   Hub** lets you drag to reorder the hub tabs and toggle each on/off, with a live
@@ -134,7 +145,9 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   the `UiStyle` singleton (`~/.config/quickshell/ui-style.json`), so any
   component using them follows the global Appearance setting. Variants are plain
   files (`ToggleCapsule/Square/Notch`, `SliderThin/Thick`) sharing one API —
-  adding a style is one file + one line. `Ui.Dropdown` is a single themed
+  adding a style is one file + one line. Sliders show a **value bubble** on
+  hover/drag (a percentage for 0–1 sliders, an integer otherwise). `Ui.Dropdown`
+  is a single themed
   dropdown (Matugen colors, Nerd Font chevron, themed popup list) that replaces
   the system `ComboBox` shell-wide. Consumed by the Settings panel, the
   WiFi/Bluetooth toggles, audio sliders, and the wallpaper picker. `Ui.Icon`

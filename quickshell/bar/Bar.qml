@@ -25,50 +25,55 @@ PanelWindow {
     }
 
     // Thickness lives on the cross-axis; the spanned axis is sized by anchors.
-    implicitWidth: barWindow.horizontal ? 0 : Theme.barWidth
-    implicitHeight: barWindow.horizontal ? Theme.barWidth : 0
+    implicitWidth: barWindow.horizontal ? 0 : BarConfig.thickness
+    implicitHeight: barWindow.horizontal ? BarConfig.thickness : 0
     exclusionMode: ExclusionMode.Auto
     color: "transparent"
 
     Rectangle {
         anchors.fill: parent
-        radius: Theme.barRadius
-        color: Theme.surface
+        radius: BarConfig.radius
+        // Fade only the background (not the widgets) via the surface colour's alpha.
+        color: Qt.rgba(Theme.surface.r, Theme.surface.g, Theme.surface.b, BarConfig.bgOpacity)
 
-        // start ─ spacer ─ center ─ spacer ─ end, flipped Row/Column with the bar.
-        GridLayout {
+        // Content area with end padding along the bar's length; the thin
+        // cross-axis keeps a fixed 4px inset.
+        Item {
+            id: content
             anchors.fill: parent
-            anchors.margins: 4
-            rows: barWindow.horizontal ? 1 : -1
-            columns: barWindow.horizontal ? -1 : 1
-            rowSpacing: 4
-            columnSpacing: 4
+            anchors.leftMargin:   barWindow.horizontal ? BarConfig.endPadding : 4
+            anchors.rightMargin:  barWindow.horizontal ? BarConfig.endPadding : 4
+            anchors.topMargin:    barWindow.horizontal ? 4 : BarConfig.endPadding
+            anchors.bottomMargin: barWindow.horizontal ? 4 : BarConfig.endPadding
 
+            // Three zones positioned by explicit x/y (NOT conditional anchors —
+            // those leave stale anchors from the other orientation that don't
+            // clear, which mis-placed the end zone off-screen). start pins to the
+            // leading edge, end to the trailing edge, center locked to the bar's
+            // TRUE center so it never drifts when a side zone changes width.
             BarZone {
+                id: startZone
                 zone: "start"
                 horizontal: barWindow.horizontal
                 barScreen: barWindow.screen
-                Layout.alignment: Qt.AlignCenter
-            }
-            Item {
-                Layout.fillWidth: barWindow.horizontal
-                Layout.fillHeight: !barWindow.horizontal
+                x: barWindow.horizontal ? 0 : (content.width - width) / 2
+                y: barWindow.horizontal ? (content.height - height) / 2 : 0
             }
             BarZone {
+                id: centerZone
                 zone: "center"
                 horizontal: barWindow.horizontal
                 barScreen: barWindow.screen
-                Layout.alignment: Qt.AlignCenter
-            }
-            Item {
-                Layout.fillWidth: barWindow.horizontal
-                Layout.fillHeight: !barWindow.horizontal
+                x: (content.width - width) / 2
+                y: (content.height - height) / 2
             }
             BarZone {
+                id: endZone
                 zone: "end"
                 horizontal: barWindow.horizontal
                 barScreen: barWindow.screen
-                Layout.alignment: Qt.AlignCenter
+                x: barWindow.horizontal ? (content.width - width) : (content.width - width) / 2
+                y: barWindow.horizontal ? (content.height - height) / 2 : (content.height - height)
             }
         }
     }
