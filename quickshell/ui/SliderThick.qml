@@ -29,6 +29,12 @@ Item {
         sl.moved(Math.max(from, Math.min(to, v)));
     }
 
+    // Bubble label: a normalised slider (range ≤ 1, e.g. volume/opacity/dim)
+    // reads as a percentage; wider ranges (thickness, radius, …) read as integers.
+    function _fmt(v) {
+        return (to - from) <= 1 ? Math.round(v * 100) + "%" : Math.round(v).toString();
+    }
+
     Rectangle {
         id: track
         anchors.fill: parent
@@ -67,5 +73,29 @@ Item {
         onPressed: (m) => sl._applyFrac(m.x / width)
         onPositionChanged: (m) => { if (pressed) sl._applyFrac(m.x / width); }
         onReleased: sl.released()
+    }
+
+    // Value bubble — follows the knob, shown on hover or drag.
+    Rectangle {
+        id: bubble
+        visible: drag.containsMouse || drag.pressed
+        z: 100
+        radius: 5
+        color: Theme.surfaceContainer
+        border.color: Theme.outline
+        border.width: 1
+        width: bubbleText.implicitWidth + 12
+        height: bubbleText.implicitHeight + 6
+        x: Math.max(0, Math.min(sl.width - width, knob.x + knob.width / 2 - width / 2))
+        y: -height - 4
+        Text {
+            id: bubbleText
+            anchors.centerIn: parent
+            text: sl._fmt(sl.value)
+            color: Theme.surfaceText
+            font.family: Theme.fontFamily
+            font.pixelSize: 11
+            font.bold: true
+        }
     }
 }
