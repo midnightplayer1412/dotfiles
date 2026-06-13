@@ -37,6 +37,9 @@ grouped by date since this repo is unreleased / rolling.
   `VolumeSlider` removed), so an Appearance change re-skins the whole shell.
 
 #### Fixed
+- **cheatsheet** (quickshell) — regenerated the Hyprland keymap so the new
+  `Super + Backspace` (Settings panel) and `Super + Shift + Escape` (hyprlock
+  fallback) binds appear in the cheatsheet.
 - **lock** (quickshell) — the lockscreen's "current desktop" wallpaper source now
   works. `LockView` read the wallpaper-state key as `currentPath`, but
   `WallpaperService` writes it as `current`; the mismatch always resolved to an
