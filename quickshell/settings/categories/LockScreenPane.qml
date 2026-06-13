@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import "../../lock" as Lock
 import "../../wallpaper" as Wp
 import "../../ui" as Ui
@@ -121,11 +120,11 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 Text { text: "Time format"; color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 13; Layout.fillWidth: true }
-                ComboBox {
+                Ui.Dropdown {
                     model: [ "24-hour", "12-hour" ]
                     currentIndex: Lock.LockConfig.clockFormat === "12h" ? 1 : 0
-                    onActivated: {
-                        Lock.LockConfig.clockFormat = currentIndex === 1 ? "12h" : "24h";
+                    onActivated: (i) => {
+                        Lock.LockConfig.clockFormat = i === 1 ? "12h" : "24h";
                         Lock.LockConfig.save();
                     }
                 }
@@ -137,16 +136,17 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 Text { text: "Date format"; color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 13; Layout.fillWidth: true }
-                ComboBox {
+                Ui.Dropdown {
                     id: dateCombo
+                    Layout.preferredWidth: 160
                     model: [ "dddd, MMMM d", "ddd MMM d", "yyyy-MM-dd", "MMMM d, yyyy" ]
-                    // Live binding so the combo re-syncs after hot-reload / external edits.
+                    // Live binding so the dropdown re-syncs after hot-reload / external edits.
                     currentIndex: {
                         const i = model.indexOf(Lock.LockConfig.dateFormat);
                         return i >= 0 ? i : 0;
                     }
-                    onActivated: {
-                        Lock.LockConfig.dateFormat = model[currentIndex];
+                    onActivated: (i) => {
+                        Lock.LockConfig.dateFormat = model[i];
                         Lock.LockConfig.save();
                     }
                 }
@@ -169,12 +169,13 @@ Item {
                     font.family: Theme.fontFamily; font.pixelSize: 13
                     Layout.fillWidth: true
                 }
-                ComboBox {
+                Ui.Dropdown {
                     id: srcCombo
+                    Layout.preferredWidth: 200
                     model: [ "Lock image", "Current desktop wallpaper" ]
                     currentIndex: Lock.LockConfig.wallpaperSource === "current-desktop" ? 1 : 0
-                    onActivated: {
-                        Lock.LockConfig.wallpaperSource = currentIndex === 1 ? "current-desktop" : "lock-image";
+                    onActivated: (i) => {
+                        Lock.LockConfig.wallpaperSource = i === 1 ? "current-desktop" : "lock-image";
                         Lock.LockConfig.save();
                     }
                 }

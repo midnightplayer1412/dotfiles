@@ -1,9 +1,9 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import "../ui" as Ui
 import ".."
 
 PanelWindow {
@@ -72,12 +72,10 @@ PanelWindow {
                 }
                 Item { Layout.fillWidth: true }
 
-                ComboBox {
-                    id: intervalCombo
+                Ui.Dropdown {
                     Layout.preferredWidth: 110
                     Layout.preferredHeight: Theme.wallpaperPickerRowHeight
                     textRole: "label"
-                    valueRole: "s"
                     model: [
                         { label: "1 min",  s: 60 },
                         { label: "5 min",  s: 300 },
@@ -91,79 +89,6 @@ PanelWindow {
                         return 1;
                     }
                     onActivated: (i) => WallpaperService.setInterval(model[i].s)
-
-                    background: Rectangle {
-                        radius: 6
-                        color: Theme.surfaceContainer
-                        border.color: intervalCombo.hovered || intervalCombo.popup.visible
-                                      ? Theme.primary : Theme.outline
-                        border.width: 1
-                        Behavior on border.color { ColorAnimation { duration: 120 } }
-                    }
-
-                    contentItem: Text {
-                        text: intervalCombo.currentText
-                        color: Theme.surfaceText
-                        font.family: Theme.wallpaperPickerFontFamily
-                        font.pixelSize: Theme.wallpaperPickerBodySize
-                        verticalAlignment: Text.AlignVCenter
-                        leftPadding: 12
-                        rightPadding: 22
-                        elide: Text.ElideRight
-                    }
-
-                    indicator: Text {
-                        x: intervalCombo.width - width - 10
-                        y: (intervalCombo.height - height) / 2
-                        text: "▾"
-                        color: intervalCombo.popup.visible ? Theme.primary : Theme.surfaceText
-                        font.family: Theme.wallpaperPickerFontFamily
-                        font.pixelSize: Theme.wallpaperPickerBodySize
-                    }
-
-                    popup: Popup {
-                        y: intervalCombo.height + 4
-                        width: intervalCombo.width
-                        implicitHeight: contentItem.implicitHeight + 8
-                        padding: 4
-
-                        background: Rectangle {
-                            color: Theme.surfaceContainer
-                            radius: 8
-                            border.color: Theme.outline
-                            border.width: 1
-                        }
-
-                        contentItem: ListView {
-                            implicitHeight: contentHeight
-                            model: intervalCombo.popup.visible ? intervalCombo.delegateModel : null
-                            currentIndex: intervalCombo.highlightedIndex
-                            clip: true
-                            spacing: 2
-                        }
-                    }
-
-                    delegate: ItemDelegate {
-                        width: intervalCombo.width - 8
-                        height: 26
-                        padding: 0
-
-                        contentItem: Text {
-                            text: modelData.label
-                            color: parent.highlighted ? Theme.primary : Theme.surfaceText
-                            font.family: Theme.wallpaperPickerFontFamily
-                            font.pixelSize: Theme.wallpaperPickerBodySize
-                            verticalAlignment: Text.AlignVCenter
-                            leftPadding: 10
-                        }
-
-                        background: Rectangle {
-                            color: parent.highlighted ? Theme.surface : "transparent"
-                            radius: 4
-                        }
-
-                        highlighted: intervalCombo.highlightedIndex === index
-                    }
                 }
 
                 RowLayout {

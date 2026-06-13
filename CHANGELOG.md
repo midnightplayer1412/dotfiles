@@ -36,6 +36,12 @@ grouped by date since this repo is unreleased / rolling.
   (master + per-app) sliders were migrated onto these primitives (old
   `VolumeSlider` removed), so an Appearance change re-skins the whole shell.
 
+- **ui** (quickshell) — a themed **`Ui.Dropdown`** replaces the default-system
+  `ComboBox` shell-wide (Matugen colors, rounded field, Nerd Font chevron, themed
+  popup list with primary-highlighted selection). Drop-in API (`model`,
+  `textRole`, `currentIndex`, `activated`) covering string and object models;
+  rolled out to the Lock Screen settings (time / date / source) and the wallpaper
+  interval picker (removing ~90 lines of bespoke per-site combo styling).
 - **connection / settings** (quickshell) — the **Connection Hub** is now
   configurable from a new **Connection Hub** tab in the Settings panel: drag the
   handle to reorder the Wi-Fi / Bluetooth / Audio / VPN tabs and toggle each on

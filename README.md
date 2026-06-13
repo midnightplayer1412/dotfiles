@@ -116,13 +116,15 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   Hub** lets you drag to reorder the hub tabs and toggle each on/off, with a live
   glyph preview. Both editors share one layout: controls on the left, live
   preview on the right. New categories drop into `settings/categories/`.
-- **UI design-system** (`ui/`) — Reusable, themed primitives (`Ui.Toggle`,
-  `Ui.Slider`) built as **dispatchers**: each renders whichever variant is
-  selected in the `UiStyle` singleton (`~/.config/quickshell/ui-style.json`),
-  so any component using them follows the global Appearance setting. Variants
-  are plain files (`ToggleCapsule/Square/Notch`, `SliderThin/Thick`) sharing one
-  API — adding a style is one file + one line. Consumed by the Settings panel
-  and the WiFi/Bluetooth toggles + audio sliders.
+- **UI design-system** (`ui/`) — Reusable, themed primitives. `Ui.Toggle` and
+  `Ui.Slider` are **dispatchers**: each renders whichever variant is selected in
+  the `UiStyle` singleton (`~/.config/quickshell/ui-style.json`), so any
+  component using them follows the global Appearance setting. Variants are plain
+  files (`ToggleCapsule/Square/Notch`, `SliderThin/Thick`) sharing one API —
+  adding a style is one file + one line. `Ui.Dropdown` is a single themed
+  dropdown (Matugen colors, Nerd Font chevron, themed popup list) that replaces
+  the system `ComboBox` shell-wide. Consumed by the Settings panel, the
+  WiFi/Bluetooth toggles, audio sliders, and the wallpaper picker.
 - **Mascot** — Sprite-based desktop pet ("Oreo Cat") that roams the screen
   with gravity. Wanders with occasional sit/nap idles and a rare box-play
   routine; reacts to clicks (pet / hop), a fast cursor swipe (run away),
