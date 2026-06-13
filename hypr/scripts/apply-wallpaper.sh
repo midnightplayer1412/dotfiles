@@ -32,6 +32,7 @@ else
 fi
 { printf '[%(%H:%M:%S)T] awww rc=%s; query: %s\n' -1 "$rc" "$(awww query 2>&1 | head -1)"; } >> "$log"
 
-matugen image --source-color-index 0 "$path"
-
-tmux source-file ~/.config/tmux/tmux.conf 2>/dev/null || true
+# Regenerate colors per the theme-config: in "static" mode the seed color wins
+# (this wallpaper change won't clobber the theme); in "auto" mode the palette is
+# derived from this wallpaper. apply-theme.sh also reloads tmux.
+~/.config/hypr/scripts/apply-theme.sh "" "" "$path"

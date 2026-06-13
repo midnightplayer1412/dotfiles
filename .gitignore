@@ -10,6 +10,7 @@ quickshell/ui-style.json
 quickshell/hub-config.json
 quickshell/launcher-usage.json
 quickshell/launcher-config.json
+quickshell/theme-config.json
 quickshell/.qmlls.ini
 
 # Matugen-regenerated theme files (rebuilt on every wallpaper change)

@@ -1,2 +1,3 @@
 singleton Theme 0.0 Theme.qml
+singleton ThemeConfig 0.0 ThemeConfig.qml
 singleton LauncherState 0.0 LauncherState.qml

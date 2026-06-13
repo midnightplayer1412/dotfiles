@@ -75,6 +75,16 @@ grouped by date since this repo is unreleased / rolling.
   icons**, recoloured to the Matugen accent via `ColorOverlay` (the symbolic set
   is authored `fill="currentColor"`), keeping the monochrome themed look while
   fixing the icon-size inconsistency.
+- **theme / settings** (quickshell) — an optional **static theme color**. By
+  default the Material You palette is derived from the wallpaper; the new "Theme
+  color" section in Settings → Appearance lets you instead pick a fixed **seed**
+  (preset swatches or a hex field) from which Matugen derives the whole palette
+  — retinting Quickshell, tmux, yazi, and hyprlock together. A new
+  `hypr/scripts/apply-theme.sh` is the single Matugen entry point (static →
+  `matugen color hex`, auto → `matugen image`); `apply-wallpaper.sh` now routes
+  through it, so changing/cycling wallpaper honors the mode (static keeps the
+  seed). New `ThemeConfig` singleton; persisted to
+  `~/.config/quickshell/theme-config.json`.
 
 #### Fixed
 - **cheatsheet** (quickshell) — regenerated the Hyprland keymap so the new
