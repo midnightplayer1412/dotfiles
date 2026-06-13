@@ -1,0 +1,2 @@
+singleton SettingsState 1.0 SettingsState.qml
+SettingsWindow 1.0 SettingsWindow.qml

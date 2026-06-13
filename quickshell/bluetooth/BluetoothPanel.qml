@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import "../ui" as Ui
 import ".."
 import "../bluetooth"
 
@@ -28,28 +29,11 @@ Item {
                 font.bold: true
             }
 
-            Rectangle {
+            Ui.Toggle {
                 Layout.preferredWidth: 44
                 Layout.preferredHeight: 24
-                radius: 12
-                color: BluetoothService.enabled ? Theme.primary : Theme.surfaceContainer
-                Behavior on color { ColorAnimation { duration: 150 } }
-
-                Rectangle {
-                    width: 18
-                    height: 18
-                    radius: 9
-                    color: Theme.surface
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: BluetoothService.enabled ? parent.width - width - 3 : 3
-                    Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: BluetoothService.setEnabled(!BluetoothService.enabled)
-                }
+                checked: BluetoothService.enabled
+                onToggled: (v) => BluetoothService.setEnabled(v)
             }
         }
 

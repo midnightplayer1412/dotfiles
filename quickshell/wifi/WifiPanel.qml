@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import "../ui" as Ui
 import ".."
 
 Item {
@@ -22,29 +23,11 @@ Item {
                 font.bold: true
             }
 
-            Rectangle {
-                id: toggle
+            Ui.Toggle {
                 Layout.preferredWidth: 44
                 Layout.preferredHeight: 24
-                radius: 12
-                color: WifiService.enabled ? Theme.primary : Theme.surfaceContainer
-                Behavior on color { ColorAnimation { duration: 150 } }
-
-                Rectangle {
-                    width: 18
-                    height: 18
-                    radius: 9
-                    color: Theme.surface
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: WifiService.enabled ? parent.width - width - 3 : 3
-                    Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: WifiService.setEnabled(!WifiService.enabled)
-                }
+                checked: WifiService.enabled
+                onToggled: (v) => WifiService.setEnabled(v)
             }
         }
 

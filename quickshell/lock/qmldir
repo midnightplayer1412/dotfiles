@@ -1,0 +1,7 @@
+singleton LockConfig 1.0 LockConfig.qml
+Clock 1.0 Clock.qml
+BatteryPill 1.0 BatteryPill.qml
+MediaCard 1.0 MediaCard.qml
+AuthField 1.0 AuthField.qml
+LockView 1.0 LockView.qml
+singleton LockContext 1.0 LockContext.qml

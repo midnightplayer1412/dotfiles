@@ -1,18 +1,34 @@
 import QtQuick
 import ".."
 
-// Reusable horizontal volume slider. Controlled: `value` is set by the owner
-// (bound to a node's volume); dragging emits `moved(v)` for the owner to apply.
+// Thin slider: 6px rounded track, primary fill, knob on hover/drag.
+// Generalises audio/VolumeSlider with from/to/stepSize so it covers ranged use
+// (e.g. blur 0..10) as well as normalised 0..1. Controlled: owner sets `value`,
+// dragging emits moved(newValue).
 Item {
     id: sl
 
-    property real value: 0            // 0..1
+    property real from: 0
+    property real to: 1
+    property real stepSize: 0
+    property real value: 0
     property color fillColor: Theme.primary
-    property bool active: true        // dimmed when muted
+    property bool active: true
     signal moved(real v)
+    signal released()        // drag finished — owner can persist here
 
     implicitHeight: 18
     height: implicitHeight
+
+    readonly property real _frac:
+        (to > from) ? Math.max(0, Math.min(1, (value - from) / (to - from))) : 0
+
+    function _applyFrac(f) {
+        f = Math.max(0, Math.min(1, f));
+        let v = from + f * (to - from);
+        if (stepSize > 0) v = Math.round(v / stepSize) * stepSize;
+        sl.moved(Math.max(from, Math.min(to, v)));
+    }
 
     Rectangle {
         id: track
@@ -28,12 +44,11 @@ Item {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            width: parent.width * Math.max(0, Math.min(1, sl.value))
+            width: parent.width * sl._frac
             radius: 3
             color: sl.active ? sl.fillColor : Theme.outline
         }
 
-        // Knob — appears on hover/drag
         Rectangle {
             width: 14
             height: 14
@@ -43,22 +58,19 @@ Item {
             border.width: 2
             anchors.verticalCenter: parent.verticalCenter
             x: Math.max(0, Math.min(track.width - width, fill.width - width / 2))
-            visible: dragArea.containsMouse || dragArea.pressed
+            visible: drag.containsMouse || drag.pressed
         }
     }
 
     MouseArea {
-        id: dragArea
+        id: drag
         anchors.fill: parent
         anchors.topMargin: -6
         anchors.bottomMargin: -6
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-
-        function apply(mx) {
-            sl.moved(Math.max(0, Math.min(1, mx / width)));
-        }
-        onPressed: (m) => apply(m.x)
-        onPositionChanged: (m) => { if (pressed) apply(m.x); }
+        onPressed: (m) => sl._applyFrac(m.x / width)
+        onPositionChanged: (m) => { if (pressed) sl._applyFrac(m.x / width); }
+        onReleased: sl.released()
     }
 }

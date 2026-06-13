@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import "../ui" as Ui
 import ".."
 import "../audio"
 
@@ -133,7 +134,7 @@ Item {
             width: parent.width
             spacing: 10
 
-            VolumeSlider {
+            Ui.Slider {
                 Layout.fillWidth: true
                 Layout.leftMargin: 36          // align under the name, past the icon
                 value: row.vol

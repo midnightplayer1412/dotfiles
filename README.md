@@ -67,6 +67,9 @@ Hyprland compositor config split into modular files:
 | Super + C | Toggle float & center |
 | Super + / | Keybinding cheatsheet |
 | Super + N | Notification center |
+| Super + Backspace | Settings panel |
+| Super + Escape | Lock screen (Quickshell) |
+| Super + Shift + Escape | Lock screen (hyprlock fallback) |
 
 ---
 
@@ -95,6 +98,27 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   CSS-drawn keyboard; hover a key to see its binding in the detail bar.
   Keymaps are JSON files under `cheatsheet/keymaps/` (one per app); the
   Hyprland map is generated from `binds.conf` by `hypr/scripts/gen-keymap.sh`.
+- **Lock Screen** — A dedicated, secure lock instance (`lock-screen.qml` →
+  `qs -p … lock-screen.qml`) implementing the `ext-session-lock-v1` protocol
+  (`WlSessionLock`) with real PAM authentication (`/etc/pam.d/login`). Themed
+  via Matugen, with a large clock, MPRIS media controls, battery, and user
+  identity. Every value (components shown, wallpaper/blur/dim, clock & date
+  format, hidden input) is read from `~/.config/quickshell/lock-config.json`.
+  hyprlock is kept installed as a `Super + Shift + Escape` fallback.
+- **Settings panel** (`Super + Backspace`) — An extensible settings app with a
+  category sidebar. **Appearance** lets you switch the active style variant for
+  shared UI components (toggle: Capsule / Square / Notch; slider: Thin / Thick)
+  with live previews — the choice is global and re-skins every component across
+  the shell instantly. **Lock Screen** is a live-preview editor that tunes the
+  lockscreen config and persists it (lazy-loaded wallpaper grid). New categories
+  drop into `settings/categories/`.
+- **UI design-system** (`ui/`) — Reusable, themed primitives (`Ui.Toggle`,
+  `Ui.Slider`) built as **dispatchers**: each renders whichever variant is
+  selected in the `UiStyle` singleton (`~/.config/quickshell/ui-style.json`),
+  so any component using them follows the global Appearance setting. Variants
+  are plain files (`ToggleCapsule/Square/Notch`, `SliderThin/Thick`) sharing one
+  API — adding a style is one file + one line. Consumed by the Settings panel
+  and the WiFi/Bluetooth toggles + audio sliders.
 - **Mascot** — Sprite-based desktop pet ("Oreo Cat") that roams the screen
   with gravity. Wanders with occasional sit/nap idles and a rare box-play
   routine; reacts to clicks (pet / hop), a fast cursor swipe (run away),

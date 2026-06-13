@@ -6,6 +6,41 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-06-13
+
+#### Added
+- **lock** (quickshell) — a dedicated Quickshell **lockscreen** replacing
+  hyprlock as the primary lock (`Super + Escape`); hyprlock kept as the
+  `Super + Shift + Escape` fallback. A separate instance (`lock-screen.qml`,
+  rooted at `quickshell/` so the `Theme` singleton resolves) implements the
+  secure `ext-session-lock-v1` protocol via `WlSessionLock` and authenticates
+  through PAM (`PamContext`, `/etc/pam.d/login`, documented `onPamMessage`
+  conversation). Matugen-themed, with a large clock, MPRIS media card, battery,
+  and `user@host` identity; the focused monitor shows the password field
+  (auto-focused, shake + attempt count on failure). New `lock/` module:
+  `LockConfig`, `LockView`, `LockContext`, `AuthField`, `Clock`, `MediaCard`,
+  `BatteryPill`.
+- **settings** (quickshell) — an extensible **Settings panel** (`Super +
+  Backspace`) with a category sidebar; the first category, **Lock Screen**, is a
+  live-preview editor (shared `LockView`) that tunes every lockscreen value —
+  component toggles, background source/wallpaper/blur/dim, clock & date format,
+  hidden input — and persists to `~/.config/quickshell/lock-config.json`
+  (`FileView` + `JsonAdapter`). Wallpaper thumbnails lazy-load on scroll.
+
+- **ui / settings** (quickshell) — a reusable **component design-system** with
+  user-switchable styles. `Ui.Toggle` / `Ui.Slider` are dispatchers that render
+  the variant selected in the global `UiStyle` singleton (`ui-style.json`);
+  variants ship as plain files (toggle: Capsule/Square/Notch, slider: Thin/Thick)
+  with a shared API. A new **Appearance** tab in the Settings panel switches them
+  with live previews, applied shell-wide. The WiFi/Bluetooth toggles and audio
+  (master + per-app) sliders were migrated onto these primitives (old
+  `VolumeSlider` removed), so an Appearance change re-skins the whole shell.
+
+#### Fixed
+- **hypr** — `autostart` now `pkill`s both `qs` and `quickshell` before
+  relaunching, so a config reload can no longer leave duplicate shell instances
+  (which double-registered global shortcuts).
+
 ### 2026-06-12
 
 #### Added

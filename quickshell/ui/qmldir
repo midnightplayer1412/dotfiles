@@ -1,0 +1,8 @@
+singleton UiStyle 1.0 UiStyle.qml
+Toggle 1.0 Toggle.qml
+Slider 1.0 Slider.qml
+ToggleCapsule 1.0 ToggleCapsule.qml
+ToggleSquare 1.0 ToggleSquare.qml
+ToggleNotch 1.0 ToggleNotch.qml
+SliderThin 1.0 SliderThin.qml
+SliderThick 1.0 SliderThick.qml

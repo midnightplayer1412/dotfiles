@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Services.Pipewire
+import "../ui" as Ui
 import ".."
 import "../audio"
 
@@ -111,7 +112,7 @@ Item {
                         }
                     }
 
-                    VolumeSlider {
+                    Ui.Slider {
                         Layout.fillWidth: true
                         value: root.masterVol
                         active: !root.masterMuted

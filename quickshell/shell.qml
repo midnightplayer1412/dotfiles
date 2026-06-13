@@ -11,6 +11,7 @@ import "overview" as Overview
 import "cheatsheet" as Cheatsheet
 import "wallpaper" as Wallpaper
 import "mascot" as Mascot
+import "settings" as Settings
 
 ShellRoot {
     function focusedScreen() {
@@ -39,6 +40,11 @@ ShellRoot {
     GlobalShortcut {
         name: "cheatsheet_toggle"
         onPressed: Cheatsheet.CheatsheetState.toggle(focusedScreen())
+    }
+
+    GlobalShortcut {
+        name: "settings_toggle"
+        onPressed: Settings.SettingsState.toggle(focusedScreen())
     }
 
     // Status bar on each screen
@@ -148,6 +154,21 @@ ShellRoot {
         }
 
         Cheatsheet.Cheatsheet {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // Settings panel — fullscreen overlay on target screen when visible
+    Variants {
+        model: {
+            if (Settings.SettingsState.visible && Settings.SettingsState.targetScreen) {
+                return [Settings.SettingsState.targetScreen];
+            }
+            return [];
+        }
+
+        Settings.SettingsWindow {
             required property var modelData
             screen: modelData
         }
