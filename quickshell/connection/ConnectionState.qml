@@ -19,7 +19,11 @@ Singleton {
     readonly property var hubScreen:
         activeTab !== "" ? targetScreen : triggerScreen
 
-    readonly property bool hubVisible: hubScreen !== null
+    // Hide the hub entirely when every tab is disabled — otherwise it would
+    // render as an empty pill. The Settings pane still lists all tabs so they
+    // can be re-enabled.
+    readonly property bool hubVisible:
+        hubScreen !== null && HubConfig.enabledOrdered().length > 0
 
     // ── Hub window registry (for focus grab) ─────────────────────────
     // Map of screen.name -> Hub PanelWindow. Hub.qml registers itself in

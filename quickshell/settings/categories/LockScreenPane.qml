@@ -6,7 +6,7 @@ import "../../wallpaper" as Wp
 import "../../ui" as Ui
 import "../.."
 
-// Lock Screen settings: live preview (left) + scrollable grouped controls (right).
+// Lock Screen settings: scrollable grouped controls (left) + live preview (right).
 // Uses the repo's proven Flickable + ColumnLayout pattern (see audio/AudioPanel.qml)
 // and an anchor-based split so width distribution is unambiguous.
 Item {
@@ -41,10 +41,10 @@ Item {
         }
     }
 
-    // ── Live preview (scaled LockView), left ──────────────────────────
+    // ── Live preview (scaled LockView), right; render inset inside frame ─
     Rectangle {
         id: preview
-        anchors.left: parent.left
+        anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 420
@@ -56,10 +56,12 @@ Item {
 
         Item {
             id: canvas
+            readonly property int pad: 16   // inner padding: keep the render off the frame edge
             width: 1280
             height: 800
             anchors.centerIn: parent
-            scale: Math.min(parent.width / width, parent.height / height)
+            scale: Math.min((parent.width - 2 * pad) / width,
+                            (parent.height - 2 * pad) / height)
 
             Lock.LockView {
                 anchors.fill: parent
@@ -77,12 +79,12 @@ Item {
         }
     }
 
-    // ── Controls, right (scrollable) ──────────────────────────────────
+    // ── Controls, left (scrollable) ───────────────────────────────────
     Flickable {
         id: ctrl
-        anchors.left: preview.right
-        anchors.leftMargin: 20
-        anchors.right: parent.right
+        anchors.left: parent.left
+        anchors.right: preview.left
+        anchors.rightMargin: 20
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         contentWidth: width

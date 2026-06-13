@@ -21,7 +21,8 @@ PanelWindow {
     // Categories: extend this list to add panes later.
     readonly property var categories: [
         { key: "appearance", label: "Appearance", glyph: "\u{F0479}" }, // nf-md-palette
-        { key: "lock", label: "Lock Screen", glyph: "\u{F033E}" }       // nf-md-lock
+        { key: "lock", label: "Lock Screen", glyph: "\u{F033E}" },      // nf-md-lock
+        { key: "hub", label: "Connection Hub", glyph: "\u{F06F3}" }     // nf-md-access-point-network
     ]
 
     HyprlandFocusGrab {
@@ -143,6 +144,11 @@ PanelWindow {
                 Categories.ThemePane {
                     anchors.fill: parent
                     visible: SettingsState.activeCategory === "appearance"
+                }
+
+                Categories.ConnectionHubPane {
+                    anchors.fill: parent
+                    visible: SettingsState.activeCategory === "hub"
                 }
             }
         }

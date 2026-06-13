@@ -86,7 +86,9 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   switching, and a **per-app volume mixer** — each playing app gets a live
   slider, mute, and an inline picker to route it to a different output. Volume
   and mute bind directly to the native PipeWire service (`Quickshell.Services.
-  Pipewire`); routing uses `pactl move-sink-input`.
+  Pipewire`); routing uses `pactl move-sink-input`. Which tabs appear and their
+  order are configurable in the Settings panel (drag to reorder, toggle to
+  show/hide); persisted to `~/.config/quickshell/hub-config.json`.
 - **Notifications** — Popup toasts plus a right-side center drawer (`Super + N`)
   with an MPRIS media player. Notifications are **grouped by app** (collapsible,
   with a count badge), show a relative **timestamp**, and can be **swiped away**
@@ -110,8 +112,10 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   shared UI components (toggle: Capsule / Square / Notch; slider: Thin / Thick)
   with live previews — the choice is global and re-skins every component across
   the shell instantly. **Lock Screen** is a live-preview editor that tunes the
-  lockscreen config and persists it (lazy-loaded wallpaper grid). New categories
-  drop into `settings/categories/`.
+  lockscreen config and persists it (lazy-loaded wallpaper grid). **Connection
+  Hub** lets you drag to reorder the hub tabs and toggle each on/off, with a live
+  glyph preview. Both editors share one layout: controls on the left, live
+  preview on the right. New categories drop into `settings/categories/`.
 - **UI design-system** (`ui/`) — Reusable, themed primitives (`Ui.Toggle`,
   `Ui.Slider`) built as **dispatchers**: each renders whichever variant is
   selected in the `UiStyle` singleton (`~/.config/quickshell/ui-style.json`),

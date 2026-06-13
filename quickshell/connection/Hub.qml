@@ -50,10 +50,18 @@ PanelWindow {
             anchors.margins: 4
             spacing: 0
 
-            HubTab { tabKey: "wifi";      parentScreen: root.screen; Layout.fillWidth: true; Layout.fillHeight: true }
-            HubTab { tabKey: "bluetooth"; parentScreen: root.screen; Layout.fillWidth: true; Layout.fillHeight: true }
-            HubTab { tabKey: "audio";     parentScreen: root.screen; Layout.fillWidth: true; Layout.fillHeight: true }
-            HubTab { tabKey: "vpn";       parentScreen: root.screen; Layout.fillWidth: true; Layout.fillHeight: true }
+            // Tabs are driven by HubConfig (order + visibility), edited in the
+            // Settings "Connection Hub" pane. Reactive: re-renders on config change.
+            Repeater {
+                model: HubConfig.enabledOrdered()
+                delegate: HubTab {
+                    required property var modelData
+                    tabKey: modelData.key
+                    parentScreen: root.screen
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+            }
         }
 
         MouseArea {

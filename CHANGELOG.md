@@ -36,6 +36,16 @@ grouped by date since this repo is unreleased / rolling.
   (master + per-app) sliders were migrated onto these primitives (old
   `VolumeSlider` removed), so an Appearance change re-skins the whole shell.
 
+- **connection / settings** (quickshell) — the **Connection Hub** is now
+  configurable from a new **Connection Hub** tab in the Settings panel: drag the
+  handle to reorder the Wi-Fi / Bluetooth / Audio / VPN tabs and toggle each on
+  or off, with a live glyph preview. Order + visibility persist to
+  `~/.config/quickshell/hub-config.json` (new `HubConfig` singleton); `Hub.qml`
+  renders from it via a `Repeater`, and the hub hides entirely when no tabs are
+  enabled. Both Settings editors now share one layout — controls on the left,
+  live preview on the right — and the lock-screen preview's render is inset from
+  its frame edge.
+
 #### Fixed
 - **cheatsheet** (quickshell) — regenerated the Hyprland keymap so the new
   `Super + Backspace` (Settings panel) and `Super + Shift + Escape` (hyprlock
