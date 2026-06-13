@@ -26,6 +26,7 @@ Singleton {
     property alias dateFormat: adapter.dateFormat
 
     property alias hideInput: adapter.hideInput
+    property alias inputPosition: adapter.inputPosition       // "center" | "bottom"
 
     // Persist current values to disk. Called by settings controls on commit.
     function save() { view.writeAdapter(); }
@@ -54,6 +55,7 @@ Singleton {
             property string dateFormat: "dddd, MMMM d"
 
             property bool hideInput: false
+            property string inputPosition: "center"
         }
     }
 }

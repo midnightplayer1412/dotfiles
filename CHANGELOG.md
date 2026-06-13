@@ -85,6 +85,12 @@ grouped by date since this repo is unreleased / rolling.
   through it, so changing/cycling wallpaper honors the mode (static keeps the
   seed). New `ThemeConfig` singleton; persisted to
   `~/.config/quickshell/theme-config.json`.
+- **lock / settings** (quickshell) — lock-screen password-input refinements: a
+  new **input position** option (center or bottom) in Settings → Lock Screen →
+  Behavior (`inputPosition` in `lock-config.json`; the field renders in the
+  center stack or pinned above the identity/battery row), larger masked dots
+  with letter-spacing, and the blinking caret removed (empty `cursorDelegate`,
+  since a static `cursorVisible:false` is re-enabled on focus).
 
 #### Fixed
 - **cheatsheet** (quickshell) — regenerated the Hyprland keymap so the new

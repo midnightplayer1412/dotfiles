@@ -68,8 +68,13 @@ Column {
                 enabled: !auth.preview && !auth.busy
                 color: "white"
                 font.family: Theme.fontFamily
-                font.pixelSize: 16
+                font.pixelSize: 26              // large masked dots
+                font.letterSpacing: 6           // breathing room between dots
                 background: null
+                // No blinking caret — the dots already show typing progress. A
+                // static cursorVisible:false doesn't stick (TextInput re-enables
+                // it on focus), so use an empty cursor delegate: nothing to draw.
+                cursorDelegate: Item {}
                 focus: !auth.preview
                 // Grab keyboard focus as soon as the live field appears so the
                 // user can type immediately (on the real lock surface, and to fix

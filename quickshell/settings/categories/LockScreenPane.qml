@@ -154,6 +154,23 @@ Item {
 
             // ── Behavior ──
             SectionHeader { text: "Behavior" }
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: "Input position"; color: Theme.surfaceText
+                    font.family: Theme.fontFamily; font.pixelSize: 13
+                    Layout.fillWidth: true
+                }
+                Ui.Dropdown {
+                    Layout.preferredWidth: 140
+                    model: [ "Center", "Bottom" ]
+                    currentIndex: Lock.LockConfig.inputPosition === "bottom" ? 1 : 0
+                    onActivated: (i) => {
+                        Lock.LockConfig.inputPosition = i === 1 ? "bottom" : "center";
+                        Lock.LockConfig.save();
+                    }
+                }
+            }
             ToggleRow {
                 label: "Hide input entirely (no dots)"; checked: Lock.LockConfig.hideInput
                 onToggled: (v) => { Lock.LockConfig.hideInput = v; Lock.LockConfig.save(); }

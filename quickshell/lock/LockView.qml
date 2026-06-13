@@ -75,7 +75,7 @@ Item {
         textColor: "white"
     }
 
-    // ── Center stack: media + input ───────────────────────────────
+    // ── Center stack: media, and the input unless it's pinned to the bottom ──
     Column {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.verticalCenter
@@ -87,6 +87,28 @@ Item {
             visible: LockConfig.showMedia
         }
 
+        Loader {
+            anchors.horizontalCenter: parent.horizontalCenter
+            active: LockConfig.inputPosition !== "bottom"
+            visible: active
+            sourceComponent: authComponent
+        }
+    }
+
+    // ── Input pinned to the bottom (optional position) ──
+    Loader {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 72   // clears the identity / battery row (margin 24)
+        active: LockConfig.inputPosition === "bottom"
+        visible: active
+        sourceComponent: authComponent
+    }
+
+    // One definition, used by whichever position is active. Only a single Loader
+    // is active at a time, so the field grabs keyboard focus exactly once.
+    Component {
+        id: authComponent
         AuthField {
             anchors.horizontalCenter: parent.horizontalCenter
             visible: view.showInput

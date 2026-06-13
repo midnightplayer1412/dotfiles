@@ -111,7 +111,8 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   (`WlSessionLock`) with real PAM authentication (`/etc/pam.d/login`). Themed
   via Matugen, with a large clock, MPRIS media controls, battery, and user
   identity. Every value (components shown, wallpaper/blur/dim, clock & date
-  format, hidden input) is read from `~/.config/quickshell/lock-config.json`.
+  format, password-input position — center or bottom — and hidden input) is
+  read from `~/.config/quickshell/lock-config.json`.
   hyprlock is kept installed as a `Super + Shift + Escape` fallback.
 - **Settings panel** (`Super + Backspace`) — An extensible settings app with a
   category sidebar. **Appearance** lets you switch the active style variant for
