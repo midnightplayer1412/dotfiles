@@ -36,6 +36,17 @@ grouped by date since this repo is unreleased / rolling.
   (master + per-app) sliders were migrated onto these primitives (old
   `VolumeSlider` removed), so an Appearance change re-skins the whole shell.
 
+- **launcher / settings** (quickshell) — a major **launcher** upgrade. App search
+  is now **fuzzy** (`Matcher`) and ranked by **frecency** (`UsageStore`, persisted
+  launch counts/recency); an empty query shows a **Recent** section. New modes: a
+  `=` **calculator** (safe evaluator; Enter copies the result via `wl-copy`) and a
+  **web-search fallback** when no app matches. Fixed a stale-selection bug (the
+  highlight now resets to the top result on every query change). A new **Launcher**
+  tab in the Settings panel configures the launcher **position** (bottom or
+  centered), the **recents layout** (list rows or chip strip), and the
+  **web-search engine** (Google default, plus DuckDuckGo / Bing / Brave). New
+  `UsageStore` / `Matcher` / `LauncherConfig` singletons; persisted to
+  `~/.config/quickshell/launcher-usage.json` and `launcher-config.json`.
 - **ui** (quickshell) — a themed **`Ui.Dropdown`** replaces the default-system
   `ComboBox` shell-wide (Matugen colors, rounded field, Nerd Font chevron, themed
   popup list with primary-highlighted selection). Drop-in API (`model`,

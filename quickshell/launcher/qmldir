@@ -1,3 +1,6 @@
 singleton Commands 0.0 Commands.qml
+singleton UsageStore 0.0 UsageStore.qml
+singleton Matcher 0.0 Matcher.qml
+singleton LauncherConfig 0.0 LauncherConfig.qml
 LauncherItem 0.0 LauncherItem.qml
 Launcher 0.0 Launcher.qml

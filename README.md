@@ -79,7 +79,13 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
 
 **Components:**
 - **Bar** — Left sidebar panel (48px wide) with workspaces, clock, battery
-- **Launcher** — Bottom-center search panel (600×400px), fuzzy app search
+- **Launcher** — Search panel (`Super + Space`) with **fuzzy** app search ranked
+  by **frecency** (your most-used float up). Empty query shows a **Recent**
+  section/strip then all apps. Modes: `/` commands, `!` shell, `=` calculator
+  (Enter copies the result), and a **web-search** fallback when nothing matches.
+  Configurable from **Settings → Launcher**: position (bottom or centered),
+  recents layout (list rows or chip strip), and web-search engine (Google /
+  DuckDuckGo / Bing / Brave). Persists to `~/.config/quickshell/launcher-*.json`.
 - **HUD** — Right-edge panel, volume and brightness sliders (auto-hide)
 - **Connection Hub** — Top-right drawer with Wi-Fi / Bluetooth / Audio / VPN
   tabs. The **Audio tab** is a full mixer: a master slider, output-device
@@ -114,8 +120,8 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   the shell instantly. **Lock Screen** is a live-preview editor that tunes the
   lockscreen config and persists it (lazy-loaded wallpaper grid). **Connection
   Hub** lets you drag to reorder the hub tabs and toggle each on/off, with a live
-  glyph preview. Both editors share one layout: controls on the left, live
-  preview on the right. New categories drop into `settings/categories/`.
+  glyph preview. **Launcher** sets the launcher position, recents layout, and
+  web-search engine. New categories drop into `settings/categories/`.
 - **UI design-system** (`ui/`) — Reusable, themed primitives. `Ui.Toggle` and
   `Ui.Slider` are **dispatchers**: each renders whichever variant is selected in
   the `UiStyle` singleton (`~/.config/quickshell/ui-style.json`), so any

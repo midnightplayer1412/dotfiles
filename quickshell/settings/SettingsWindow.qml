@@ -22,7 +22,8 @@ PanelWindow {
     readonly property var categories: [
         { key: "appearance", label: "Appearance", glyph: "\u{F0479}" }, // nf-md-palette
         { key: "lock", label: "Lock Screen", glyph: "\u{F033E}" },      // nf-md-lock
-        { key: "hub", label: "Connection Hub", glyph: "\u{F06F3}" }     // nf-md-access-point-network
+        { key: "hub", label: "Connection Hub", glyph: "\u{F06F3}" },    // nf-md-access-point-network
+        { key: "launcher", label: "Launcher", glyph: "\u{F003B}" }      // nf-md-apps
     ]
 
     HyprlandFocusGrab {
@@ -149,6 +150,11 @@ PanelWindow {
                 Categories.ConnectionHubPane {
                     anchors.fill: parent
                     visible: SettingsState.activeCategory === "hub"
+                }
+
+                Categories.LauncherPane {
+                    anchors.fill: parent
+                    visible: SettingsState.activeCategory === "launcher"
                 }
             }
         }
