@@ -62,6 +62,19 @@ grouped by date since this repo is unreleased / rolling.
   enabled. Both Settings editors now share one layout — controls on the left,
   live preview on the right — and the lock-screen preview's render is inset from
   its frame edge.
+- **settings** (quickshell) — an **About** tab, pinned to the bottom of the
+  Settings sidebar (below a divider, set apart from the functional tabs). A
+  read-only system/hardware snapshot — OS, kernel, hostname, compositor, uptime
+  (Software) and CPU + thread count, GPU(s), memory, root disk (Hardware) —
+  gathered in a single `bash` pass (`Process` + `StdioCollector`) each time the
+  panel opens, so values like uptime stay fresh. New `SystemInfoPane`.
+- **ui / settings** (quickshell) — a new **`Ui.Icon`** primitive renders SVG/theme
+  icons at an exact pixel size (`sourceSize == size`), so apparent size is
+  deterministic — unlike font glyphs, which vary in drawn extent at the same
+  `pixelSize`. The Settings sidebar and About pane now use **Papirus *symbolic*
+  icons**, recoloured to the Matugen accent via `ColorOverlay` (the symbolic set
+  is authored `fill="currentColor"`), keeping the monochrome themed look while
+  fixing the icon-size inconsistency.
 
 #### Fixed
 - **cheatsheet** (quickshell) — regenerated the Hyprland keymap so the new

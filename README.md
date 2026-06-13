@@ -121,7 +121,10 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   lockscreen config and persists it (lazy-loaded wallpaper grid). **Connection
   Hub** lets you drag to reorder the hub tabs and toggle each on/off, with a live
   glyph preview. **Launcher** sets the launcher position, recents layout, and
-  web-search engine. New categories drop into `settings/categories/`.
+  web-search engine. **About** (pinned to the bottom of the sidebar) shows a
+  read-only system/hardware snapshot — OS, kernel, host, compositor, uptime,
+  CPU, GPU(s), memory, disk — gathered live each time the panel opens. New
+  categories drop into `settings/categories/`.
 - **UI design-system** (`ui/`) — Reusable, themed primitives. `Ui.Toggle` and
   `Ui.Slider` are **dispatchers**: each renders whichever variant is selected in
   the `UiStyle` singleton (`~/.config/quickshell/ui-style.json`), so any
@@ -130,7 +133,10 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   adding a style is one file + one line. `Ui.Dropdown` is a single themed
   dropdown (Matugen colors, Nerd Font chevron, themed popup list) that replaces
   the system `ComboBox` shell-wide. Consumed by the Settings panel, the
-  WiFi/Bluetooth toggles, audio sliders, and the wallpaper picker.
+  WiFi/Bluetooth toggles, audio sliders, and the wallpaper picker. `Ui.Icon`
+  renders SVG/theme icons at an exact size (so they never vary the way font
+  glyphs do) and optionally recolors them to the accent — used by the Settings
+  sidebar and About pane with Papirus *symbolic* icons.
 - **Mascot** — Sprite-based desktop pet ("Oreo Cat") that roams the screen
   with gravity. Wanders with occasional sit/nap idles and a rare box-play
   routine; reacts to clicks (pet / hop), a fast cursor swipe (run away),

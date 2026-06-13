@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import "categories" as Categories
+import "../ui" as Ui
 import ".."
 
 // Fullscreen settings panel: left category nav + right content area.
@@ -18,12 +19,15 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     color: "transparent"
 
-    // Categories: extend this list to add panes later.
+    // Categories: extend this list to add panes later. Icons are Papirus
+    // *symbolic* (monochrome) SVGs, tinted to the accent by Ui.Icon — uniform
+    // sizes by construction, unlike font glyphs.
+    readonly property string sym: "/usr/share/icons/Papirus/16x16/symbolic"
     readonly property var categories: [
-        { key: "appearance", label: "Appearance", glyph: "\u{F0479}" }, // nf-md-palette
-        { key: "lock", label: "Lock Screen", glyph: "\u{F033E}" },      // nf-md-lock
-        { key: "hub", label: "Connection Hub", glyph: "\u{F06F3}" },    // nf-md-access-point-network
-        { key: "launcher", label: "Launcher", glyph: "\u{F003B}" }      // nf-md-apps
+        { key: "appearance", label: "Appearance",     icon: sym + "/categories/applications-graphics-symbolic.svg" },
+        { key: "lock",       label: "Lock Screen",    icon: sym + "/actions/system-lock-screen-symbolic.svg" },
+        { key: "hub",        label: "Connection Hub", icon: sym + "/devices/network-cellular-symbolic.svg" },
+        { key: "launcher",   label: "Launcher",       icon: sym + "/categories/applications-all-symbolic.svg" }
     ]
 
     HyprlandFocusGrab {
@@ -73,11 +77,10 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.bottomMargin: 12
                     spacing: 8
-                    Text {
-                        text: "\u{F08BB}"   // nf-md-cog
+                    Ui.Icon {
+                        source: root.sym + "/categories/preferences-system-symbolic.svg"
                         color: Theme.primary
-                        font.family: Theme.glyphFont
-                        font.pixelSize: 22
+                        size: 22
                     }
                     Text {
                         text: "Settings"
@@ -90,43 +93,25 @@ PanelWindow {
 
                 Repeater {
                     model: root.categories
-                    delegate: Rectangle {
+                    delegate: NavButton {
                         required property var modelData
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 38
-                        radius: 9
-                        color: SettingsState.activeCategory === modelData.key
-                            ? Theme.surfaceContainer
-                            : (navMouse.containsMouse ? Theme.surfaceContainer : "transparent")
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 10
-                            spacing: 10
-                            Text {
-                                text: modelData.glyph
-                                color: SettingsState.activeCategory === modelData.key ? Theme.primary : Theme.surfaceText
-                                font.family: Theme.glyphFont
-                                font.pixelSize: 16
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: modelData.label
-                                color: SettingsState.activeCategory === modelData.key ? Theme.primary : Theme.surfaceText
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 13
-                            }
-                        }
-                        MouseArea {
-                            id: navMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: SettingsState.activeCategory = modelData.key
-                        }
+                        entry: modelData
                     }
                 }
 
                 Item { Layout.fillHeight: true }
+
+                // "About" is pinned to the bottom, set apart from the functional
+                // tabs by a divider — system/hardware info, not a setting.
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 1
+                    Layout.bottomMargin: 6
+                    color: Theme.outline
+                }
+                NavButton {
+                    entry: ({ key: "about", label: "About", icon: root.sym + "/actions/help-about-symbolic.svg" })
+                }
             }
 
             // Divider
@@ -156,6 +141,11 @@ PanelWindow {
                     anchors.fill: parent
                     visible: SettingsState.activeCategory === "launcher"
                 }
+
+                Categories.SystemInfoPane {
+                    anchors.fill: parent
+                    visible: SettingsState.activeCategory === "about"
+                }
             }
         }
     }
@@ -165,5 +155,42 @@ PanelWindow {
         anchors.fill: parent
         focus: true
         Keys.onEscapePressed: SettingsState.close()
+    }
+
+    // Sidebar entry, shared by the category Repeater and the pinned "About" item.
+    component NavButton: Rectangle {
+        property var entry: ({ key: "", label: "", glyph: "" })
+        readonly property bool active: SettingsState.activeCategory === entry.key
+        Layout.fillWidth: true
+        Layout.preferredHeight: 38
+        radius: 9
+        color: active
+            ? Theme.surfaceContainer
+            : (navMouse.containsMouse ? Theme.surfaceContainer : "transparent")
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 10
+            spacing: 10
+            Ui.Icon {
+                source: entry.icon
+                color: active ? Theme.primary : Theme.surfaceText
+                size: 18
+                Layout.alignment: Qt.AlignVCenter
+            }
+            Text {
+                Layout.fillWidth: true
+                text: entry.label
+                color: active ? Theme.primary : Theme.surfaceText
+                font.family: Theme.fontFamily
+                font.pixelSize: 13
+            }
+        }
+        MouseArea {
+            id: navMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: SettingsState.activeCategory = entry.key
+        }
     }
 }
