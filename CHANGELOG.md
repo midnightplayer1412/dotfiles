@@ -25,11 +25,12 @@ grouped by date since this repo is unreleased / rolling.
 #### Changed
 - **wallpaper** (quickshell) — wallpapers now sort **numerically**
   (…9, 10, …57, …100) instead of lexically (1, 10, 100, 11, …).
-- **ui** (quickshell) — `Ui.ScrollBar` is now applied **shell-wide** to every
-  scrollable view: the notifications drawer, the Wi-Fi/Bluetooth/VPN/audio
-  panels, the launcher results, the `Ui.Dropdown` popup, and all Settings panes
-  (Lock Screen, Launcher, System Info, Appearance) — previously these had no
-  visible scrollbar.
+- **ui** (quickshell) — `Ui.ScrollBar` is applied to the scrollable views that
+  can actually overflow: the notifications drawer, the launcher results, the
+  `Ui.Dropdown` popup, and all Settings panes (Lock Screen, Launcher, System
+  Info, Appearance) — previously these had no visible scrollbar. The
+  connection-hub panels (Wi-Fi/Bluetooth/VPN/audio) are deliberately excluded:
+  they live in a full-height drawer their short lists never overflow.
 - **settings** (quickshell) — the Lock Screen pane's wallpaper grid now loads
   the small **cached thumbnails** (with a capped `sourceSize`) instead of
   decoding the multi-MB originals into 92×58 cells, sharing the picker's

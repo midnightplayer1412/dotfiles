@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import "../ui" as Ui
 import ".."
 
@@ -156,7 +155,6 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            ScrollBar.vertical: Ui.ScrollBar {}
             spacing: 4
             model: WifiService.networks
 
