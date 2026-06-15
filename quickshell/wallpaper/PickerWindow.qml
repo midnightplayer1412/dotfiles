@@ -266,7 +266,7 @@ PanelWindow {
                     highlightFollowsCurrentItem: true
                     keyNavigationEnabled: true
 
-                    ScrollBar.vertical: Ui.ScrollBar {}
+                    ScrollBar.vertical: Ui.ScrollBar { visible: grid.contentHeight > grid.height + 1 }
 
                     Keys.onReturnPressed: win.pinCurrent()
                     Keys.onEnterPressed: win.pinCurrent()

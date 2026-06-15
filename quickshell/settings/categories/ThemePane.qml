@@ -18,11 +18,12 @@ Item {
     }
 
     Flickable {
+        id: flick
         anchors.fill: parent
         contentWidth: width
         contentHeight: col.implicitHeight
         clip: true
-        ScrollBar.vertical: Ui.ScrollBar {}
+        ScrollBar.vertical: Ui.ScrollBar { visible: flick.contentHeight > flick.height + 1 }
         boundsBehavior: Flickable.StopAtBounds
 
         ColumnLayout {

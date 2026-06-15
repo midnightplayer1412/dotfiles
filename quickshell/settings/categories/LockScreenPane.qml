@@ -90,7 +90,7 @@ Item {
         contentWidth: width
         contentHeight: content.implicitHeight
         clip: true
-        ScrollBar.vertical: Ui.ScrollBar {}
+        ScrollBar.vertical: Ui.ScrollBar { visible: ctrl.contentHeight > ctrl.height + 1 }
         boundsBehavior: Flickable.StopAtBounds
 
         ColumnLayout {

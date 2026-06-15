@@ -87,11 +87,12 @@ df -h --output=used,size,pcent / 2>/dev/null | tail -1 | awk '{printf "disk\\t%s
     }
 
     Flickable {
+        id: flick
         anchors.fill: parent
         contentWidth: width
         contentHeight: col.implicitHeight
         clip: true
-        ScrollBar.vertical: Ui.ScrollBar {}
+        ScrollBar.vertical: Ui.ScrollBar { visible: flick.contentHeight > flick.height + 1 }
         boundsBehavior: Flickable.StopAtBounds
 
         ColumnLayout {

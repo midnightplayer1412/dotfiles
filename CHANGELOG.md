@@ -37,6 +37,11 @@ grouped by date since this repo is unreleased / rolling.
   thumbnail cache for much lower memory use.
 
 #### Fixed
+- **ui** (quickshell) — `Ui.ScrollBar` no longer appears on views whose content
+  fits (the attached-scrollbar `size` auto-binding wasn't reliable for plain
+  `Flickable`s, so `AsNeeded` showed a spurious bar). Its visibility is now
+  bound directly to real overflow (`contentHeight > height`) across every use
+  — the Settings panes, notifications drawer, launcher, dropdown, and picker.
 - **wallpaper** (quickshell) — picker thumbnails no longer **reload/flash when
   scrolling back**. With ~200 wallpapers (several GB, some GIFs >300 MB) the
   originals overflowed Qt's ~10 MB pixmap cache and were re-decoded on every

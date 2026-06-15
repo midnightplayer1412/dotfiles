@@ -93,9 +93,10 @@ Item {
         }
 
         contentItem: ListView {
+            id: dropList
             implicitHeight: Math.min(contentHeight, 240)
             clip: true
-            ScrollBar.vertical: Ui.ScrollBar {}
+            ScrollBar.vertical: Ui.ScrollBar { visible: dropList.contentHeight > dropList.height + 1 }
             model: root.model
             boundsBehavior: Flickable.StopAtBounds
 

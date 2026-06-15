@@ -295,7 +295,7 @@ PanelWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-                ScrollBar.vertical: Ui.ScrollBar {}
+                ScrollBar.vertical: Ui.ScrollBar { visible: resultsList.contentHeight > resultsList.height + 1 }
                 currentIndex: 0
                 highlightMoveDuration: 100
 

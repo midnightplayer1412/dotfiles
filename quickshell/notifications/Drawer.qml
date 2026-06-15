@@ -166,13 +166,14 @@ PanelWindow {
             // because the model is a reassigned JS array — see project notes on
             // ListView var-model rendering.
             Flickable {
+                id: notifFlick
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
                 contentWidth: width
                 contentHeight: groupCol.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
-                ScrollBar.vertical: Ui.ScrollBar {}
+                ScrollBar.vertical: Ui.ScrollBar { visible: notifFlick.contentHeight > notifFlick.height + 1 }
                 visible: NotificationService.notifications.values.length > 0
 
                 Column {
