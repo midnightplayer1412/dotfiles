@@ -6,6 +6,35 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-06-15
+
+#### Added
+- **wallpaper** (quickshell) — the wallpaper picker gained a **search/filter**
+  field, a **shuffle-now** button, and a **cycle order** preference (**Random**
+  — now never repeats the current wallpaper back-to-back — vs. **Sequential**),
+  persisted to `wallpaper-state.json`. The grid now supports **keyboard
+  navigation** (Down to enter the grid, arrows to move, Enter to apply, Esc to
+  clear/close), **opens centered on the current wallpaper**, and shows an
+  **empty state** for no results. The window is larger (6 columns) with a
+  scrollbar, thumbnails **lift on hover/focus**, and the Cycle switch now uses
+  the shared `Ui.Toggle`.
+- **ui** (quickshell) — new shared **`Ui.ScrollBar`** design-system primitive
+  (slim, outline-tinted, brighter while dragged, auto-hiding); first used by the
+  wallpaper picker.
+
+#### Changed
+- **wallpaper** (quickshell) — wallpapers now sort **numerically**
+  (…9, 10, …57, …100) instead of lexically (1, 10, 100, 11, …).
+
+#### Fixed
+- **wallpaper** (quickshell) — picker thumbnails no longer **reload/flash when
+  scrolling back**. With ~200 wallpapers (several GB, some GIFs >300 MB) the
+  originals overflowed Qt's ~10 MB pixmap cache and were re-decoded on every
+  scroll. A persistent **on-disk thumbnail cache**
+  (`hypr/scripts/gen-wallpaper-thumbs.sh` → `~/.cache/quickshell/wallpaper-thumbs`,
+  regenerated incrementally on scan) makes (re)decoding near-instant and keeps
+  memory flat; cells fall back to the original only until a thumb is generated.
+
 ### 2026-06-13
 
 #### Added

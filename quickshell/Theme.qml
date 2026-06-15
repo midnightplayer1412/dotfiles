@@ -69,11 +69,11 @@ Singleton {
     readonly property int drawerRadius:     16
 
     // Wallpaper picker geometry
-    readonly property int wallpaperPickerWidth:  720
-    readonly property int wallpaperPickerHeight: 520
+    readonly property int wallpaperPickerWidth:  980
+    readonly property int wallpaperPickerHeight: 720
     readonly property int wallpaperPickerRadius: 16
     readonly property int wallpaperPickerPadding: 14
-    readonly property int wallpaperThumbColumns: 5
+    readonly property int wallpaperThumbColumns: 6
     readonly property int wallpaperThumbGap: 6
     readonly property int wallpaperThumbRadius: 5
     readonly property int wallpaperThumbBorder: 2

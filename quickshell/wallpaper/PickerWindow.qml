@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
@@ -18,6 +19,27 @@ PanelWindow {
 
     color: "transparent"
 
+    // Symbolic (monochrome) Papirus icons, tinted by Ui.Icon to match the shell.
+    readonly property string symActions: "/usr/share/icons/Papirus/16x16/symbolic/actions"
+
+    // Wallpapers filtered by the search box (case-insensitive substring on
+    // basename). Empty query → the full list.
+    readonly property var filtered: {
+        const q = search.text.trim().toLowerCase();
+        const all = WallpaperService.wallpapers;
+        if (!q) return all;
+        return all.filter(w => w.basename.toLowerCase().indexOf(q) !== -1);
+    }
+
+    // Pin the currently key-focused thumbnail and close.
+    function pinCurrent() {
+        const idx = grid.currentIndex;
+        if (idx >= 0 && idx < win.filtered.length) {
+            WallpaperService.pinWallpaper(win.filtered[idx].path);
+            WallpaperService.pickerVisible = false;
+        }
+    }
+
     HyprlandFocusGrab {
         active: true
         windows: [win]
@@ -27,12 +49,6 @@ PanelWindow {
     MouseArea {
         anchors.fill: parent
         onClicked: WallpaperService.pickerVisible = false
-    }
-
-    Item {
-        anchors.fill: parent
-        focus: true
-        Keys.onEscapePressed: WallpaperService.pickerVisible = false
     }
 
     Rectangle {
@@ -56,11 +72,11 @@ PanelWindow {
             anchors.margins: Theme.wallpaperPickerPadding
             spacing: 12
 
-            // Header
+            // ── Header ──────────────────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Theme.wallpaperPickerRowHeight
-                spacing: 14
+                spacing: 12
 
                 Text {
                     text: "WALLPAPER"
@@ -70,7 +86,122 @@ PanelWindow {
                     font.weight: Font.DemiBold
                     font.letterSpacing: 2
                 }
-                Item { Layout.fillWidth: true }
+
+                // Search field — grows to fill the gap between title and controls.
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Theme.wallpaperPickerRowHeight
+                    Layout.maximumWidth: 360
+                    radius: 8
+                    color: Theme.surfaceContainer
+                    border.width: 1
+                    border.color: search.activeFocus ? Theme.primary : Theme.outline
+                    Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 9
+                        anchors.rightMargin: 6
+                        spacing: 6
+
+                        Ui.Icon {
+                            source: "file://" + win.symActions + "/edit-find-symbolic.svg"
+                            color: Theme.outline
+                            size: 14
+                        }
+
+                        TextInput {
+                            id: search
+                            Layout.fillWidth: true
+                            clip: true
+                            color: Theme.surfaceText
+                            font.family: Theme.wallpaperPickerFontFamily
+                            font.pixelSize: Theme.wallpaperPickerBodySize
+                            verticalAlignment: TextInput.AlignVCenter
+                            selectByMouse: true
+                            selectionColor: Theme.primary
+                            focus: true
+
+                            Text {
+                                anchors.fill: parent
+                                verticalAlignment: Text.AlignVCenter
+                                visible: search.text.length === 0
+                                text: "Search…"
+                                color: Theme.outline
+                                font: search.font
+                            }
+
+                            // Reset key-focus to the top whenever the result set changes.
+                            onTextChanged: grid.currentIndex = win.filtered.length > 0 ? 0 : -1
+
+                            Keys.onDownPressed: {
+                                grid.forceActiveFocus();
+                                if (grid.currentIndex < 0 && win.filtered.length > 0)
+                                    grid.currentIndex = 0;
+                            }
+                            Keys.onReturnPressed: win.pinCurrent()
+                            Keys.onEnterPressed: win.pinCurrent()
+                            Keys.onEscapePressed: {
+                                if (search.text.length > 0) search.text = "";
+                                else WallpaperService.pickerVisible = false;
+                            }
+                        }
+
+                        // Clear button (only when there is a query)
+                        Ui.Icon {
+                            source: "file://" + win.symActions + "/edit-clear-symbolic.svg"
+                            color: clearMouse.containsMouse ? Theme.surfaceText : Theme.outline
+                            size: 14
+                            visible: search.text.length > 0
+                            MouseArea {
+                                id: clearMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: { search.text = ""; search.forceActiveFocus(); }
+                            }
+                        }
+                    }
+                }
+
+                // Shuffle-now button
+                Rectangle {
+                    Layout.preferredWidth: Theme.wallpaperPickerRowHeight
+                    Layout.preferredHeight: Theme.wallpaperPickerRowHeight
+                    radius: 8
+                    color: shuffleMouse.containsMouse ? Theme.primaryContainer : Theme.surfaceContainer
+                    border.width: 1
+                    border.color: shuffleMouse.containsMouse ? Theme.primary : Theme.outline
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                    Ui.Icon {
+                        anchors.centerIn: parent
+                        source: "file://" + win.symActions + "/ymuse-random-symbolic.svg"
+                        color: Theme.surfaceText
+                        size: 16
+                    }
+                    MouseArea {
+                        id: shuffleMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: WallpaperService.shuffleNow()
+                    }
+                }
+
+                // Cycle order — random vs. sequential (persisted preference).
+                Ui.Dropdown {
+                    Layout.preferredWidth: 120
+                    Layout.preferredHeight: Theme.wallpaperPickerRowHeight
+                    textRole: "label"
+                    model: [
+                        { label: "Random",     v: "random" },
+                        { label: "Sequential", v: "sequential" }
+                    ]
+                    currentIndex: WallpaperService.cycleOrder === "sequential" ? 1 : 0
+                    onActivated: (i) => WallpaperService.setCycleOrder(model[i].v)
+                }
 
                 Ui.Dropdown {
                     Layout.preferredWidth: 110
@@ -99,66 +230,86 @@ PanelWindow {
                         font.family: Theme.wallpaperPickerFontFamily
                         font.pixelSize: Theme.wallpaperPickerBodySize
                     }
-                    Rectangle {
-                        id: toggle
-                        width: 38; height: 22; radius: 11
-                        color: WallpaperService.cycleEnabled ? Theme.primary : Theme.outline
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Rectangle {
-                            width: 18; height: 18; radius: 9
-                            color: "white"
-                            anchors.verticalCenter: parent.verticalCenter
-                            x: WallpaperService.cycleEnabled ? parent.width - width - 2 : 2
-                            Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: WallpaperService.setCycle(!WallpaperService.cycleEnabled)
-                        }
+                    Ui.Toggle {
+                        checked: WallpaperService.cycleEnabled
+                        onToggled: (v) => WallpaperService.setCycle(v)
                     }
                 }
             }
 
-            // Lazy-loaded grid — GridView only instantiates delegates that
-            // are inside the viewport plus `cacheBuffer` worth of pixels
-            // outside it. Scrolling reuses delegate instances, so memory
-            // stays flat regardless of how many wallpapers exist.
-            GridView {
-                id: grid
+            // ── Grid ────────────────────────────────────────────────
+            Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                clip: true
 
-                model: WallpaperService.wallpapers
+                // Lazy-loaded: GridView only instantiates delegates inside the
+                // viewport plus `cacheBuffer`. Scrolling reuses instances, so
+                // memory stays flat regardless of how many wallpapers exist.
+                GridView {
+                    id: grid
+                    anchors.fill: parent
+                    clip: true
+                    focus: false
 
-                readonly property int cols: Theme.wallpaperThumbColumns
-                readonly property int gap: Theme.wallpaperThumbGap
+                    model: win.filtered
 
-                // Cells are flush in GridView, so we put the gap *inside*
-                // each cell via the delegate's rightMargin/bottomMargin.
-                cellWidth: Math.floor(width / cols)
-                cellHeight: Math.floor((cellWidth - gap) * 10 / 16) + gap
+                    readonly property int cols: Theme.wallpaperThumbColumns
+                    readonly property int gap: Theme.wallpaperThumbGap
 
-                // Pre-load one row above/below the viewport so scrolling is
-                // smooth without holding everything in memory.
-                cacheBuffer: cellHeight * 2
+                    // Cells are flush in GridView, so we put the gap *inside*
+                    // each cell via the delegate's right/bottom margin.
+                    cellWidth: Math.floor(width / cols)
+                    cellHeight: Math.floor((cellWidth - gap) * 10 / 16) + gap
 
-                boundsBehavior: Flickable.StopAtBounds
+                    cacheBuffer: cellHeight * 2
+                    boundsBehavior: Flickable.StopAtBounds
+                    highlightFollowsCurrentItem: true
+                    keyNavigationEnabled: true
 
-                delegate: WallpaperThumb {
-                    required property var modelData
-                    width: grid.cellWidth - grid.gap
-                    height: grid.cellHeight - grid.gap
-                    entry: modelData
-                    selected: modelData.path === WallpaperService.currentPath
-                    onClicked: {
-                        console.log("PICKER: click pin", modelData.path);
-                        WallpaperService.pinWallpaper(modelData.path);
-                        WallpaperService.pickerVisible = false;
+                    ScrollBar.vertical: Ui.ScrollBar {}
+
+                    Keys.onReturnPressed: win.pinCurrent()
+                    Keys.onEnterPressed: win.pinCurrent()
+                    Keys.onEscapePressed: WallpaperService.pickerVisible = false
+
+                    delegate: WallpaperThumb {
+                        required property var modelData
+                        required property int index
+                        width: grid.cellWidth - grid.gap
+                        height: grid.cellHeight - grid.gap
+                        entry: modelData
+                        selected: modelData.path === WallpaperService.currentPath
+                        keyFocused: grid.activeFocus && index === grid.currentIndex
+                        thumbRev: WallpaperService.thumbRev
+                        onClicked: {
+                            WallpaperService.pinWallpaper(modelData.path);
+                            WallpaperService.pickerVisible = false;
+                        }
                     }
+                }   // GridView
+
+                // Empty state — no wallpapers at all, or none match the search.
+                Text {
+                    anchors.centerIn: parent
+                    visible: win.filtered.length === 0
+                    text: WallpaperService.wallpapers.length === 0
+                          ? "No wallpapers found in " + WallpaperService.wallpaperDir
+                          : "No wallpapers match “" + search.text + "”"
+                    color: Theme.outline
+                    font.family: Theme.wallpaperPickerFontFamily
+                    font.pixelSize: Theme.wallpaperPickerBodySize
                 }
             }
+        }
+    }
+
+    // On open: center the grid on the currently-applied wallpaper and seed
+    // key-navigation there, so it's visible immediately even far down the list.
+    Component.onCompleted: {
+        const idx = win.filtered.findIndex(w => w.path === WallpaperService.currentPath);
+        if (idx >= 0) {
+            grid.currentIndex = idx;
+            Qt.callLater(() => grid.positionViewAtIndex(idx, GridView.Center));
         }
     }
 }
