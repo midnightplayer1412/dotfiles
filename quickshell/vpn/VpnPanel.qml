@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import ".."
+import "../ui" as Ui
 import "../vpn"
 
 Item {
@@ -104,6 +106,7 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            ScrollBar.vertical: Ui.ScrollBar {}
             spacing: 4
             model: VpnService.connections
             delegate: VpnRow {

@@ -1,9 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import ".."
+import "../ui" as Ui
 
 PanelWindow {
     id: root
@@ -170,6 +172,7 @@ PanelWindow {
                 contentWidth: width
                 contentHeight: groupCol.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
+                ScrollBar.vertical: Ui.ScrollBar {}
                 visible: NotificationService.notifications.values.length > 0
 
                 Column {

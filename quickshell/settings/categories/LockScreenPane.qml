@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import "../../lock" as Lock
 import "../../wallpaper" as Wp
 import "../../ui" as Ui
@@ -89,6 +90,7 @@ Item {
         contentWidth: width
         contentHeight: content.implicitHeight
         clip: true
+        ScrollBar.vertical: Ui.ScrollBar {}
         boundsBehavior: Flickable.StopAtBounds
 
         ColumnLayout {

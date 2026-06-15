@@ -1,9 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import ".."
+import "../ui" as Ui
 
 PanelWindow {
     id: root
@@ -293,6 +295,7 @@ PanelWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
+                ScrollBar.vertical: Ui.ScrollBar {}
                 currentIndex: 0
                 highlightMoveDuration: 100
 

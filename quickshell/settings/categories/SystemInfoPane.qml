@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Quickshell.Io
 import "../../ui" as Ui
 import "../.."
@@ -90,6 +91,7 @@ df -h --output=used,size,pcent / 2>/dev/null | tail -1 | awk '{printf "disk\\t%s
         contentWidth: width
         contentHeight: col.implicitHeight
         clip: true
+        ScrollBar.vertical: Ui.ScrollBar {}
         boundsBehavior: Flickable.StopAtBounds
 
         ColumnLayout {

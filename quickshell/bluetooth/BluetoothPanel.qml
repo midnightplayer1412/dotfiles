@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import "../ui" as Ui
 import ".."
 import "../bluetooth"
@@ -136,6 +137,7 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            ScrollBar.vertical: Ui.ScrollBar {}
             spacing: 4
             model: root.others
             delegate: DeviceRow { width: ListView.view ? ListView.view.width : 0 }

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "." as Ui
 import ".."
 
 // Themed dropdown — a drop-in replacement for QtQuick Controls ComboBox that
@@ -94,6 +95,7 @@ Item {
         contentItem: ListView {
             implicitHeight: Math.min(contentHeight, 240)
             clip: true
+            ScrollBar.vertical: Ui.ScrollBar {}
             model: root.model
             boundsBehavior: Flickable.StopAtBounds
 

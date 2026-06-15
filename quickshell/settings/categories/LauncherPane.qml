@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import "../../launcher" as Launcher
 import "../../ui" as Ui
 import "../.."
@@ -16,6 +17,7 @@ Item {
         contentWidth: width
         contentHeight: col.implicitHeight
         clip: true
+        ScrollBar.vertical: Ui.ScrollBar {}
         boundsBehavior: Flickable.StopAtBounds
 
         ColumnLayout {
