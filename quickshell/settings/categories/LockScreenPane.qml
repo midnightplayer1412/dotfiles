@@ -249,6 +249,7 @@ Item {
                         // Lazy load: only fetch the image once the thumb scrolls
                         // near the viewport, and keep it once loaded (no reload flicker).
                         property bool loaded: false
+                        property bool thumbFailed: false   // fall back to original if no cached thumb
                         readonly property bool inView: {
                             const top = thumb.mapToItem(content, 0, 0).y;
                             return (top + height) > (ctrl.contentY - 600)
@@ -258,11 +259,23 @@ Item {
 
                         Image {
                             anchors.fill: parent
-                            source: thumb.loaded ? ("file://" + thumb.modelData.path) : ""
+                            // Use the small cached thumbnail (see gen-wallpaper-thumbs.sh)
+                            // instead of decoding the multi-MB original into a 92x58 cell;
+                            // fall back to the original only until the thumb exists.
+                            source: !thumb.loaded ? ""
+                                  : (!thumb.thumbFailed && thumb.modelData.thumb)
+                                    ? "file://" + thumb.modelData.thumb
+                                    : "file://" + thumb.modelData.path
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             cache: true
+                            sourceSize.width: 200
+                            sourceSize.height: 130
                             visible: status === Image.Ready
+                            onStatusChanged: {
+                                if (status === Image.Error && !thumb.thumbFailed && thumb.modelData.thumb)
+                                    thumb.thumbFailed = true;
+                            }
                         }
                         MouseArea {
                             anchors.fill: parent

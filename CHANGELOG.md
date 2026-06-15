@@ -30,6 +30,10 @@ grouped by date since this repo is unreleased / rolling.
   panels, the launcher results, the `Ui.Dropdown` popup, and all Settings panes
   (Lock Screen, Launcher, System Info, Appearance) — previously these had no
   visible scrollbar.
+- **settings** (quickshell) — the Lock Screen pane's wallpaper grid now loads
+  the small **cached thumbnails** (with a capped `sourceSize`) instead of
+  decoding the multi-MB originals into 92×58 cells, sharing the picker's
+  thumbnail cache for much lower memory use.
 
 #### Fixed
 - **wallpaper** (quickshell) — picker thumbnails no longer **reload/flash when
