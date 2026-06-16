@@ -13,6 +13,10 @@ PanelWindow {
 
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
+    // Both modes grab the keyboard. Sticky uses it for Escape; armed uses it to
+    // catch the Super-key RELEASE in QML (Hyprland can't dispatch a bind on a
+    // modifier-key release — verified). Tab cycling still runs via the Hyprland
+    // submap, which fires from compositor-level binds regardless of this grab.
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
     color: "transparent"
@@ -53,6 +57,21 @@ PanelWindow {
     Item {
         anchors.fill: parent
         focus: true
-        Keys.onEscapePressed: OverviewState.close()
+        Keys.onEscapePressed: OverviewState.altTabCancel()
+
+        // Armed alt-tab commits when Super is released. The Hyprland submap
+        // consumes key PRESSES (driving Tab cycling), but RELEASES fall through
+        // to this focused surface — so we catch the Super release here, which
+        // Hyprland itself can't bind. Note Qt delivers the Super key as
+        // Key_Meta (Super_L/R covered defensively for other keyboards).
+        Keys.onReleased: (event) => {
+            if (OverviewState.armed
+                && (event.key === Qt.Key_Meta
+                 || event.key === Qt.Key_Super_L
+                 || event.key === Qt.Key_Super_R)) {
+                OverviewState.altTabCommit();
+                event.accepted = true;
+            }
+        }
     }
 }

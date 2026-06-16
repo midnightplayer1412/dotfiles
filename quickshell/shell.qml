@@ -37,6 +37,29 @@ ShellRoot {
         onPressed: Overview.OverviewState.toggle(focusedScreen())
     }
 
+    // Armed alt-tab (Super+Alt+Tab). The Hyprland submap routes every key in the
+    // held cycle here; commit fires on Super release (or Enter as a fallback).
+    GlobalShortcut {
+        name: "overview_altTabNext"
+        onPressed: Overview.OverviewState.altTabStep(focusedScreen(), 1)
+    }
+    GlobalShortcut {
+        name: "overview_altTabPrev"
+        onPressed: Overview.OverviewState.altTabStep(focusedScreen(), -1)
+    }
+    GlobalShortcut {
+        name: "overview_altTabCommit"
+        onPressed: Overview.OverviewState.altTabCommit()
+    }
+    GlobalShortcut {
+        name: "overview_altTabCancel"
+        onPressed: Overview.OverviewState.altTabCancel()
+    }
+    GlobalShortcut {
+        name: "overview_altTabClose"
+        onPressed: Overview.OverviewState.altTabCloseHighlighted()
+    }
+
     GlobalShortcut {
         name: "cheatsheet_toggle"
         onPressed: Cheatsheet.CheatsheetState.toggle(focusedScreen())

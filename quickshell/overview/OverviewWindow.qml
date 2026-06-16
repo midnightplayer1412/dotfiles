@@ -23,6 +23,8 @@ Rectangle {
     property Item constrainTo: null
 
     property bool hovered: false
+    // Set by the alt-tab cycle in OverviewWidget — the current keyboard target.
+    property bool highlighted: false
     readonly property bool dragging: dragArea.drag.active
 
     signal clicked()
@@ -41,15 +43,19 @@ Rectangle {
     color: dragging ? Theme.primaryContainer
          : hovered  ? Theme.surfaceContainer
          :             Qt.darker(Theme.surface, 1.1)
-    border.width: active ? 2 : 1
-    border.color: active ? Theme.primary : Theme.outline
+    border.width: highlighted ? 3 : active ? 2 : 1
+    border.color: highlighted || active ? Theme.primary : Theme.outline
     clip: true
 
     opacity: dragging ? 0.9 : 1.0
-    z: dragging ? 1000 : 0
+    // Lift the highlighted tile above its neighbours so its border/scale isn't
+    // clipped by sibling tiles; dragging still wins.
+    z: dragging ? 1000 : highlighted ? 500 : 0
+    scale: highlighted ? 1.04 : 1.0
 
-    Behavior on color       { ColorAnimation { duration: 100 } }
-    Behavior on border.color { ColorAnimation { duration: 120 } }
+    Behavior on color        { ColorAnimation  { duration: 100 } }
+    Behavior on border.color { ColorAnimation  { duration: 120 } }
+    Behavior on scale        { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
 
     Drag.active: dragArea.drag.active
     Drag.hotSpot.x: width / 2

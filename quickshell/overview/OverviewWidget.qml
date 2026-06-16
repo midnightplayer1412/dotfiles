@@ -134,6 +134,10 @@ Rectangle {
                         required property var modelData
                         toplevel: modelData
                         constrainTo: root
+                        // The alt-tab cycle target (object identity: cycleOrder
+                        // holds the same toplevel instances as cell.windows).
+                        highlighted: OverviewState.armed
+                                  && OverviewState.highlightedWindow === modelData
 
                         // Pull at/size from the raw IPC object (HyprlandToplevel
                         // doesn't expose them as direct properties).
