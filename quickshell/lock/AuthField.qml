@@ -8,11 +8,19 @@ Column {
 
     property var context: null          // LockContext or null (preview)
     property bool hideInput: false      // fully hide vs dots
+    property bool hideUntilTyping: false // keep the container hidden until typing
     property bool preview: context === null
 
     readonly property bool busy: context ? context.authenticating : false
     readonly property string errorMessage: context ? context.errorMessage : ""
     readonly property int attempts: context ? context.attempts : 0
+
+    // The input container fades in once there's something to show: any typed
+    // text, an error/shake to contextualize, or an in-flight auth. Preview and
+    // the disabled-flag both keep it visible. The field itself keeps focus
+    // regardless, so the first blind keystroke registers and triggers the reveal.
+    readonly property bool revealed: !auth.hideUntilTyping || auth.preview
+        || field.text.length > 0 || auth.errorMessage.length > 0 || auth.busy
 
     spacing: 8
     width: 320
@@ -33,6 +41,11 @@ Column {
     Item {
         width: parent.width
         height: 44
+
+        // Fade the container in/out without collapsing its space, so the clock
+        // and media above don't reflow as it appears.
+        opacity: auth.revealed ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 180 } }
 
         Rectangle {
             id: box

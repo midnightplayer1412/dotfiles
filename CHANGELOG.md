@@ -6,6 +6,17 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-06-17
+
+#### Added
+- **lock / settings** (quickshell) — new **Hide input until typing** option in
+  Settings → Lock Screen → Behavior (`hideInputUntilTyping` in
+  `lock-config.json`, default off). When on, the password container stays hidden
+  and fades in on the first keystroke, then fades back out once the field is
+  empty and idle; it stays visible during the failure shake / attempt count and
+  while authenticating. The field keeps keyboard focus throughout, so the first
+  blind keystroke triggers the reveal.
+
 ### 2026-06-15
 
 #### Added

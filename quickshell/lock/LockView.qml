@@ -114,6 +114,7 @@ Item {
             visible: view.showInput
             context: view.context
             hideInput: LockConfig.hideInput
+            hideUntilTyping: LockConfig.hideInputUntilTyping
         }
     }
 

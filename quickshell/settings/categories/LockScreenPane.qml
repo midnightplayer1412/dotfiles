@@ -177,6 +177,10 @@ Item {
                 label: "Hide input entirely (no dots)"; checked: Lock.LockConfig.hideInput
                 onToggled: (v) => { Lock.LockConfig.hideInput = v; Lock.LockConfig.save(); }
             }
+            ToggleRow {
+                label: "Hide input until typing"; checked: Lock.LockConfig.hideInputUntilTyping
+                onToggled: (v) => { Lock.LockConfig.hideInputUntilTyping = v; Lock.LockConfig.save(); }
+            }
 
             // ── Background (last — the wallpaper grid is the long one) ──
             SectionHeader { text: "Background" }
