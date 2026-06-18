@@ -22,6 +22,8 @@ grouped by date since this repo is unreleased / rolling.
 - **cheatsheet** (quickshell) — the Hyprland keymap now lists the
   **Super + Alt + Tab** alt-tab window switcher (hold, Tab cycles, release to
   focus), and its bind comment spells out the hold/cycle/release behaviour.
+- **lock** (hyprlock) — refreshed the input-field `outer_color` / `check_color`
+  from sage green (`bccf81`) to periwinkle blue (`b7c4ff`).
 
 #### Fixed
 - **settings** (quickshell) — the Launcher pane's content now leaves a right
