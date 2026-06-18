@@ -53,6 +53,8 @@
     { "key": "space", "mods": ["SUPER"], "category": "Apps", "desc": "App launcher" },
     { "key": "N", "mods": ["SUPER"], "category": "System", "desc": "Notification center" },
     { "key": "TAB", "mods": ["SUPER"], "category": "Window", "desc": "Workspace overview" },
+    { "key": "Tab", "mods": ["SUPER", "ALT"], "category": "Window", "desc": "Alt-tab switcher (hold, Tab cycles, release to focus)" },
+    { "key": "Tab", "mods": ["SUPER", "ALT"], "category": "", "desc": "Enter mode" },
     { "key": "slash", "mods": ["SUPER"], "category": "System", "desc": "Keybinding cheatsheet" },
     { "key": "backspace", "mods": ["SUPER"], "category": "System", "desc": "Settings panel" },
     { "key": "escape", "mods": ["SUPER"], "category": "System", "desc": "Lock screen" },

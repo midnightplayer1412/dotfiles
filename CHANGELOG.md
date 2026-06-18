@@ -19,6 +19,9 @@ grouped by date since this repo is unreleased / rolling.
 - **launcher** (quickshell) — the Recent **chip strip** now wraps onto multiple
   rows (`Flow`) instead of laying chips out in a single non-wrapping row, so it
   stays tidy at higher recent-app counts instead of overflowing horizontally.
+- **cheatsheet** (quickshell) — the Hyprland keymap now lists the
+  **Super + Alt + Tab** alt-tab window switcher (hold, Tab cycles, release to
+  focus), and its bind comment spells out the hold/cycle/release behaviour.
 
 #### Fixed
 - **settings** (quickshell) — the Launcher pane's content now leaves a right
