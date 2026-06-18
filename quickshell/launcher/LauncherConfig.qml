@@ -12,6 +12,7 @@ Singleton {
 
     property alias position: adapter.position             // "bottom" | "center"
     property alias recentsLayout: adapter.recentsLayout   // "rows" | "chips"
+    property alias maxRecents: adapter.maxRecents         // # of recent apps shown (1–10)
     property alias searchEngine: adapter.searchEngine     // engine key (see engines)
 
     // Web-search engines for the launcher's no-match fallback. {q} is the query.
@@ -39,6 +40,7 @@ Singleton {
             id: adapter
             property string position: "bottom"
             property string recentsLayout: "rows"
+            property int maxRecents: 5
             property string searchEngine: "google"
         }
     }

@@ -43,7 +43,7 @@ PanelWindow {
     readonly property var recentApps: {
         const byId = {};
         for (const a of root.allApps) byId[a.id] = a;
-        return UsageStore.topIds(5).map(id => byId[id]).filter(Boolean);
+        return UsageStore.topIds(LauncherConfig.maxRecents).map(id => byId[id]).filter(Boolean);
     }
 
     // Wrap a DesktopEntry as a unified result row.
@@ -223,17 +223,16 @@ PanelWindow {
                     font.pixelSize: 11
                     font.bold: true
                 }
-                RowLayout {
+                Flow {
                     Layout.fillWidth: true
                     Layout.fillHeight: false
-                    Layout.preferredHeight: 64
                     spacing: 8
                     Repeater {
                         model: root.recentApps
                         delegate: Rectangle {
                             required property var modelData
-                            Layout.preferredWidth: 72
-                            Layout.preferredHeight: 56
+                            width: 72
+                            height: 56
                             radius: 10
                             color: chipMouse.containsMouse ? Theme.surfaceContainer : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
@@ -273,7 +272,6 @@ PanelWindow {
                             }
                         }
                     }
-                    Item { Layout.fillWidth: true }   // left-align chips
                 }
             }
 

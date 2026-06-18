@@ -23,7 +23,9 @@ Item {
 
         ColumnLayout {
             id: col
-            width: parent.width
+            // Leave a gutter on the right so the scrollbar sits clear of the content
+            // (8px bar + breathing room) instead of hugging its edge.
+            width: parent.width - 24
             spacing: 14
 
             Text {
@@ -156,6 +158,51 @@ Item {
                             }
                         }
                     }
+                }
+            }
+
+            // ── Recent apps count ─────────────────────────────────────
+            Text {
+                text: "Recent apps shown"
+                color: Theme.primary
+                font.family: Theme.fontFamily
+                font.pixelSize: 14
+                font.bold: true
+                Layout.topMargin: 10
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "How many recent apps appear when the search box is empty."
+                color: Theme.outline
+                font.family: Theme.fontFamily
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+                Text {
+                    text: "Max items"
+                    color: Theme.surfaceText
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 13
+                    Layout.preferredWidth: 70
+                }
+                Ui.Slider {
+                    Layout.fillWidth: true
+                    from: 1; to: 10; stepSize: 1
+                    value: Launcher.LauncherConfig.maxRecents
+                    onMoved: (v) => Launcher.LauncherConfig.maxRecents = v
+                    onReleased: Launcher.LauncherConfig.save()
+                }
+                Text {
+                    text: Launcher.LauncherConfig.maxRecents
+                    color: Theme.primary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 13
+                    font.bold: true
+                    horizontalAlignment: Text.AlignRight
+                    Layout.preferredWidth: 20
                 }
             }
 

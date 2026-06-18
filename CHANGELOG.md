@@ -6,6 +6,25 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-06-18
+
+#### Added
+- **launcher / settings** (quickshell) — new **Recent apps shown** setting in
+  Settings → Launcher (`maxRecents` in `launcher-config.json`, default 5,
+  adjustable 1–10 via a slider). The empty-query Recent section now shows up to
+  this many most-used apps instead of a hard-coded 5, in both the list-rows and
+  chip-strip layouts.
+
+#### Changed
+- **launcher** (quickshell) — the Recent **chip strip** now wraps onto multiple
+  rows (`Flow`) instead of laying chips out in a single non-wrapping row, so it
+  stays tidy at higher recent-app counts instead of overflowing horizontally.
+
+#### Fixed
+- **settings** (quickshell) — the Launcher pane's content now leaves a right
+  gutter so the `Ui.ScrollBar` sits clear of the cards/slider instead of
+  hugging their edge.
+
 ### 2026-06-17
 
 #### Added
