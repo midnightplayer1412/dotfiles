@@ -22,8 +22,15 @@ Singleton {
         // Hyprland doesn't push position-changed events over live IPC, so
         // refresh once on open to pick up any moves done outside the overview.
         Hyprland.refreshToplevels();
+        // Start sticky-mode selection on the focused window so HJKL has an anchor.
+        seedKeyboardSelection();
     }
-    function close() { visible = false; armed = false; }
+    function close() {
+        visible = false;
+        armed = false;
+        keyboardSelectedAddress = "";
+        clearTileGeometry();
+    }
 
     // Slow tick while the overview is open, in case the user repositions
     // windows in another tool (or via keybind) without closing the overview.
@@ -99,6 +106,75 @@ Singleton {
         if (highlightIndex >= cycleOrder.length - 1)
             highlightIndex = Math.max(0, cycleOrder.length - 2);
         refreshTimer.restart();
+    }
+
+    // ── Sticky-mode keyboard selection (Super+Tab overview) ──────────
+    // Geometric HJKL navigation, independent of the armed alt-tab above.
+    // The highlight is driven by address (not an index) because the selection
+    // jumps spatially across workspace cells rather than walking a list.
+    property string keyboardSelectedAddress: ""
+
+    // address (0x-normalized) -> { cx, cy } tile centers in OverviewWidget root
+    // coords. Populated by each rendered tile (OverviewWidget.registerTile) and
+    // cleared on close(). Read imperatively by selectStep at keypress time.
+    property var tileGeometry: ({})
+
+    readonly property var keyboardSelectedWindow:
+        keyboardSelectedAddress
+            ? (toplevels.find(t => _addr(t.address ?? "") === keyboardSelectedAddress) ?? null)
+            : null
+
+    // How strongly HJKL prefers an in-line window over a diagonal one.
+    // score = along-axis distance + selectPerpWeight * perpendicular distance.
+    readonly property real selectPerpWeight: 2
+
+    function registerTile(address, cx, cy) {
+        if (!address) return;
+        tileGeometry[_addr(address)] = { cx: cx, cy: cy };
+    }
+
+    function clearTileGeometry() { tileGeometry = ({}); }
+
+    // Seed the selection on the currently-focused window (focusHistoryID 0).
+    function seedKeyboardSelection() {
+        const focused = toplevels.find(
+            t => (t?.lastIpcObject?.focusHistoryID ?? -1) === 0);
+        keyboardSelectedAddress = focused?.address ? _addr(focused.address) : "";
+    }
+
+    // dir: "h" left, "l" right, "k" up, "j" down. Move the selection to the
+    // nearest registered window whose center lies in that direction. No-op if
+    // there is none. Falls back to any registered tile if the current
+    // selection's geometry isn't known yet (tiles register just after open).
+    function selectStep(dir) {
+        const geom = tileGeometry;
+        const cur = geom[keyboardSelectedAddress];
+        if (!cur) {
+            for (const a in geom) { keyboardSelectedAddress = a; return; }
+            return;
+        }
+        const eps = 1;
+        let best = "";
+        let bestScore = Infinity;
+        for (const a in geom) {
+            if (a === keyboardSelectedAddress) continue;
+            const dx = geom[a].cx - cur.cx;
+            const dy = geom[a].cy - cur.cy;
+            let along, perp;
+            if (dir === "l")      { if (dx <= eps)  continue; along = dx;  perp = Math.abs(dy); }
+            else if (dir === "h") { if (dx >= -eps) continue; along = -dx; perp = Math.abs(dy); }
+            else if (dir === "j") { if (dy <= eps)  continue; along = dy;  perp = Math.abs(dx); }
+            else if (dir === "k") { if (dy >= -eps) continue; along = -dy; perp = Math.abs(dx); }
+            else continue;
+            const score = along + selectPerpWeight * perp;
+            if (score < bestScore) { bestScore = score; best = a; }
+        }
+        if (best) keyboardSelectedAddress = best;
+    }
+
+    function selectCommit() {
+        if (keyboardSelectedAddress) focusWindow(keyboardSelectedAddress);
+        close();
     }
 
     // ── Grid layout ──────────────────────────────────────────────────

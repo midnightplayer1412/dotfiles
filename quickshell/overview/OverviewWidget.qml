@@ -131,13 +131,33 @@ Rectangle {
                     model: cell.windows
 
                     OverviewWindow {
+                        id: tile
                         required property var modelData
                         toplevel: modelData
                         constrainTo: root
-                        // The alt-tab cycle target (object identity: cycleOrder
-                        // holds the same toplevel instances as cell.windows).
+
+                        // Report this tile's center (in widget-root `root`
+                        // coords) so OverviewState's HJKL navigation can find the
+                        // geometrically nearest window. Re-report whenever the
+                        // tile's home geometry changes. Uses tileW/tileH (home
+                        // size), so an in-progress drag doesn't perturb nav.
+                        function reportGeometry() {
+                            if (!OverviewState.visible || !tile.address) return;
+                            const c = tile.mapToItem(root, tile.tileW / 2, tile.tileH / 2);
+                            OverviewState.registerTile(tile.address, c.x, c.y);
+                        }
+                        Component.onCompleted: Qt.callLater(reportGeometry)
+                        onTileXChanged: reportGeometry()
+                        onTileYChanged: reportGeometry()
+                        onTileWChanged: reportGeometry()
+                        onTileHChanged: reportGeometry()
+
+                        // Armed alt-tab uses its MRU highlight; the sticky
+                        // Super+Tab overview uses the keyboard selection. Same
+                        // visual (OverviewWindow border/scale), one at a time.
                         highlighted: OverviewState.armed
-                                  && OverviewState.highlightedWindow === modelData
+                            ? OverviewState.highlightedWindow === modelData
+                            : OverviewState.keyboardSelectedWindow === modelData
 
                         // Pull at/size from the raw IPC object (HyprlandToplevel
                         // doesn't expose them as direct properties).
