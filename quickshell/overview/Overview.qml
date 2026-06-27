@@ -59,6 +59,27 @@ PanelWindow {
         focus: true
         Keys.onEscapePressed: OverviewState.altTabCancel()
 
+        // Sticky-mode (Super+Tab) keyboard navigation: HJKL/arrows move the
+        // selection to the geometrically nearest window, Enter focuses it.
+        // Armed alt-tab (Super+Alt+Tab) drives its own keys via the Hyprland
+        // submap + Super-release below, so bail out when armed.
+        Keys.onPressed: (event) => {
+            if (OverviewState.armed)
+                return;
+            switch (event.key) {
+            case Qt.Key_H: case Qt.Key_Left:
+                OverviewState.selectStep("h"); event.accepted = true; break;
+            case Qt.Key_L: case Qt.Key_Right:
+                OverviewState.selectStep("l"); event.accepted = true; break;
+            case Qt.Key_K: case Qt.Key_Up:
+                OverviewState.selectStep("k"); event.accepted = true; break;
+            case Qt.Key_J: case Qt.Key_Down:
+                OverviewState.selectStep("j"); event.accepted = true; break;
+            case Qt.Key_Return: case Qt.Key_Enter:
+                OverviewState.selectCommit(); event.accepted = true; break;
+            }
+        }
+
         // Armed alt-tab commits when Super is released. The Hyprland submap
         // consumes key PRESSES (driving Tab cycling), but RELEASES fall through
         // to this focused surface — so we catch the Super release here, which
