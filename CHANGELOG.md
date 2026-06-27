@@ -6,6 +6,20 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-06-27
+
+#### Added
+- **overview** (quickshell) — the **Super + Tab** workspace overview is now
+  keyboard-navigable. On open the currently-focused window is selected, and
+  **H / J / K / L** (or the arrow keys) move the selection to the
+  geometrically nearest window in that direction across the whole grid,
+  crossing workspace cells; **Enter** focuses the selected window and closes
+  the overview (**Esc** still cancels). Each tile reports its center into a
+  small address-keyed registry that drives a nearest-neighbour search
+  (`along + 2·perpendicular` distance), so navigation follows what you see.
+  Implemented entirely in QML — no new Hyprland binds — and independent of the
+  Super + Alt + Tab alt-tab, which is unchanged.
+
 ### 2026-06-18
 
 #### Added
