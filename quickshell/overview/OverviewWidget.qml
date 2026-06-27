@@ -146,7 +146,7 @@ Rectangle {
                             const c = tile.mapToItem(root, tile.tileW / 2, tile.tileH / 2);
                             OverviewState.registerTile(tile.address, c.x, c.y);
                         }
-                        Component.onCompleted: reportGeometry()
+                        Component.onCompleted: Qt.callLater(reportGeometry)
                         onTileXChanged: reportGeometry()
                         onTileYChanged: reportGeometry()
                         onTileWChanged: reportGeometry()
