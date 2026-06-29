@@ -6,6 +6,36 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-06-29
+
+#### Added
+- **keyboard / settings** (quickshell + asusctl) — new **Keyboard lighting**
+  card in Settings → Appearance that drives the laptop's Aura backlight from the
+  Matugen theme. A master toggle plus dropdowns for **color source** (follow the
+  palette accent or a custom hex with swatches), **effect** (static / breathe /
+  pulse — the only effects the FX507ZU4 single-zone board supports), and
+  **brightness** (off / low / med / high); **speed** appears only for breathe.
+  A live preview bar shows the resulting color, dimmed to hint the brightness.
+  Settings persist to `keyboard-config.json` and are applied via a new
+  `hypr/scripts/apply-keyboard.sh`, the single owner of the `asusctl` command.
+  `apply-theme.sh` calls it after every Matugen regenerate, so the keyboard
+  re-tints in lockstep with tmux / yazi / hyprlock on every wallpaper or theme
+  change. The script self-guards (no-ops if `asusctl`/`asusd` are absent or the
+  feature is off), so it never breaks the theme pipeline.
+
+#### Changed
+- **settings** (quickshell) — the Keyboard lighting options use uniform
+  fill-width `Ui.Dropdown`s with a fixed label column, so every dropdown is the
+  same width regardless of label length.
+
+#### Fixed
+- **settings** (quickshell) — the Appearance pane's content now leaves a right
+  gutter so the `Ui.ScrollBar` sits clear of the content instead of overlapping
+  it (matching the Launcher pane).
+- **settings** (quickshell) — the Lock Screen pane's four dropdowns (time/date
+  format, input position, background source) now share a uniform width instead
+  of each sizing differently.
+
 ### 2026-06-27
 
 #### Added
