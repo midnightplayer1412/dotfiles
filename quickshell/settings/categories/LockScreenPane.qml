@@ -123,6 +123,7 @@ Item {
                 Layout.fillWidth: true
                 Text { text: "Time format"; color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 13; Layout.fillWidth: true }
                 Ui.Dropdown {
+                    Layout.preferredWidth: 200
                     model: [ "24-hour", "12-hour" ]
                     currentIndex: Lock.LockConfig.clockFormat === "12h" ? 1 : 0
                     onActivated: (i) => {
@@ -140,7 +141,7 @@ Item {
                 Text { text: "Date format"; color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 13; Layout.fillWidth: true }
                 Ui.Dropdown {
                     id: dateCombo
-                    Layout.preferredWidth: 160
+                    Layout.preferredWidth: 200
                     model: [ "dddd, MMMM d", "ddd MMM d", "yyyy-MM-dd", "MMMM d, yyyy" ]
                     // Live binding so the dropdown re-syncs after hot-reload / external edits.
                     currentIndex: {
@@ -164,7 +165,7 @@ Item {
                     Layout.fillWidth: true
                 }
                 Ui.Dropdown {
-                    Layout.preferredWidth: 140
+                    Layout.preferredWidth: 200
                     model: [ "Center", "Bottom" ]
                     currentIndex: Lock.LockConfig.inputPosition === "bottom" ? 1 : 0
                     onActivated: (i) => {
