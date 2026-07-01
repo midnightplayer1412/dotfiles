@@ -57,8 +57,9 @@ Hyprland compositor config split into modular files:
 
 | Key | Action |
 |-----|--------|
-| Super + Return | Terminal (kitty) |
-| Super + E | File manager (dolphin) |
+| Super + Return | Terminal (ghostty) |
+| Super + E | File manager (yazi) |
+| Super + Shift + E | GUI file manager (Thunar) |
 | Super + Space | Launcher |
 | Super + Q | Close window |
 | Super + 1-0 | Switch workspace |
