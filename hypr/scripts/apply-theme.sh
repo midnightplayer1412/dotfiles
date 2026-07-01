@@ -40,3 +40,10 @@ tmux source-file "$HOME/.config/tmux/tmux.conf" 2>/dev/null || true
 # and no-ops when asusctl/asusd or the feature is off; `|| true` ensures a
 # keyboard hiccup never fails the theme apply.
 "$HOME/.config/hypr/scripts/apply-keyboard.sh" || true
+
+# GTK apps read gtk.css only at startup, and Thunar daemonizes — quit the daemon
+# so the next window picks up the freshly-generated palette. No-ops if Thunar
+# isn't installed or isn't running.
+if command -v thunar >/dev/null && pgrep -x thunar >/dev/null; then
+  thunar -q 2>/dev/null || true
+fi

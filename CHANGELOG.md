@@ -32,6 +32,13 @@ grouped by date since this repo is unreleased / rolling.
   the Glass/Solid preset and Matugen colors automatically. New `errorText` /
   `errorContainer` Theme roles give `danger` buttons proper tokens instead of a
   hardcoded red.
+- **file manager / gtk** (thunar + matugen) — Thunar as the GUI file manager
+  (`Super+Shift+E`; `Super+E` stays yazi), with a new Matugen **GTK** template
+  (`matugen/templates/gtk-colors.css` → `~/.config/gtk-{3,4}.0/gtk.css`) so GTK
+  apps and the GTK file-chooser retint with the wallpaper alongside quickshell /
+  tmux / yazi / hyprlock. Backgrounds use lifted `surface_bright` tones so the
+  tint is visible in dark mode. `apply-theme.sh` quits the Thunar daemon on each
+  theme change so the next window loads the fresh palette.
 
 #### Changed
 - **shell-wide** (quickshell) — migrated ~37 files onto the shared components,
