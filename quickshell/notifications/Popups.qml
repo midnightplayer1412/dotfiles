@@ -15,8 +15,8 @@ PanelWindow {
         right: true
     }
 
-    margins.top: 50
-    margins.right: 20
+    margins.top: BarConfig.clearance("top", 50)
+    margins.right: BarConfig.clearance("right", 20)
 
     implicitWidth: 420
     implicitHeight: Math.max(1, column.implicitHeight)

@@ -439,6 +439,77 @@ Item {
                 }
             }
 
+            // ── Connection layout ─────────────────────────────────────
+            Text {
+                text: "Connection layout"
+                color: Theme.primary
+                font.family: Theme.fontFamily
+                font.pixelSize: 14
+                font.bold: true
+                Layout.topMargin: 6
+            }
+            Text {
+                text: "How Wi-Fi, Bluetooth, and VPN are arranged in the connection panel."
+                color: Theme.outline
+                font.family: Theme.fontFamily
+                font.pixelSize: 12
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+                Repeater {
+                    model: [
+                        { key: "tiles",     label: "Tiles",     glyph: "\u{F1119}", hint: "Toggle tiles" },
+                        { key: "accordion", label: "Accordion", glyph: "\u{F0169}", hint: "Collapsible" },
+                        { key: "stacked",   label: "Stacked",   glyph: "\u{F0575}", hint: "Scroll all" }
+                    ]
+                    delegate: Rectangle {
+                        required property var modelData
+                        readonly property bool selected: Ui.UiStyle.connectionLayout === modelData.key
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 78
+                        radius: 10
+                        color: Theme.surfaceContainer
+                        border.width: selected ? 2 : 1
+                        border.color: selected ? Theme.primary : Theme.outline
+
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 6
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.glyph
+                                font.family: Theme.glyphFont
+                                font.pixelSize: 22
+                                color: parent.parent.selected ? Theme.primary : Theme.surfaceText
+                            }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.label
+                                color: parent.parent.selected ? Theme.primary : Theme.surfaceText
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.hint
+                                color: Theme.outline
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                            }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: { Ui.UiStyle.connectionLayout = modelData.key; Ui.UiStyle.save(); }
+                        }
+                    }
+                }
+            }
+
             // ── Toggle ────────────────────────────────────────────────
             Text {
                 text: "Toggle"

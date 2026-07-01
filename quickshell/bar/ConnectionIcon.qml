@@ -2,13 +2,14 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
-import "../connection" as Conn
 import "../wifi" as Wifi
 import "../bluetooth" as Bt
+import "../vpn" as Vpn
+import "../connection" as Conn
 import ".."
 
-// Wi-Fi signal (+ a Bluetooth glyph when an audio device is connected). Click
-// opens the Connection Hub's Wi-Fi tab.
+// Combined connection status: Wi-Fi strength, plus small Bluetooth and VPN
+// badges when active. Click toggles the Connection panel.
 Item {
     id: net
     property bool horizontal: false
@@ -16,6 +17,7 @@ Item {
     readonly property bool wifiConnected: Wifi.WifiService.connected
     readonly property int wifiSignal: Wifi.WifiService.activeSignal
     readonly property bool btActive: (Bt.BluetoothService.audioMacs || []).length > 0
+    readonly property bool vpnActive: (Vpn.VpnService.activeName || "").length > 0
 
     function wifiGlyph(s) {
         if (s > 75) return "\u{F0928}";  // wifi-strength-4
@@ -27,7 +29,7 @@ Item {
     implicitWidth: lay.implicitWidth
     implicitHeight: lay.implicitHeight
 
-    function hubScreen() {
+    function panelScreen() {
         const name = Hyprland.focusedMonitor?.name ?? "";
         for (const s of Quickshell.screens) if (s.name === name) return s;
         return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null;
@@ -57,6 +59,14 @@ Item {
             font.pixelSize: Theme.barIconSize - 4   // secondary badge, intentionally smaller
             color: mouse.containsMouse ? Theme.primary : Theme.surfaceText
         }
+        Text {
+            Layout.alignment: Qt.AlignCenter
+            visible: net.vpnActive
+            text: "\u{F0582}"   // vpn
+            font.family: Theme.glyphFont
+            font.pixelSize: Theme.barIconSize - 4   // secondary badge, intentionally smaller
+            color: mouse.containsMouse ? Theme.primary : Theme.surfaceText
+        }
     }
 
     MouseArea {
@@ -64,6 +74,6 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: Conn.ConnectionState.open("wifi", net.hubScreen())
+        onClicked: Conn.ConnectionState.toggle("connection", net.panelScreen())
     }
 }

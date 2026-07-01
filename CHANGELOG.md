@@ -41,6 +41,22 @@ grouped by date since this repo is unreleased / rolling.
   (wifi / bluetooth / audio / vpn), settings, and calendar now use the shared
   components. The bar background follows the Surface preset (frosted under Glass,
   its `bgOpacity` knob under Solid).
+- **connection** (quickshell) — replaced the hover-hub connection UX. A single
+  **Connection** bar icon (combined Wi-Fi / Bluetooth / VPN status) toggles a
+  unified right-side panel holding all three together; a separate **Audio** bar
+  icon (headphones glyph) toggles the audio panel. The connection panel layout is
+  a swappable variant — **Tiles** (default) / **Accordion** / **Stacked** — chosen
+  in Settings → Appearance (`UiStyle.connectionLayout`). Wi-Fi / Bluetooth / VPN
+  were extracted into reusable sections consumed by every layout. Floating panels
+  (connection, notifications, calendar, HUD) now inset around the bar via
+  `BarConfig.clearance()` so they never overlay it, whatever edge it sits on.
+
+#### Removed
+- **connection** (quickshell) — the hover trigger zone, the tab hub pill, the
+  per-tab drawer switching, `HubConfig` + the "Connection Hub" settings pane, and
+  the bar's separate `Network` / `Volume` widgets (folded into the new Connection
+  and Audio icons; saved bar layouts auto-migrate `network`→`connection`,
+  `volume`→`audio`).
 
 ### 2026-06-29
 

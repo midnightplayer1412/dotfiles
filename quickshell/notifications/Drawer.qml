@@ -18,6 +18,13 @@ PanelWindow {
         bottom: true
     }
 
+    // Clear the bar on whichever edge it sits on.
+    margins {
+        top:    BarConfig.clearance("top")
+        right:  BarConfig.clearance("right")
+        bottom: BarConfig.clearance("bottom")
+    }
+
     implicitWidth: 400
 
     color: "transparent"

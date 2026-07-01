@@ -5,8 +5,8 @@ import Quickshell.Services.Pipewire
 import "../connection" as Conn
 import ".."
 
-// Default-sink volume. Glyph reflects level/mute; scroll adjusts; click opens
-// the Connection Hub's Audio tab (full mixer).
+// Default-sink audio. Headphones glyph (dimmed when muted); scroll adjusts
+// volume; middle-click mutes; left-click toggles the Audio panel (full mixer).
 Item {
     id: vol
     property bool horizontal: false
@@ -15,12 +15,9 @@ Item {
     readonly property var au: sink && sink.audio ? sink.audio : null
     readonly property real level: au ? au.volume : 0
     readonly property bool muted: au ? au.muted : false
-    readonly property string glyph: {
-        if (vol.muted || vol.level <= 0.001) return "\u{F0581}";   // volume-off
-        if (vol.level < 0.34) return "\u{F057F}";                  // volume-low
-        if (vol.level < 0.67) return "\u{F0580}";                  // volume-medium
-        return "\u{F057E}";                                        // volume-high
-    }
+    // Headphones glyph — cleaner than the speaker set. Mute is shown by the
+    // dimmed colour below; scroll still adjusts volume and opens the mixer.
+    readonly property string glyph: "\u{F02CB}"   // nf-md-headphones
 
     // Keep the sink bound so volume/mute stay live and writable.
     PwObjectTracker { objects: vol.sink ? [vol.sink] : [] }
@@ -28,7 +25,7 @@ Item {
     implicitWidth: Theme.barIconSize
     implicitHeight: Theme.barIconSize
 
-    function hubScreen() {
+    function panelScreen() {
         const name = Hyprland.focusedMonitor?.name ?? "";
         for (const s of Quickshell.screens) if (s.name === name) return s;
         return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null;
@@ -53,7 +50,7 @@ Item {
             if (m.button === Qt.MiddleButton) {
                 if (vol.au) vol.au.muted = !vol.au.muted;
             } else {
-                Conn.ConnectionState.open("audio", vol.hubScreen());
+                Conn.ConnectionState.toggle("audio", vol.panelScreen());
             }
         }
         onWheel: (w) => {

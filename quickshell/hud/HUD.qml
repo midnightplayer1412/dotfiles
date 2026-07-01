@@ -19,7 +19,7 @@ PanelWindow {
 
     implicitWidth: screen.width
     implicitHeight: 100
-    margins.bottom: 40
+    margins.bottom: BarConfig.clearance("bottom", 40)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     WlrLayershell.namespace: Ui.Surfaces.blurNamespace

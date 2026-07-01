@@ -1,25 +1,26 @@
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import ".."
 import "../ui" as Ui
-import "../wifi"
-import "../bluetooth"
 import "../audio"
-import "../vpn"
 
+// Right-side container. Hosts EITHER the unified connection layout
+// (wifi/bluetooth/vpn) or the audio panel, chosen by ConnectionState.openPanel.
+// Click-outside (focus grab) closes it.
 PanelWindow {
     id: root
 
     required property var screen
 
     anchors { top: true; right: true; bottom: true }
+
+    // Clear the bar on whichever edge it occupies so the container never overlays it.
     margins {
-        top:    Theme.hubMargin + Theme.hubHeight + Theme.hubDrawerGap
-        right:  Theme.hubMargin
-        bottom: Theme.hubMargin
+        top:    BarConfig.clearance("top",    Theme.hubMargin)
+        right:  BarConfig.clearance("right",  Theme.hubMargin)
+        bottom: BarConfig.clearance("bottom", Theme.hubMargin)
     }
     implicitWidth: Theme.drawerWidth
 
@@ -29,12 +30,9 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
     WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
-    readonly property var hubWindow:
-        ConnectionState.hubWindows[root.screen?.name ?? ""] ?? null
-
     HyprlandFocusGrab {
         active: true
-        windows: root.hubWindow ? [root, root.hubWindow] : [root]
+        windows: [root]
         onCleared: ConnectionState.close()
     }
 
@@ -57,20 +55,12 @@ PanelWindow {
         Loader {
             anchors.fill: parent
             anchors.margins: 16
-            sourceComponent: {
-                switch (ConnectionState.activeTab) {
-                case "wifi":      return wifiPanel;
-                case "bluetooth": return bluetoothPanel;
-                case "audio":     return audioPanel;
-                case "vpn":       return vpnPanel;
-                }
-                return null;
-            }
+            sourceComponent: ConnectionState.openPanel === "audio" ? audioPanel
+                           : ConnectionState.openPanel === "connection" ? connLayout
+                           : null
         }
 
-        Component { id: wifiPanel; WifiPanel {} }
-        Component { id: bluetoothPanel; BluetoothPanel {} }
+        Component { id: connLayout; ConnLayout {} }
         Component { id: audioPanel; AudioPanel {} }
-        Component { id: vpnPanel; VpnPanel {} }
     }
 }

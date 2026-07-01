@@ -24,8 +24,8 @@ GridLayout {
     Component { id: cClock;      Clock      { horizontal: BarConfig.horizontal } }
     Component { id: cBattery;    Battery    { horizontal: BarConfig.horizontal } }
     Component { id: cTray;       Tray       { horizontal: BarConfig.horizontal } }
-    Component { id: cVolume;     Volume     { horizontal: BarConfig.horizontal } }
-    Component { id: cNetwork;    Network    { horizontal: BarConfig.horizontal } }
+    Component { id: cAudio;      AudioIcon      { horizontal: BarConfig.horizontal } }
+    Component { id: cConnection; ConnectionIcon { horizontal: BarConfig.horizontal } }
     Component { id: cResources;  Resources  { horizontal: BarConfig.horizontal } }
     Component { id: cMedia;      Media      { horizontal: BarConfig.horizontal } }
     Component { id: cWindow;     ActiveWindow { horizontal: BarConfig.horizontal } }
@@ -36,8 +36,8 @@ GridLayout {
             case "clock":      return cClock;
             case "battery":    return cBattery;
             case "tray":       return cTray;
-            case "volume":     return cVolume;
-            case "network":    return cNetwork;
+            case "audio":      return cAudio;
+            case "connection": return cConnection;
             case "resources":  return cResources;
             case "media":      return cMedia;
             case "window":     return cWindow;

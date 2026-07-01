@@ -17,7 +17,9 @@ PanelWindow {
         bottom: true
     }
 
-    margins.left: Theme.barWidth + Theme.barMargin + 8
+    margins.left:   BarConfig.clearance("left", 8)
+    margins.top:    BarConfig.clearance("top")
+    margins.bottom: BarConfig.clearance("bottom")
 
     implicitWidth: 300
 
