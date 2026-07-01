@@ -92,24 +92,12 @@ Item {
                     Layout.fillWidth: true
                     spacing: 10
 
-                    Text {
-                        text: root.masterGlyph
-                        color: masterMuteMouse.containsMouse
-                            ? Theme.primary
-                            : (root.masterMuted ? Theme.outline : Theme.surfaceText)
-                        font.family: Theme.glyphFont
-                        font.pixelSize: 18
+                    Ui.IconButton {
+                        bg: "bare"
+                        glyph: root.masterGlyph
+                        glyphSize: 18
                         Layout.preferredWidth: 24
-                        horizontalAlignment: Text.AlignHCenter
-
-                        MouseArea {
-                            id: masterMuteMouse
-                            anchors.fill: parent
-                            anchors.margins: -3
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: if (root.masterAudio) root.masterAudio.muted = !root.masterAudio.muted
-                        }
+                        onClicked: if (root.masterAudio) root.masterAudio.muted = !root.masterAudio.muted
                     }
 
                     Ui.Slider {

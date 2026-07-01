@@ -1,9 +1,10 @@
 import QtQuick
 import QtQuick.Layouts
+import "../ui" as Ui
 import ".."
 import "../audio"
 
-Item {
+Ui.SelectableRow {
     id: row
 
     required property var modelData
@@ -28,69 +29,55 @@ Item {
         return "";
     }
 
-    height: 48
+    implicitHeight: 48
+    radius: 10
+    selected: row.isDefault
+    interactive: !row.isDefault
+    selectedColor: Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.14)
+    onClicked: AudioService.setDefault(row.modelData.name)
 
-    Rectangle {
+    RowLayout {
         anchors.fill: parent
-        radius: 10
-        color: row.isDefault
-            ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.14)
-            : (hoverArea.containsMouse ? Theme.surfaceContainer : "transparent")
-        border.color: row.isDefault ? Theme.primary : "transparent"
-        border.width: row.isDefault ? 1 : 0
-        Behavior on color { ColorAnimation { duration: 100 } }
+        anchors.leftMargin: 12
+        anchors.rightMargin: 12
+        spacing: 12
 
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
-            spacing: 12
+        Text {
+            text: row.glyph
+            font.family: "Monaspace Argon NF"
+            font.pixelSize: 20
+            color: row.isDefault ? Theme.primary : Theme.surfaceText
+            Layout.preferredWidth: 24
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 1
 
             Text {
-                text: row.glyph
-                font.family: "Monaspace Argon NF"
-                font.pixelSize: 20
-                color: row.isDefault ? Theme.primary : Theme.surfaceText
-                Layout.preferredWidth: 24
-            }
-
-            ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 1
-
-                Text {
-                    Layout.fillWidth: true
-                    text: row.modelData.description
-                    color: Theme.surfaceText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                    elide: Text.ElideRight
-                }
-                Text {
-                    visible: row.subtext.length > 0
-                    text: row.subtext
-                    color: Theme.outline
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
-                }
-            }
-
-            Text {
-                visible: row.isDefault
-                text: "Active"
-                color: Theme.primary
+                text: row.modelData.description
+                color: Theme.surfaceText
                 font.family: Theme.fontFamily
-                font.pixelSize: 11
-                font.bold: true
+                font.pixelSize: 13
+                elide: Text.ElideRight
+            }
+            Text {
+                visible: row.subtext.length > 0
+                text: row.subtext
+                color: Theme.outline
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
             }
         }
 
-        MouseArea {
-            id: hoverArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: row.isDefault ? Qt.ArrowCursor : Qt.PointingHandCursor
-            onClicked: if (!row.isDefault) AudioService.setDefault(row.modelData.name)
+        Text {
+            visible: row.isDefault
+            text: "Active"
+            color: Theme.primary
+            font.family: Theme.fontFamily
+            font.pixelSize: 11
+            font.bold: true
         }
     }
 }

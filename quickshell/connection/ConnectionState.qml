@@ -3,65 +3,25 @@ pragma Singleton
 import Quickshell
 import QtQuick
 
+// Right-side panel state. A single container hosts EITHER the unified connection
+// panel (wifi/bluetooth/vpn) or the audio panel — never both. Bar icons toggle
+// it; the container's focus grab calls close() on click-outside.
 Singleton {
     id: state
 
-    // ── Drawer state ─────────────────────────────────────────────────
-    property string activeTab: ""        // "" | "wifi" | "bluetooth" | "audio" | "vpn"
+    // "" (closed) | "connection" | "audio"
+    property string openPanel: ""
     property var targetScreen: null
 
-    // ── Hub visibility state (driven by hover) ───────────────────────
-    property var triggerScreen: null     // screen whose trigger zone is hovered
-    property bool hubHovered: false      // cursor inside the visible Hub itself
+    readonly property bool visible: openPanel !== "" && targetScreen !== null
 
-    // The hub renders on this screen. Drawer's screen wins when open so
-    // the hub follows the drawer; otherwise the hovered trigger's screen.
-    readonly property var hubScreen:
-        activeTab !== "" ? targetScreen : triggerScreen
-
-    // Hide the hub entirely when every tab is disabled — otherwise it would
-    // render as an empty pill. The Settings pane still lists all tabs so they
-    // can be re-enabled.
-    readonly property bool hubVisible:
-        hubScreen !== null && HubConfig.enabledOrdered().length > 0
-
-    // ── Hub window registry (for focus grab) ─────────────────────────
-    // Map of screen.name -> Hub PanelWindow. Hub.qml registers itself in
-    // Component.onCompleted; Drawer reads this so it can include the
-    // matching hub in its HyprlandFocusGrab.windows list.
-    property var hubWindows: ({})
-
-    function registerHub(screen, win) {
-        hubWindows[screen.name] = win;
-        hubWindowsChanged();
-    }
-    function unregisterHub(screen) {
-        delete hubWindows[screen.name];
-        hubWindowsChanged();
+    // Toggle a panel from a bar icon: same panel on the same screen closes it;
+    // otherwise (re)open the requested panel on that screen.
+    function toggle(kind, screen) {
+        if (state.openPanel === kind && state.targetScreen === screen) { state.close(); return; }
+        state.open(kind, screen);
     }
 
-    // ── Hover bridging ───────────────────────────────────────────────
-    // When the cursor leaves either window we defer the hide so it can
-    // land in the other without flicker. Re-entry cancels the timer.
-    Timer {
-        id: leaveTimer
-        interval: 150
-        onTriggered: if (!state.hubHovered) state.triggerScreen = null
-    }
-
-    function triggerEntered(screen) { triggerScreen = screen; leaveTimer.stop(); }
-    function triggerExited()        { leaveTimer.restart(); }
-    function hubEntered()           { hubHovered = true;  leaveTimer.stop(); }
-    function hubExited()            { hubHovered = false; leaveTimer.restart(); }
-
-    // ── Tab clicks ───────────────────────────────────────────────────
-    function tabClicked(tab, screen) {
-        if (activeTab === tab && targetScreen === screen) { close(); return; }
-        if (activeTab !== "" && targetScreen === screen) { setTab(tab); return; }
-        open(tab, screen);
-    }
-
-    function open(tab, screen) { targetScreen = screen; activeTab = tab; }
-    function setTab(tab) { activeTab = tab; }
-    function close() { activeTab = ""; }
+    function open(kind, screen) { state.targetScreen = screen; state.openPanel = kind; }
+    function close() { state.openPanel = ""; }
 }

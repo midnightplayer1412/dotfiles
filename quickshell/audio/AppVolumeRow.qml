@@ -175,12 +175,15 @@ Item {
             Repeater {
                 model: AudioService.sinks
 
-                delegate: Rectangle {
+                delegate: Ui.SelectableRow {
                     required property var modelData
                     width: parent.width - 36
                     height: 26
                     radius: 6
-                    color: sinkMouse.containsMouse ? Theme.surfaceContainer : "transparent"
+                    onClicked: {
+                        AudioService.moveStream(row.serial, modelData.name);
+                        row.expanded = false;
+                    }
 
                     Text {
                         anchors.left: parent.left
@@ -193,17 +196,6 @@ Item {
                         font.family: Theme.fontFamily
                         font.pixelSize: 11
                         elide: Text.ElideRight
-                    }
-
-                    MouseArea {
-                        id: sinkMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            AudioService.moveStream(row.serial, modelData.name);
-                            row.expanded = false;
-                        }
                     }
                 }
             }

@@ -28,18 +28,23 @@ Singleton {
 
     // Every widget the bar knows how to render, in default order. Adding a key
     // here (plus a case in BarZone's registry) makes it available everywhere.
-    readonly property var knownKeys: ["workspaces", "clock", "battery", "tray", "volume", "network", "resources", "media", "window"]
+    readonly property var knownKeys: ["workspaces", "clock", "battery", "tray", "audio", "connection", "resources", "media", "window"]
     readonly property var labels: ({
         "workspaces": "Workspaces",
         "clock":      "Clock",
         "battery":    "Battery",
         "tray":       "System Tray",
-        "volume":     "Volume",
-        "network":    "Network",
+        "audio":      "Audio",
+        "connection": "Connection",
         "resources":  "Resources",
         "media":      "Media",
         "window":     "App Name"
     })
+
+    // Legacy key remap so a saved bar-config.json from before the connection
+    // refactor keeps working: the old "network"/"volume" widgets became the
+    // combined "connection"/"audio" icons.
+    readonly property var legacyKeys: ({ "network": "connection", "volume": "audio" })
 
     // Reconcile the saved layout against knownKeys: keep only known keys, drop
     // duplicates (first zone wins), so a stale/edited file can't double-place or
@@ -49,7 +54,8 @@ Singleton {
         const used = ({});
         const pick = (zoneKeys) => {
             const out = [];
-            for (const k of (zoneKeys || [])) {
+            for (const raw of (zoneKeys || [])) {
+                const k = config.legacyKeys[raw] || raw;   // migrate old network/volume keys
                 if (config.knownKeys.indexOf(k) >= 0 && !used[k]) { used[k] = true; out.push(k); }
             }
             return out;
@@ -92,6 +98,13 @@ Singleton {
         adapter.endPadding = config.defaults.endPadding;
         adapter.layout = JSON.parse(JSON.stringify(config.defaults.layout));   // deep copy
         config.save();
+    }
+
+    // Margin a floating right/edge panel should use on `edge`
+    // ("top"|"right"|"bottom"|"left") so it never overlays the bar: the bar's
+    // span (thickness + a small gap) when the bar is on that edge, else `base`.
+    function clearance(edge, base) {
+        return position === edge ? (thickness + 12) : (base === undefined ? 0 : base);
     }
 
     function save() { view.writeAdapter(); }

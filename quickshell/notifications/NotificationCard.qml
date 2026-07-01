@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.Notifications
 import ".."
+import "../ui" as Ui
 
 Rectangle {
     id: root
@@ -47,7 +48,10 @@ Rectangle {
     ) + 2 * padding
 
     radius: Theme.notifRadius
-    color: Theme.surfaceContainer
+    // Follow the surface preset: translucent glass under Glass, opaque under
+    // Solid (Surfaces.cardColor === Theme.surfaceContainer there). Critical
+    // notifications stay fully opaque for maximum legibility.
+    color: root.isCritical ? Theme.surfaceContainer : Ui.Surfaces.cardColor
     border.color: root.isCritical ? Theme.error : root.borderColor
     border.width: root.isCritical ? Theme.notifBorderCritical : 1
 
@@ -248,23 +252,14 @@ Rectangle {
                     visible: text.length > 0
                 }
 
-                Text {
+                Ui.IconButton {
                     id: dismissText
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "\u{F0156}"   // nf-md-close
-                    color: dismissMouse.containsMouse ? Theme.primary : Theme.surfaceText
-                    font.family: Theme.glyphFont
-                    font.pixelSize: compact ? 12 : 14
-
-                    MouseArea {
-                        id: dismissMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.collapseDismiss()
-                    }
+                    bg: "bare"
+                    glyph: "\u{F0156}"   // nf-md-close
+                    glyphSize: compact ? 12 : 14
+                    onClicked: root.collapseDismiss()
                 }
             }
 
@@ -318,31 +313,12 @@ Rectangle {
 
                 Repeater {
                     model: root.chipActions
-                    delegate: Rectangle {
+                    delegate: Ui.Button {
                         required property var modelData
-                        radius: Theme.notifChipRadius
-                        color: chipMouse.containsMouse ? Theme.primary : Theme.surfaceContainer
-                        border.color: Theme.primary
-                        border.width: 1
-                        implicitWidth: chipLabel.implicitWidth + 2 * Theme.notifChipPadding
-                        implicitHeight: compact ? Theme.notifChipHeightCompact : Theme.notifChipHeight
-
-                        Text {
-                            id: chipLabel
-                            anchors.centerIn: parent
-                            text: modelData.text
-                            color: chipMouse.containsMouse ? Theme.primaryText : Theme.primary
-                            font.pixelSize: compact ? 10 : 11
-                            font.family: Theme.fontFamily
-                        }
-
-                        MouseArea {
-                            id: chipMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: NotificationService.invokeAction(root.notif, modelData.identifier)
-                        }
+                        kind: "chip"
+                        text: modelData.text
+                        fontSize: compact ? 10 : 11
+                        onClicked: NotificationService.invokeAction(root.notif, modelData.identifier)
                     }
                 }
             }

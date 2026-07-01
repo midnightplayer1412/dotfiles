@@ -1,4 +1,11 @@
 singleton UiStyle 1.0 UiStyle.qml
+singleton Surfaces 1.0 Surfaces.qml
+Surface 1.0 Surface.qml
+Button 1.0 Button.qml
+IconButton 1.0 IconButton.qml
+TextField 1.0 TextField.qml
+Card 1.0 Card.qml
+SelectableRow 1.0 SelectableRow.qml
 Toggle 1.0 Toggle.qml
 Slider 1.0 Slider.qml
 Dropdown 1.0 Dropdown.qml

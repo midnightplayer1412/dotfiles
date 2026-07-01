@@ -1,16 +1,15 @@
 import QtQuick
 import QtQuick.Layouts
+import "../ui" as Ui
 import ".."
 import "../wifi"
 
-Rectangle {
+Ui.SelectableRow {
     id: row
     required property var modelData
 
-    height: 44
     radius: 8
-    color: mouse.containsMouse ? Theme.surfaceContainer : "transparent"
-    Behavior on color { ColorAnimation { duration: 100 } }
+    onClicked: WifiService.connect(row.modelData.ssid)
 
     readonly property bool secured: modelData?.security && modelData.security !== ""
     readonly property bool isPending: WifiService.pendingSsid === modelData?.ssid && WifiService.connecting
@@ -20,6 +19,16 @@ Rectangle {
         if (s > 50) return "\u{F0925}";  // wifi-strength-3
         if (s > 25) return "\u{F0922}";  // wifi-strength-2
         return "\u{F091F}";              // wifi-strength-1
+    }
+
+    // Right-click on a saved network forgets it (SelectableRow.clicked is left-only).
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        cursorShape: Qt.PointingHandCursor
+        onClicked: {
+            if (row.modelData.saved) WifiService.forget(row.modelData.ssid);
+        }
     }
 
     RowLayout {
@@ -66,21 +75,6 @@ Rectangle {
             font.family: "Monaspace Argon NF"
             font.pixelSize: 14
             color: Theme.primary
-        }
-    }
-
-    MouseArea {
-        id: mouse
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: (e) => {
-            if (e.button === Qt.LeftButton) {
-                WifiService.connect(row.modelData.ssid);
-            } else if (e.button === Qt.RightButton && row.modelData.saved) {
-                WifiService.forget(row.modelData.ssid);
-            }
         }
     }
 }

@@ -6,6 +6,58 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-01
+
+#### Added
+- **theme / settings** (quickshell) — a swappable **Surface style** preset
+  (**Glass** / **Solid**) in Settings → Appearance that re-skins every panel in
+  the shell live. **Glass** is frosted: translucent surfaces with a hairline
+  border and top highlight, backed by **real compositor blur** (a Hyprland
+  `layerrule` matches the `quickshell-glass` layer namespace that glass windows
+  carry). **Solid** reproduces the previous flat opaque look exactly, as a
+  zero-risk fallback. Colors still come from Matugen either way — the preset only
+  changes translucency, never hue. A **"Blur desktop behind panels"** toggle
+  gates the compositor blur. The choice persists to `ui-style.json`. Built on a
+  new shared `Ui.Surface` primitive (`level: 0` panel / `level: 1` card) backed
+  by a `Ui.Surfaces` token singleton — the single source of truth for the look —
+  which every surface across the shell now routes through.
+- **ui** (quickshell) — a shared component library so buttons, inputs, and cards
+  stop being hand-rolled per file: **`Ui.Button`** (`filled` / `primary` /
+  `ghost` / `danger` / `chip`, with hover / pressed / disabled / busy / active
+  states), **`Ui.IconButton`** (round tile or bare glyph), **`Ui.TextField`**
+  (`field` / `search`, with placeholder, focus border, left icon, clear button),
+  **`Ui.Card`** (icon/glyph + title + subtitle + trailing control + body), and
+  **`Ui.SelectableRow`** (selected/hover rows and nav items). Semantic by design
+  — the `kind`/`variant` is chosen by meaning at the call site — and they inherit
+  the Glass/Solid preset and Matugen colors automatically. New `errorText` /
+  `errorContainer` Theme roles give `danger` buttons proper tokens instead of a
+  hardcoded red.
+
+#### Changed
+- **shell-wide** (quickshell) — migrated ~37 files onto the shared components,
+  removing the per-file duplication (net ~430 fewer lines): every panel/card
+  background now uses `Ui.Surface`, and buttons / icon-buttons / inputs / titled
+  cards / nav rows across bar, launcher, notifications, the connection panels
+  (wifi / bluetooth / audio / vpn), settings, and calendar now use the shared
+  components. The bar background follows the Surface preset (frosted under Glass,
+  its `bgOpacity` knob under Solid).
+- **connection** (quickshell) — replaced the hover-hub connection UX. A single
+  **Connection** bar icon (combined Wi-Fi / Bluetooth / VPN status) toggles a
+  unified right-side panel holding all three together; a separate **Audio** bar
+  icon (headphones glyph) toggles the audio panel. The connection panel layout is
+  a swappable variant — **Tiles** (default) / **Accordion** / **Stacked** — chosen
+  in Settings → Appearance (`UiStyle.connectionLayout`). Wi-Fi / Bluetooth / VPN
+  were extracted into reusable sections consumed by every layout. Floating panels
+  (connection, notifications, calendar, HUD) now inset around the bar via
+  `BarConfig.clearance()` so they never overlay it, whatever edge it sits on.
+
+#### Removed
+- **connection** (quickshell) — the hover trigger zone, the tab hub pill, the
+  per-tab drawer switching, `HubConfig` + the "Connection Hub" settings pane, and
+  the bar's separate `Network` / `Volume` widgets (folded into the new Connection
+  and Audio icons; saved bar layouts auto-migrate `network`→`connection`,
+  `volume`→`audio`).
+
 ### 2026-06-29
 
 #### Added

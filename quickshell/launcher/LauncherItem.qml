@@ -3,23 +3,20 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import ".."
+import "../ui" as Ui
 
-Rectangle {
+Ui.SelectableRow {
     id: root
 
     required property var entry
-    required property bool selected
-    property bool hovered: false
-
-    signal clicked()
+    // `selected` is inherited from Ui.SelectableRow; the list sets it by index.
+    // `hovered` is inherited (read-only); the list watches onHoveredChanged.
 
     height: Theme.launcherItemHeight
     radius: 8
-    color: selected ? Theme.primaryContainer
-         : hovered  ? Theme.surfaceContainer
-         :             "transparent"
-
-    Behavior on color { ColorAnimation { duration: 100 } }
+    // Keep the launcher's accent selection (primaryContainer); hover neutral.
+    selectedColor: Theme.primaryContainer
+    hoverColor: Theme.surfaceContainer
 
     RowLayout {
         anchors.fill: parent
@@ -86,13 +83,5 @@ Rectangle {
             Layout.maximumWidth: 200
             visible: text !== ""
         }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        onEntered: root.hovered = true
-        onExited: root.hovered = false
-        onClicked: root.clicked()
     }
 }

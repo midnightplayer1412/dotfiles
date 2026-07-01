@@ -1,7 +1,9 @@
 import QtQuick
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import ".."
+import "../ui" as Ui
 
 PanelWindow {
     id: root
@@ -13,14 +15,15 @@ PanelWindow {
         right: true
     }
 
-    margins.top: 50
-    margins.right: 20
+    margins.top: BarConfig.clearance("top", 50)
+    margins.right: BarConfig.clearance("right", 20)
 
     implicitWidth: 420
     implicitHeight: Math.max(1, column.implicitHeight)
 
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
     visible: NotificationService.activePopupCount > 0
 
     Column {

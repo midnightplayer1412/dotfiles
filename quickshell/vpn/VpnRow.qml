@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import "../ui" as Ui
 import ".."
 import "../vpn"
 
@@ -50,31 +51,12 @@ Item {
                 }
             }
 
-            Rectangle {
-                Layout.preferredWidth: actionLabel.implicitWidth + 16
-                Layout.preferredHeight: 26
-                radius: 13
-                color: actionMouse.containsMouse ? Theme.primary : Theme.surfaceContainer
-                Behavior on color { ColorAnimation { duration: 100 } }
-
-                Text {
-                    id: actionLabel
-                    anchors.centerIn: parent
-                    text: row.modelData.active ? "Disconnect" : "Connect"
-                    color: actionMouse.containsMouse ? Theme.primaryText : Theme.surfaceText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 11
-                }
-
-                MouseArea {
-                    id: actionMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: row.modelData.active
-                        ? VpnService.deactivate(row.modelData.name)
-                        : VpnService.activate(row.modelData.name)
-                }
+            Ui.Button {
+                kind: "filled"
+                text: row.modelData.active ? "Disconnect" : "Connect"
+                onClicked: row.modelData.active
+                    ? VpnService.deactivate(row.modelData.name)
+                    : VpnService.activate(row.modelData.name)
             }
         }
 

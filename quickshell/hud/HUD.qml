@@ -1,6 +1,8 @@
 import QtQuick
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Io
+import "../ui" as Ui
 import ".."
 
 PanelWindow {
@@ -17,9 +19,10 @@ PanelWindow {
 
     implicitWidth: screen.width
     implicitHeight: 100
-    margins.bottom: 40
+    margins.bottom: BarConfig.clearance("bottom", 40)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
     // State
     property bool active: HudState.isVisibleOnScreen(screen)
@@ -255,16 +258,14 @@ PanelWindow {
     }
 
     // Main container — centered horizontal pill
-    Rectangle {
+    Ui.Surface {
         id: container
+        level: 0
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         width: 300
         height: 50
-        color: Theme.surface
         radius: 25
-        border.color: Theme.outline
-        border.width: 1
 
         // Slide-up animation
         anchors.bottomMargin: active ? 0 : -60

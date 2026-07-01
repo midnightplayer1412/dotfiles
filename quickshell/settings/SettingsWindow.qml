@@ -17,6 +17,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
     color: "transparent"
 
     // Categories: extend this list to add panes later. Icons are Papirus
@@ -27,7 +28,6 @@ PanelWindow {
         { key: "appearance", label: "Appearance",     icon: sym + "/categories/applications-graphics-symbolic.svg" },
         { key: "bar",        label: "Bar",            icon: sym + "/actions/sidebar-show-symbolic.svg" },
         { key: "lock",       label: "Lock Screen",    icon: sym + "/actions/system-lock-screen-symbolic.svg" },
-        { key: "hub",        label: "Connection Hub", icon: sym + "/devices/network-cellular-symbolic.svg" },
         { key: "launcher",   label: "Launcher",       icon: sym + "/categories/applications-all-symbolic.svg" }
     ]
 
@@ -44,15 +44,13 @@ PanelWindow {
         MouseArea { anchors.fill: parent; onClicked: SettingsState.close() }
     }
 
-    Rectangle {
+    Ui.Surface {
         id: card
+        level: 0
         anchors.centerIn: parent
         width: Math.min(1100, parent.width - 120)
         height: Math.min(720, parent.height - 120)
         radius: 18
-        color: Theme.surface
-        border.color: Theme.outline
-        border.width: 1
 
         // Swallow clicks so they don't fall through to the backdrop.
         MouseArea { anchors.fill: parent }
@@ -138,11 +136,6 @@ PanelWindow {
                     visible: SettingsState.activeCategory === "bar"
                 }
 
-                Categories.ConnectionHubPane {
-                    anchors.fill: parent
-                    visible: SettingsState.activeCategory === "hub"
-                }
-
                 Categories.LauncherPane {
                     anchors.fill: parent
                     visible: SettingsState.activeCategory === "launcher"
@@ -164,15 +157,13 @@ PanelWindow {
     }
 
     // Sidebar entry, shared by the category Repeater and the pinned "About" item.
-    component NavButton: Rectangle {
+    component NavButton: Ui.SelectableRow {
         property var entry: ({ key: "", label: "", glyph: "" })
         readonly property bool active: SettingsState.activeCategory === entry.key
         Layout.fillWidth: true
         Layout.preferredHeight: 38
-        radius: 9
-        color: active
-            ? Theme.surfaceContainer
-            : (navMouse.containsMouse ? Theme.surfaceContainer : "transparent")
+        selected: active
+        onClicked: SettingsState.activeCategory = entry.key
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 10
@@ -190,13 +181,6 @@ PanelWindow {
                 font.family: Theme.fontFamily
                 font.pixelSize: 13
             }
-        }
-        MouseArea {
-            id: navMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: SettingsState.activeCategory = entry.key
         }
     }
 }

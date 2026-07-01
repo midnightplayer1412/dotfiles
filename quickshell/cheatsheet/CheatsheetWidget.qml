@@ -1,9 +1,10 @@
 import QtQuick
 import QtQuick.Layouts
 import ".."
+import "../ui" as Ui
 
 // The cheatsheet card: header + (left tabs | keyboard) + bottom detail bar.
-Rectangle {
+Ui.Surface {
     id: widget
 
     readonly property int pad: 28
@@ -13,10 +14,8 @@ Rectangle {
     implicitWidth:  content.implicitWidth + pad * 2
     implicitHeight: content.implicitHeight + pad * 2
 
+    level: 0
     radius: 20
-    color: Theme.surface
-    border.width: 1
-    border.color: Theme.outline
 
     // Absorb clicks so they don't reach the window's close-catcher.
     MouseArea { anchors.fill: parent; onClicked: {} }

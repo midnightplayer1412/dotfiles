@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import "../ui" as Ui
 import ".."
 import "../bluetooth"
 
@@ -9,13 +10,11 @@ Rectangle {
     color: Qt.rgba(0, 0, 0, 0.6)
     radius: Theme.drawerRadius
 
-    Rectangle {
+    Ui.Surface {
+        level: 0
         anchors.centerIn: parent
         width: parent.width - 40
         radius: 12
-        color: Theme.surface
-        border.color: Theme.outline
-        border.width: 1
         height: contentCol.implicitHeight + 32
 
         ColumnLayout {
@@ -61,57 +60,16 @@ Rectangle {
 
                 Item { Layout.fillWidth: true }
 
-                Rectangle {
-                    Layout.preferredWidth: cancelLabel.implicitWidth + 24
-                    Layout.preferredHeight: 30
-                    radius: 15
-                    color: cancelMouse.containsMouse ? Theme.surfaceContainer : "transparent"
-                    border.color: Theme.outline
-                    border.width: 1
-
-                    Text {
-                        id: cancelLabel
-                        anchors.centerIn: parent
-                        text: "Cancel"
-                        color: Theme.surfaceText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                    }
-
-                    MouseArea {
-                        id: cancelMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: BluetoothService.confirmForget(false)
-                    }
+                Ui.Button {
+                    kind: "ghost"
+                    text: "Cancel"
+                    onClicked: BluetoothService.confirmForget(false)
                 }
 
-                Rectangle {
-                    Layout.preferredWidth: forgetLabel.implicitWidth + 24
-                    Layout.preferredHeight: 30
-                    radius: 15
-                    color: forgetMouse.containsMouse
-                        ? Qt.rgba(1.0, 0.4, 0.4, 1.0)
-                        : Qt.rgba(1.0, 0.4, 0.4, 0.25)
-
-                    Text {
-                        id: forgetLabel
-                        anchors.centerIn: parent
-                        text: "Forget"
-                        color: forgetMouse.containsMouse ? Theme.primaryText : Theme.surfaceText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                        font.bold: true
-                    }
-
-                    MouseArea {
-                        id: forgetMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: BluetoothService.confirmForget(true)
-                    }
+                Ui.Button {
+                    kind: "danger"
+                    text: "Forget"
+                    onClicked: BluetoothService.confirmForget(true)
                 }
             }
         }

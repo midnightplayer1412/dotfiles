@@ -197,36 +197,12 @@ ShellRoot {
         }
     }
 
-    // Connection trigger zone — transparent, always per-screen
+    // Connection / audio container — right-side, on the target screen when open.
+    // A single container hosts either the unified connection panel or the audio
+    // panel (ConnectionState.openPanel); bar icons toggle it.
     Variants {
-        model: Quickshell.screens
-
-        Connection.HubTrigger {
-            required property var modelData
-            screen: modelData
-        }
-    }
-
-    // Connection hub — only on the screen that's hovered or has the drawer open
-    Variants {
-        model: Connection.ConnectionState.hubVisible
-            ? [Connection.ConnectionState.hubScreen] : []
-
-        Connection.Hub {
-            required property var modelData
-            screen: modelData
-        }
-    }
-
-    // Connection drawer — only on target screen when a tab is active
-    Variants {
-        model: {
-            if (Connection.ConnectionState.activeTab !== ""
-                && Connection.ConnectionState.targetScreen) {
-                return [Connection.ConnectionState.targetScreen];
-            }
-            return [];
-        }
+        model: Connection.ConnectionState.visible
+            ? [Connection.ConnectionState.targetScreen] : []
 
         Connection.Drawer {
             required property var modelData

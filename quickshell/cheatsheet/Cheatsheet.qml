@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import ".."
+import "../ui" as Ui
 
 // Full-screen overlay hosting the keybinding cheatsheet. Mirrors the Overview
 // window: layer-shell overlay, exclusive keyboard focus, click-outside / Esc
@@ -17,6 +18,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
     color: "transparent"
 

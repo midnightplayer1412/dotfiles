@@ -1,10 +1,14 @@
 import Quickshell
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import ".."
+import "../ui" as Ui
 
 PanelWindow {
     id: barWindow
+
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
     readonly property bool horizontal: BarConfig.horizontal
 
@@ -33,8 +37,14 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         radius: BarConfig.radius
-        // Fade only the background (not the widgets) via the surface colour's alpha.
-        color: Qt.rgba(Theme.surface.r, Theme.surface.g, Theme.surface.b, BarConfig.bgOpacity)
+        // Under Glass, follow the shared surface token (translucent, so the
+        // compositor blur shows through) plus the hairline. Under Solid, keep
+        // the user's bgOpacity knob. Fades only the background, not the widgets.
+        color: Ui.Surfaces.isGlass
+            ? Ui.Surfaces.baseColor
+            : Qt.rgba(Theme.surface.r, Theme.surface.g, Theme.surface.b, BarConfig.bgOpacity)
+        border.width: Ui.Surfaces.borderWidth
+        border.color: Ui.Surfaces.borderColor
 
         // Content area with end padding along the bar's length; the thin
         // cross-axis keeps a fixed 4px inset.

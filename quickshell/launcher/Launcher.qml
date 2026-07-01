@@ -22,6 +22,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
     color: "transparent"
 
@@ -85,8 +86,10 @@ PanelWindow {
         onClicked: LauncherState.close()
     }
 
-    Rectangle {
+    Ui.Surface {
         id: content
+        level: 0
+        radius: Theme.launcherRadius
 
         width: Theme.launcherWidth
         height: Theme.launcherHeight
@@ -107,10 +110,6 @@ PanelWindow {
             NumberAnimation { target: content; property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
             NumberAnimation { target: slideTransform; property: "y"; from: 30; to: 0; duration: 200; easing.type: Easing.OutCubic }
         }
-        radius: Theme.launcherRadius
-        color: Theme.surface
-        border.color: Theme.outline
-        border.width: 1
         clip: true
 
         // Absorb clicks on the panel's empty padding so they don't bubble to the outer click-catcher
@@ -125,11 +124,11 @@ PanelWindow {
             spacing: 8
 
             // Search bar
-            Rectangle {
+            Ui.Surface {
+                level: 1
                 Layout.fillWidth: true
                 Layout.preferredHeight: Theme.launcherSearchHeight
                 radius: Theme.launcherSearchHeight / 2
-                color: Theme.surfaceContainer
 
                 RowLayout {
                     anchors.fill: parent
