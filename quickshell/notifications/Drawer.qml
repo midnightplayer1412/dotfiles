@@ -140,12 +140,13 @@ PanelWindow {
                 contentWidth: width
                 contentHeight: groupCol.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
-                ScrollBar.vertical: Ui.ScrollBar { visible: notifFlick.contentHeight > notifFlick.height + 1 }
+                readonly property bool barVisible: contentHeight > height + 1
+                ScrollBar.vertical: Ui.ScrollBar { visible: notifFlick.barVisible }
                 visible: NotificationService.notifications.values.length > 0
 
                 Column {
                     id: groupCol
-                    width: parent.width
+                    width: notifFlick.width - (notifFlick.barVisible ? Theme.scrollGutter : 0)
                     spacing: 12
 
                     Repeater {

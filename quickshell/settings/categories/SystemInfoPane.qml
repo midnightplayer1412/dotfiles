@@ -86,19 +86,9 @@ df -h --output=used,size,pcent / 2>/dev/null | tail -1 | awk '{printf "disk\\t%s
         }
     }
 
-    Flickable {
-        id: flick
+    Ui.ScrollView {
         anchors.fill: parent
-        contentWidth: width
-        contentHeight: col.implicitHeight
-        clip: true
-        ScrollBar.vertical: Ui.ScrollBar { visible: flick.contentHeight > flick.height + 1 }
-        boundsBehavior: Flickable.StopAtBounds
-
-        ColumnLayout {
-            id: col
-            width: parent.width
-            spacing: 16
+        spacing: 16
 
             // ── Header: machine identity ──
             RowLayout {
@@ -152,7 +142,6 @@ df -h --output=used,size,pcent / 2>/dev/null | tail -1 | awk '{printf "disk\\t%s
             }
 
             Item { Layout.fillHeight: true }
-        }
     }
 
     // ── Reusable pieces ──

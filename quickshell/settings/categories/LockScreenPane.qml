@@ -80,23 +80,14 @@ Item {
     }
 
     // ── Controls, left (scrollable) ───────────────────────────────────
-    Flickable {
+    Ui.ScrollView {
         id: ctrl
         anchors.left: parent.left
         anchors.right: preview.left
         anchors.rightMargin: 20
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        contentWidth: width
-        contentHeight: content.implicitHeight
-        clip: true
-        ScrollBar.vertical: Ui.ScrollBar { visible: ctrl.contentHeight > ctrl.height + 1 }
-        boundsBehavior: Flickable.StopAtBounds
-
-        ColumnLayout {
-            id: content
-            width: parent.width
-            spacing: 14
+        spacing: 14
 
             // ── Components ──
             SectionHeader { text: "Components" }
@@ -256,7 +247,7 @@ Item {
                         property bool loaded: false
                         property bool thumbFailed: false   // fall back to original if no cached thumb
                         readonly property bool inView: {
-                            const top = thumb.mapToItem(content, 0, 0).y;
+                            const top = thumb.mapToItem(ctrl.contentItem, 0, 0).y;
                             return (top + height) > (ctrl.contentY - 600)
                                 && top < (ctrl.contentY + ctrl.height + 600);
                         }
@@ -295,6 +286,5 @@ Item {
             }
 
             Item { Layout.fillHeight: true }   // bottom spacer
-        }
     }
 }

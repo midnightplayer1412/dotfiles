@@ -292,7 +292,8 @@ PanelWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-                ScrollBar.vertical: Ui.ScrollBar { visible: resultsList.contentHeight > resultsList.height + 1 }
+                readonly property bool barVisible: contentHeight > height + 1
+                ScrollBar.vertical: Ui.ScrollBar { visible: resultsList.barVisible }
                 currentIndex: 0
                 highlightMoveDuration: 100
 
@@ -386,7 +387,7 @@ PanelWindow {
                     required property var modelData
                     required property int index
 
-                    width: resultsList.width
+                    width: resultsList.width - (resultsList.barVisible ? Theme.scrollGutter : 0)
                     height: modelData.isHeader ? 24 : Theme.launcherItemHeight
 
                     // Section header row

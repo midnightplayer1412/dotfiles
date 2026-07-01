@@ -39,6 +39,12 @@ grouped by date since this repo is unreleased / rolling.
   tmux / yazi / hyprlock. Backgrounds use lifted `surface_bright` tones so the
   tint is visible in dark mode. `apply-theme.sh` quits the Thunar daemon on each
   theme change so the next window loads the fresh palette.
+- **ui** (quickshell) — new `Ui.ScrollView` (scrollable column) + `Theme.scrollGutter`.
+  Scrollbars now **reserve a right gutter** when content overflows, so the bar
+  never overlaps content, and **auto-hide** — the bar is invisible at rest and
+  fades in only while scrolling or when the pointer is over the bar strip.
+  Adopted across the settings panes, connection layouts, launcher, dropdown,
+  notification drawer, and wallpaper picker.
 
 #### Changed
 - **shell-wide** (quickshell) — migrated ~37 files onto the shared components,
