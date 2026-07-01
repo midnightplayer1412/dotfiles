@@ -31,6 +31,7 @@ Singleton {
     readonly property int barRadius: 12
     readonly property int iconSize: 20
     readonly property int barIconSize: 22   // standalone bar widget icons/glyphs (tray, volume, network)
+    readonly property int scrollGutter: 12   // right gutter reserved for Ui.ScrollBar / Ui.ScrollView
     readonly property int workspaceDotSize: 8
     readonly property int workspaceDotActiveSize: 8
 

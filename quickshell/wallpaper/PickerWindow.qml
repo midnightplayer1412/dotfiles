@@ -247,6 +247,7 @@ PanelWindow {
                 GridView {
                     id: grid
                     anchors.fill: parent
+                    anchors.rightMargin: (grid.contentHeight > grid.height + 1) ? Theme.scrollGutter : 0
                     clip: true
                     focus: false
 

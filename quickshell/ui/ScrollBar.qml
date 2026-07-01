@@ -2,9 +2,9 @@ import QtQuick
 import QtQuick.Controls
 import ".."
 
-// Themed vertical scrollbar — slim, outline-tinted, brighter while dragged, and
-// shown only when the content overflows. Matches the rest of the shell instead
-// of the default Controls look. Assign to a Flickable's attached property:
+// Themed vertical scrollbar — slim, outline-tinted. Auto-hides: it's invisible
+// at rest and fades in only while scrolling (active) or while the pointer is
+// over the scrollbar strip (hovered). Shown only when content overflows.
 //
 //   ScrollBar.vertical: Ui.ScrollBar {}
 //
@@ -13,11 +13,13 @@ ScrollBar {
     policy: ScrollBar.AsNeeded
     width: 8
 
+    readonly property bool revealed: root.active || root.hovered
+
     contentItem: Rectangle {
         implicitWidth: 6
         radius: 3
         color: Theme.outline
-        opacity: root.pressed ? 0.9 : 0.5
-        Behavior on opacity { NumberAnimation { duration: 120 } }
+        opacity: root.revealed ? (root.pressed ? 0.9 : 0.55) : 0.0
+        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
     }
 }

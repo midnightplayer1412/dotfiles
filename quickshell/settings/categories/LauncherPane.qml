@@ -12,21 +12,9 @@ import "../.."
 Item {
     id: pane
 
-    Flickable {
-        id: flick
+    Ui.ScrollView {
         anchors.fill: parent
-        contentWidth: width
-        contentHeight: col.implicitHeight
-        clip: true
-        ScrollBar.vertical: Ui.ScrollBar { visible: flick.contentHeight > flick.height + 1 }
-        boundsBehavior: Flickable.StopAtBounds
-
-        ColumnLayout {
-            id: col
-            // Leave a gutter on the right so the scrollbar sits clear of the content
-            // (8px bar + breathing room) instead of hugging its edge.
-            width: parent.width - 24
-            spacing: 14
+        spacing: 14
 
             Text {
                 text: "Launcher"
@@ -251,7 +239,6 @@ Item {
             }
 
             Item { Layout.fillHeight: true }
-        }
     }
 
     // ── Static layout mockups shown inside the cards ──────────────────

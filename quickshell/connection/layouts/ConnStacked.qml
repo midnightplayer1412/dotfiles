@@ -14,31 +14,21 @@ import "../../vpn" as Vpn
 Item {
     id: root
 
-    Flickable {
+    Ui.ScrollView {
         anchors.fill: parent
-        contentWidth: width
-        contentHeight: col.implicitHeight
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        ScrollBar.vertical: Ui.ScrollBar {}
+        spacing: 16
 
-        ColumnLayout {
-            id: col
-            width: parent.width
-            spacing: 16
-
-            Wifi.WifiPanel {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 300
-            }
-            Bt.BluetoothPanel {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 300
-            }
-            Vpn.VpnPanel {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 300
-            }
+        Wifi.WifiPanel {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 300
+        }
+        Bt.BluetoothPanel {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 300
+        }
+        Vpn.VpnPanel {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 300
         }
     }
 }

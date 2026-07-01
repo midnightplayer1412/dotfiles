@@ -37,18 +37,9 @@ Item {
     Component { id: btComp;   Bt.BtSection {} }
     Component { id: vpnComp;  Vpn.VpnSection {} }
 
-    Flickable {
+    Ui.ScrollView {
         anchors.fill: parent
-        contentWidth: width
-        contentHeight: acc.implicitHeight
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        ScrollBar.vertical: Ui.ScrollBar {}
-
-        ColumnLayout {
-            id: acc
-            width: parent.width
-            spacing: 10
+        spacing: 10
 
             Repeater {
                 model: root.rows
@@ -167,6 +158,5 @@ Item {
                     }
                 }
             }
-        }
     }
 }

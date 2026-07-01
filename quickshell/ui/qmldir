@@ -11,6 +11,7 @@ Slider 1.0 Slider.qml
 Dropdown 1.0 Dropdown.qml
 Icon 1.0 Icon.qml
 ScrollBar 1.0 ScrollBar.qml
+ScrollView 1.0 ScrollView.qml
 ToggleCapsule 1.0 ToggleCapsule.qml
 ToggleSquare 1.0 ToggleSquare.qml
 ToggleNotch 1.0 ToggleNotch.qml

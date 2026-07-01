@@ -96,7 +96,8 @@ Item {
             id: dropList
             implicitHeight: Math.min(contentHeight, 240)
             clip: true
-            ScrollBar.vertical: Ui.ScrollBar { visible: dropList.contentHeight > dropList.height + 1 }
+            readonly property bool barVisible: contentHeight > height + 1
+            ScrollBar.vertical: Ui.ScrollBar { visible: dropList.barVisible }
             model: root.model
             boundsBehavior: Flickable.StopAtBounds
 
@@ -104,7 +105,7 @@ Item {
                 id: row
                 required property var modelData
                 required property int index
-                width: ListView.view ? ListView.view.width : 0
+                width: (ListView.view ? ListView.view.width : 0) - (dropList.barVisible ? Theme.scrollGutter : 0)
                 height: 30
                 radius: 6
                 readonly property bool isCurrent: index === root.currentIndex

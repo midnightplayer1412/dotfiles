@@ -53,21 +53,9 @@ Item {
         ? KeyboardConfig.color : Theme.primary
     readonly property real kbDim: ({ "off": 0.1, "low": 0.4, "med": 0.7, "high": 1.0 }[KeyboardConfig.brightness]) || 1.0
 
-    Flickable {
-        id: flick
+    Ui.ScrollView {
         anchors.fill: parent
-        contentWidth: width
-        contentHeight: col.implicitHeight
-        clip: true
-        ScrollBar.vertical: Ui.ScrollBar { visible: flick.contentHeight > flick.height + 1 }
-        boundsBehavior: Flickable.StopAtBounds
-
-        ColumnLayout {
-            id: col
-            // Leave a gutter on the right so the scrollbar sits clear of the content
-            // (8px bar + breathing room) instead of hugging its edge.
-            width: parent.width - 24
-            spacing: 14
+        spacing: 14
 
             Text {
                 text: "Appearance"
@@ -614,7 +602,6 @@ Item {
             }
 
             Item { Layout.fillHeight: true }
-        }
     }
 
     // ── Live preview components (shown in the cards, on-state / mid value) ──
