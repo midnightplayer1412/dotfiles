@@ -1,0 +1,25 @@
+[Added Associations]
+application/pdf=brave-2.desktop;
+application/zip=unzip.desktop;
+text/html=brave.desktop;
+
+[Default Applications]
+application/pdf=brave-2.desktop;
+application/x-extension-burp=install4j_pwthlp-BurpSuiteCommunity.desktop
+application/zip=unzip.desktop;
+image/gif=imv.desktop
+image/jpeg=imv.desktop
+image/jpg=imv.desktop
+image/png=imv-viewer.desktop
+image/webp=imv.desktop
+text/html=brave.desktop;
+x-scheme-handler/about=brave-browser.desktop
+x-scheme-handler/anytype=anytype.desktop
+x-scheme-handler/burp=install4j_pwthlp-BurpSuiteCommunity.desktop
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+x-scheme-handler/http=brave-browser.desktop
+x-scheme-handler/https=brave-browser.desktop
+x-scheme-handler/postman=Postman.desktop
+x-scheme-handler/unknown=brave-browser.desktop
+inode/directory=thunar.desktop
+x-directory/normal=thunar.desktop
