@@ -3,8 +3,9 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import ".."
+import "../ui" as Ui
 
-Rectangle {
+Ui.Surface {
     id: root
 
     readonly property int cellW: Theme.overviewCellWidth
@@ -25,10 +26,8 @@ Rectangle {
     // even when dragged toward higher-index workspaces.
     property int draggingFromWs: -1
 
+    level: 0
     radius: Theme.overviewRadius
-    color:  Theme.surface
-    border.color: Theme.outline
-    border.width: 1
 
     // Absorb clicks on widget padding so they don't reach Overview's outer
     // close-catcher. Declared first so the Grid renders above it.

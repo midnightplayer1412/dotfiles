@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import ".."
+import "../ui" as Ui
 
 PanelWindow {
     id: root
@@ -18,6 +19,7 @@ PanelWindow {
     // modifier-key release — verified). Tab cycling still runs via the Hyprland
     // submap, which fires from compositor-level binds regardless of this grab.
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
     color: "transparent"
 

@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Services.Mpris
+import "../ui" as Ui
 import ".."
 
 // MPRIS transport. Horizontal bar: scrolling track title + previous/play-pause/
@@ -28,36 +29,23 @@ Item {
     onTitleChanged: titleText.x = 0
 
     // One transport button (fixed square so the row/column align cleanly).
-    component Xport: Item {
+    component Xport: Ui.IconButton {
         property string act: ""
-        property string glyph: ""
+        property string iconGlyph: ""
         property string enKey: ""
-        width: Theme.barIconSize
-        height: Theme.barIconSize
-        readonly property bool isEnabled: media.player ? media.player[enKey] === true : false
-        Text {
-            anchors.centerIn: parent
-            text: act === "toggle"
-                ? (media.player?.playbackState === MprisPlaybackState.Playing ? "\u{F03E4}" : "\u{F040A}")
-                : glyph
-            font.family: Theme.glyphFont
-            font.pixelSize: Theme.barIconSize - 2
-            color: ma.containsMouse && isEnabled ? Theme.primary
-                 : (isEnabled ? Theme.surfaceText : Theme.outline)
-        }
-        MouseArea {
-            id: ma
-            anchors.fill: parent
-            hoverEnabled: true
-            enabled: parent.isEnabled
-            cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: {
-                const p = media.player;
-                if (!p) return;
-                if (act === "previous") p.previous();
-                else if (act === "next") p.next();
-                else p.togglePlaying();
-            }
+        bg: "bare"
+        size: Theme.barIconSize
+        glyphSize: Theme.barIconSize - 2
+        enabled: media.player ? media.player[enKey] === true : false
+        glyph: act === "toggle"
+            ? (media.player?.playbackState === MprisPlaybackState.Playing ? "\u{F03E4}" : "\u{F040A}")
+            : iconGlyph
+        onClicked: {
+            const p = media.player;
+            if (!p) return;
+            if (act === "previous") p.previous();
+            else if (act === "next") p.next();
+            else p.togglePlaying();
         }
     }
 
@@ -109,9 +97,9 @@ Item {
             }
         }
 
-        Xport { act: "previous"; glyph: "\u{F04AE}"; enKey: "canGoPrevious" }
-        Xport { act: "toggle";                       enKey: "canTogglePlaying" }
-        Xport { act: "next";     glyph: "\u{F04AD}"; enKey: "canGoNext" }
+        Xport { act: "previous"; iconGlyph: "\u{F04AE}"; enKey: "canGoPrevious" }
+        Xport { act: "toggle";                           enKey: "canTogglePlaying" }
+        Xport { act: "next";     iconGlyph: "\u{F04AD}"; enKey: "canGoNext" }
     }
 
     // ── Vertical: transport only ──
@@ -119,8 +107,8 @@ Item {
         id: colL
         visible: !media.horizontal
         spacing: 2
-        Xport { act: "previous"; glyph: "\u{F04AE}"; enKey: "canGoPrevious" }
-        Xport { act: "toggle";                       enKey: "canTogglePlaying" }
-        Xport { act: "next";     glyph: "\u{F04AD}"; enKey: "canGoNext" }
+        Xport { act: "previous"; iconGlyph: "\u{F04AE}"; enKey: "canGoPrevious" }
+        Xport { act: "toggle";                           enKey: "canTogglePlaying" }
+        Xport { act: "next";     iconGlyph: "\u{F04AD}"; enKey: "canGoNext" }
     }
 }

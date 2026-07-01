@@ -24,6 +24,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
     HyprlandFocusGrab {
         active: true
@@ -31,17 +32,15 @@ PanelWindow {
         onCleared: NotificationCenterState.close()
     }
 
-    Rectangle {
+    Ui.Surface {
         id: panel
+        level: 0
+        radius: 16
 
         width: parent.width - 10
         height: parent.height - 20
         anchors.verticalCenter: parent.verticalCenter
 
-        color: Theme.surface
-        radius: 16
-        border.color: Theme.outline
-        border.width: 1
         clip: true
 
         // slide-in from right
@@ -74,58 +73,19 @@ PanelWindow {
                 }
 
                 // Do Not Disturb toggle
-                Rectangle {
-                    Layout.preferredWidth: 28
-                    Layout.preferredHeight: 28
-                    radius: 14
-                    color: NotificationService.doNotDisturb
-                        ? Theme.primary
-                        : (dndMouse.containsMouse ? Theme.surfaceContainer : "transparent")
-
-                    Behavior on color { ColorAnimation { duration: 120 } }
-
-                    Text {
-                        anchors.centerIn: parent
-                        // bell-off when silenced, bell when active
-                        text: NotificationService.doNotDisturb ? "\u{F009C}" : "\u{F009A}"
-                        color: NotificationService.doNotDisturb ? Theme.primaryText : Theme.surfaceText
-                        font.family: Theme.glyphFont
-                        font.pixelSize: 15
-                    }
-
-                    MouseArea {
-                        id: dndMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: NotificationService.toggleDoNotDisturb()
-                    }
+                Ui.IconButton {
+                    bg: "filled"
+                    active: NotificationService.doNotDisturb
+                    // bell-off when silenced, bell when active
+                    glyph: NotificationService.doNotDisturb ? "\u{F009C}" : "\u{F009A}"
+                    glyphSize: 15
+                    onClicked: NotificationService.toggleDoNotDisturb()
                 }
 
-                Rectangle {
-                    Layout.preferredWidth: clearLabel.implicitWidth + 20
-                    Layout.preferredHeight: 28
-                    radius: 14
-                    color: clearMouse.containsMouse ? Theme.primary : Theme.surfaceContainer
-
-                    Behavior on color { ColorAnimation { duration: 120 } }
-
-                    Text {
-                        id: clearLabel
-                        anchors.centerIn: parent
-                        text: "Clear all"
-                        color: clearMouse.containsMouse ? Theme.primaryText : Theme.surfaceText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                    }
-
-                    MouseArea {
-                        id: clearMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: NotificationService.clearAll()
-                    }
+                Ui.Button {
+                    kind: "filled"
+                    text: "Clear all"
+                    onClicked: NotificationService.clearAll()
                 }
             }
 

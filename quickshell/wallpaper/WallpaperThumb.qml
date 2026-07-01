@@ -1,4 +1,5 @@
 import QtQuick
+import "../ui" as Ui
 import ".."
 
 Item {
@@ -26,10 +27,10 @@ Item {
     // Placeholder background — visible while the image is still loading or
     // failed. Subtly distinct from panel surface so empty cells read as
     // "loading" rather than missing.
-    Rectangle {
+    Ui.Surface {
+        level: 1
         anchors.fill: parent
         radius: Theme.wallpaperThumbRadius
-        color: Theme.surfaceContainer
         z: 0
     }
 

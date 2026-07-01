@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import "../ui" as Ui
 import ".."
 import "../wifi"
 
@@ -11,18 +12,16 @@ Rectangle {
     property string targetSsid: WifiService.pendingPasswordSsid
     onTargetSsidChanged: {
         pwField.text = "";
-        if (targetSsid.length > 0) pwField.forceActiveFocus();
+        if (targetSsid.length > 0) pwField.input.forceActiveFocus();
     }
 
-    Rectangle {
+    Ui.Surface {
+        level: 1
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         height: contentCol.implicitHeight + 28
         radius: 16
-        color: Theme.surfaceContainer
-        border.color: Theme.outline
-        border.width: 1
 
         ColumnLayout {
             id: contentCol
@@ -43,36 +42,13 @@ Rectangle {
                 elide: Text.ElideRight
             }
 
-            Rectangle {
+            Ui.TextField {
+                id: pwField
                 Layout.fillWidth: true
-                Layout.preferredHeight: 32
-                radius: 8
-                color: Theme.surface
-                border.color: pwField.activeFocus ? Theme.primary : Theme.outline
-                border.width: 1
-
-                TextInput {
-                    id: pwField
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
-                    verticalAlignment: TextInput.AlignVCenter
-                    echoMode: TextInput.Password
-                    color: Theme.surfaceText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                    clip: true
-                    focus: true
-                    onAccepted: WifiService.connectWithPassword(root.targetSsid, pwField.text)
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "Password"
-                        color: Theme.outline
-                        font: pwField.font
-                        visible: pwField.text.length === 0
-                    }
-                }
+                variant: "field"
+                placeholder: "Password"
+                echoMode: TextInput.Password
+                onAccepted: WifiService.connectWithPassword(root.targetSsid, pwField.text)
             }
 
             Text {
@@ -92,56 +68,17 @@ Rectangle {
 
                 Item { Layout.fillWidth: true }
 
-                Rectangle {
-                    Layout.preferredWidth: cancelLabel.implicitWidth + 18
-                    Layout.preferredHeight: 28
-                    radius: 14
-                    color: cancelMouse.containsMouse ? Theme.surface : "transparent"
-                    border.color: Theme.outline
-                    border.width: 1
-
-                    Text {
-                        id: cancelLabel
-                        anchors.centerIn: parent
-                        text: "Cancel"
-                        color: Theme.surfaceText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                    }
-
-                    MouseArea {
-                        id: cancelMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: WifiService.cancelPasswordPrompt()
-                    }
+                Ui.Button {
+                    kind: "ghost"
+                    text: "Cancel"
+                    onClicked: WifiService.cancelPasswordPrompt()
                 }
 
-                Rectangle {
-                    Layout.preferredWidth: connectLabel.implicitWidth + 22
-                    Layout.preferredHeight: 28
-                    radius: 14
-                    color: connectMouse.containsMouse ? Theme.primary : Theme.primaryContainer
-
-                    Text {
-                        id: connectLabel
-                        anchors.centerIn: parent
-                        text: WifiService.connecting ? "Connecting…" : "Connect"
-                        color: connectMouse.containsMouse ? Theme.primaryText : Theme.surfaceText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                        font.bold: true
-                    }
-
-                    MouseArea {
-                        id: connectMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        enabled: !WifiService.connecting
-                        onClicked: WifiService.connectWithPassword(root.targetSsid, pwField.text)
-                    }
+                Ui.Button {
+                    kind: "primary"
+                    text: WifiService.connecting ? "Connecting…" : "Connect"
+                    busy: WifiService.connecting
+                    onClicked: WifiService.connectWithPassword(root.targetSsid, pwField.text)
                 }
             }
         }

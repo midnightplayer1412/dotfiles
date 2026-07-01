@@ -179,47 +179,9 @@ df -h --output=used,size,pcent / 2>/dev/null | tail -1 | awk '{printf "disk\\t%s
         }
     }
 
-    component Card: Rectangle {
-        default property alias content: inner.data
-        property string title: ""
-        property string icon: ""
+    // Thin wrapper over Ui.Card: title/icon props and the body slot are inherited;
+    // the two Card{} usages pass title/icon + InfoRow body children unchanged.
+    component Card: Ui.Card {
         Layout.fillWidth: true
-        radius: 12
-        color: Theme.surfaceContainer
-        border.color: Theme.outline
-        border.width: 1
-        implicitHeight: lay.implicitHeight + 28
-
-        ColumnLayout {
-            id: lay
-            anchors.fill: parent
-            anchors.margins: 14
-            spacing: 12
-
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.bottomMargin: 2
-                spacing: 10
-                Ui.Icon {
-                    source: icon
-                    color: Theme.primary
-                    size: 22
-                    Layout.alignment: Qt.AlignVCenter
-                }
-                Text {
-                    text: title
-                    color: Theme.primary
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 14
-                    font.bold: true
-                }
-            }
-
-            ColumnLayout {
-                id: inner
-                Layout.fillWidth: true
-                spacing: 10
-            }
-        }
     }
 }

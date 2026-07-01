@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import ".."
+import "../ui" as Ui
 import "../wifi"
 import "../bluetooth"
 import "../audio"
@@ -26,6 +27,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
     readonly property var hubWindow:
         ConnectionState.hubWindows[root.screen?.name ?? ""] ?? null
@@ -36,13 +38,11 @@ PanelWindow {
         onCleared: ConnectionState.close()
     }
 
-    Rectangle {
+    Ui.Surface {
         id: surface
         anchors.fill: parent
+        level: 0
         radius: Theme.drawerRadius
-        color: Theme.surface
-        border.color: Theme.outline
-        border.width: 1
         clip: true
 
         x: 40

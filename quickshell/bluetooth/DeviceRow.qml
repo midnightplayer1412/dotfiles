@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import "../ui" as Ui
 import ".."
 import "../bluetooth"
 
@@ -63,76 +64,44 @@ Item {
                 }
             }
 
-            Rectangle {
-                Layout.preferredWidth: actionLabel.implicitWidth + 16
-                Layout.preferredHeight: 26
-                radius: 13
-                color: actionMouse.containsMouse ? Theme.primary : Theme.surfaceContainer
-                Behavior on color { ColorAnimation { duration: 100 } }
-
-                Text {
-                    id: actionLabel
-                    anchors.centerIn: parent
-                    text: {
-                        if (row.inFlight) {
-                            return BluetoothService.inFlightAction === "disconnect"
-                                ? "Disconnecting…"
-                                : "Connecting…";
-                        }
-                        if (row.modelData.connected) {
-                            return row.halfConnected ? "Reconnect" : "Disconnect";
-                        }
-                        return row.modelData.paired ? "Connect" : "Pair";
+            Ui.Button {
+                // Disconnect is neutral (device stays paired) → filled; connect-type
+                // actions get emphasis → primary. In-flight labels + dimming via busy.
+                kind: (row.modelData.connected && !row.halfConnected) ? "filled" : "primary"
+                busy: row.inFlight
+                text: {
+                    if (row.inFlight) {
+                        return BluetoothService.inFlightAction === "disconnect"
+                            ? "Disconnecting…"
+                            : "Connecting…";
                     }
-                    color: actionMouse.containsMouse ? Theme.primaryText : Theme.surfaceText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 11
-                    opacity: row.inFlight ? 0.7 : 1.0
+                    if (row.modelData.connected) {
+                        return row.halfConnected ? "Reconnect" : "Disconnect";
+                    }
+                    return row.modelData.paired ? "Connect" : "Pair";
                 }
-
-                MouseArea {
-                    id: actionMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: row.inFlight ? Qt.ArrowCursor : Qt.PointingHandCursor
-                    onClicked: {
-                        if (row.inFlight) return;
-                        if (row.halfConnected) {
-                            BluetoothService.reconnect(row.modelData.mac);
-                        } else if (row.modelData.connected) {
-                            BluetoothService.disconnect(row.modelData.mac);
-                        } else if (row.modelData.paired) {
-                            BluetoothService.connect(row.modelData.mac);
-                        } else {
-                            BluetoothService.pair(row.modelData.mac);
-                        }
+                onClicked: {
+                    if (row.halfConnected) {
+                        BluetoothService.reconnect(row.modelData.mac);
+                    } else if (row.modelData.connected) {
+                        BluetoothService.disconnect(row.modelData.mac);
+                    } else if (row.modelData.paired) {
+                        BluetoothService.connect(row.modelData.mac);
+                    } else {
+                        BluetoothService.pair(row.modelData.mac);
                     }
                 }
             }
 
-            Rectangle {
-                Layout.preferredWidth: 26
-                Layout.preferredHeight: 26
-                radius: 13
+            Ui.IconButton {
+                // Forget affordance — now tints via theme accent on hover instead of
+                // the old red. Destructive confirmation lives in ForgetConfirm.
+                bg: "bare"
+                glyph: "\u{F01B4}"   // nf-md-delete
+                size: 26
+                glyphSize: 14
                 visible: row.modelData.paired
-                color: forgetMouse.containsMouse ? Qt.rgba(1.0, 0.4, 0.4, 0.25) : "transparent"
-                Behavior on color { ColorAnimation { duration: 100 } }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "\u{F01B4}"   // nf-md-delete
-                    font.family: "Monaspace Argon NF"
-                    font.pixelSize: 14
-                    color: forgetMouse.containsMouse ? Qt.rgba(1.0, 0.4, 0.4, 1.0) : Theme.outline
-                }
-
-                MouseArea {
-                    id: forgetMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: BluetoothService.requestForget(row.modelData.mac, row.modelData.name)
-                }
+                onClicked: BluetoothService.requestForget(row.modelData.mac, row.modelData.name)
             }
         }
 

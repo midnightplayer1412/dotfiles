@@ -66,29 +66,10 @@ Item {
                     }
                 }
 
-                Rectangle {
-                    Layout.preferredWidth: disconnectLabel.implicitWidth + 18
-                    Layout.preferredHeight: 28
-                    radius: 14
-                    color: disconnectMouse.containsMouse ? Theme.primary : Theme.surface
-                    Behavior on color { ColorAnimation { duration: 120 } }
-
-                    Text {
-                        id: disconnectLabel
-                        anchors.centerIn: parent
-                        text: "Disconnect"
-                        color: disconnectMouse.containsMouse ? Theme.primaryText : Theme.surfaceText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                    }
-
-                    MouseArea {
-                        id: disconnectMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: WifiService.disconnect()
-                    }
+                Ui.Button {
+                    kind: "filled"
+                    text: "Disconnect"
+                    onClicked: WifiService.disconnect()
                 }
             }
         }
@@ -134,20 +115,10 @@ Item {
                 font.bold: true
             }
 
-            Text {
-                text: WifiService.scanning ? "…" : "↻"
-                color: Theme.primary
-                opacity: refreshMouse.containsMouse ? 1.0 : 0.7
-                font.pixelSize: 14
-
-                MouseArea {
-                    id: refreshMouse
-                    anchors.fill: parent
-                    anchors.margins: -4
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: WifiService.refresh()
-                }
+            Ui.IconButton {
+                bg: "bare"
+                glyph: WifiService.scanning ? "…" : "↻"
+                onClicked: WifiService.refresh()
             }
         }
 

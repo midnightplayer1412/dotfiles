@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import "../ui" as Ui
 import ".."
 
 PanelWindow {
@@ -24,6 +25,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
     HyprlandFocusGrab {
         active: true
@@ -72,18 +74,16 @@ PanelWindow {
         }
     }
 
-    Rectangle {
+    Ui.Surface {
         id: panel
+        level: 0
 
         width: parent.width - 8
         height: 340
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
 
-        color: Theme.surface
         radius: 16
-        border.color: Theme.outline
-        border.width: 1
         clip: true
 
         // entry animation
@@ -106,26 +106,12 @@ PanelWindow {
                 Layout.fillWidth: true
                 spacing: 4
 
-                Rectangle {
-                    Layout.preferredWidth: 24
-                    Layout.preferredHeight: 24
-                    radius: 12
-                    color: prevMouse.containsMouse ? Theme.surfaceContainer : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "◀"
-                        color: Theme.surfaceText
-                        font.pixelSize: 11
-                    }
-
-                    MouseArea {
-                        id: prevMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.prevMonth()
-                    }
+                Ui.IconButton {
+                    bg: "filled"
+                    size: 24
+                    glyph: "◀"
+                    glyphSize: 11
+                    onClicked: root.prevMonth()
                 }
 
                 Text {
@@ -138,26 +124,12 @@ PanelWindow {
                     font.bold: true
                 }
 
-                Rectangle {
-                    Layout.preferredWidth: 24
-                    Layout.preferredHeight: 24
-                    radius: 12
-                    color: nextMouse.containsMouse ? Theme.surfaceContainer : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "▶"
-                        color: Theme.surfaceText
-                        font.pixelSize: 11
-                    }
-
-                    MouseArea {
-                        id: nextMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.nextMonth()
-                    }
+                Ui.IconButton {
+                    bg: "filled"
+                    size: 24
+                    glyph: "▶"
+                    glyphSize: 11
+                    onClicked: root.nextMonth()
                 }
             }
 

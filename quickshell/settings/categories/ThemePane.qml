@@ -165,31 +165,15 @@ Item {
                         border.color: Theme.outline
                         border.width: 1
                     }
-                    // Themed hex input (avoids the system-styled TextField)
-                    Rectangle {
+                    // Themed hex input
+                    Ui.TextField {
+                        id: hexInput
+                        variant: "field"
+                        maxLength: 7
+                        fontSize: 13
                         Layout.preferredWidth: 150
-                        Layout.preferredHeight: 34
-                        radius: 8
-                        color: Theme.surfaceContainer
-                        border.width: 1
-                        border.color: hexInput.activeFocus ? Theme.primary : Theme.outline
-                        TextInput {
-                            id: hexInput
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            verticalAlignment: TextInput.AlignVCenter
-                            color: Theme.surfaceText
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 13
-                            clip: true
-                            selectByMouse: true
-                            selectionColor: Theme.primary
-                            text: ThemeConfig.color
-                            inputMethodHints: Qt.ImhNoAutoUppercase
-                            maximumLength: 7
-                            onAccepted: pane.applyHex(text)
-                        }
+                        text: ThemeConfig.color
+                        onAccepted: pane.applyHex(hexInput.text)
                     }
                     Text {
                         text: "Enter to apply"
@@ -204,216 +188,254 @@ Item {
             // ── Keyboard lighting ─────────────────────────────────────
             // Grouped in a card: header + on/off, a live color preview bar
             // (dimmed to hint brightness), then constant-width dropdown rows.
-            Rectangle {
+            Ui.Card {
                 Layout.fillWidth: true
                 Layout.topMargin: 6
-                radius: 12
-                color: Theme.surfaceContainer
-                border.width: 1
-                border.color: Theme.outline
-                implicitHeight: kbCard.implicitHeight + 28
+                glyph: "\u{F030C}"   // nf-md-keyboard
+                title: "Keyboard lighting"
+                subtitle: "Match the backlight to your theme."
+                trailing: Component {
+                    Ui.Toggle {
+                        checked: KeyboardConfig.enabled
+                        onToggled: (v) => KeyboardConfig.setEnabled(v)
+                    }
+                }
 
+                // Live color preview bar — fades with the chosen brightness.
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 26
+                    visible: KeyboardConfig.enabled
+                    radius: 8
+                    color: pane.kbColor
+                    opacity: pane.kbDim
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                }
+
+                // Option rows — fixed label column + fill-width dropdowns,
+                // so every dropdown is exactly the same width.
                 ColumnLayout {
-                    id: kbCard
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.margins: 14
-                    spacing: 12
+                    Layout.fillWidth: true
+                    visible: KeyboardConfig.enabled
+                    spacing: 10
 
-                    // Header — keyboard glyph, title/subtitle, master toggle.
+                    // Color source
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 10
                         Text {
-                            text: "\u{F030C}"   // nf-md-keyboard
-                            color: Theme.primary
-                            font.family: "Monaspace Argon NF"
-                            font.pixelSize: 20
+                            Layout.preferredWidth: 78
+                            text: "Color"
+                            color: Theme.surfaceText
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 13
                         }
-                        ColumnLayout {
+                        Ui.Dropdown {
                             Layout.fillWidth: true
-                            spacing: 1
-                            Text {
-                                text: "Keyboard lighting"
-                                color: Theme.surfaceText
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 14
-                                font.bold: true
-                            }
-                            Text {
-                                text: "Match the backlight to your theme."
-                                color: Theme.outline
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                            }
-                        }
-                        Ui.Toggle {
-                            checked: KeyboardConfig.enabled
-                            onToggled: (v) => KeyboardConfig.setEnabled(v)
+                            model: pane.kbColorModes
+                            textRole: "label"
+                            currentIndex: pane.kbIndexOf(pane.kbColorModes, KeyboardConfig.colorMode)
+                            onActivated: (i) => KeyboardConfig.setColorMode(pane.kbColorModes[i].key)
                         }
                     }
 
-                    // Live color preview bar — fades with the chosen brightness.
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 26
-                        visible: KeyboardConfig.enabled
-                        radius: 8
-                        color: pane.kbColor
-                        opacity: pane.kbDim
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        Behavior on opacity { NumberAnimation { duration: 150 } }
-                    }
-
-                    // Option rows — fixed label column + fill-width dropdowns,
-                    // so every dropdown is exactly the same width.
+                    // Custom swatches + hex (only in custom mode), indented
+                    // to line up under the dropdown column.
                     ColumnLayout {
                         Layout.fillWidth: true
-                        visible: KeyboardConfig.enabled
+                        Layout.leftMargin: 88
+                        visible: KeyboardConfig.colorMode === "custom"
                         spacing: 10
 
-                        // Color source
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 10
-                            Text {
-                                Layout.preferredWidth: 78
-                                text: "Color"
-                                color: Theme.surfaceText
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 13
-                            }
-                            Ui.Dropdown {
-                                Layout.fillWidth: true
-                                model: pane.kbColorModes
-                                textRole: "label"
-                                currentIndex: pane.kbIndexOf(pane.kbColorModes, KeyboardConfig.colorMode)
-                                onActivated: (i) => KeyboardConfig.setColorMode(pane.kbColorModes[i].key)
-                            }
-                        }
-
-                        // Custom swatches + hex (only in custom mode), indented
-                        // to line up under the dropdown column.
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            Layout.leftMargin: 88
-                            visible: KeyboardConfig.colorMode === "custom"
-                            spacing: 10
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 8
-                                Repeater {
-                                    model: KeyboardConfig.presets
-                                    delegate: Rectangle {
-                                        required property var modelData
-                                        readonly property bool selected:
-                                            (KeyboardConfig.color || "").toLowerCase() === modelData.toLowerCase()
-                                        Layout.preferredWidth: 26
-                                        Layout.preferredHeight: 26
-                                        radius: 13
-                                        color: modelData
-                                        border.width: selected ? 3 : 1
-                                        border.color: selected ? Theme.surfaceText : Theme.outline
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: KeyboardConfig.setColor(modelData)
-                                        }
+                            spacing: 8
+                            Repeater {
+                                model: KeyboardConfig.presets
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    readonly property bool selected:
+                                        (KeyboardConfig.color || "").toLowerCase() === modelData.toLowerCase()
+                                    Layout.preferredWidth: 26
+                                    Layout.preferredHeight: 26
+                                    radius: 13
+                                    color: modelData
+                                    border.width: selected ? 3 : 1
+                                    border.color: selected ? Theme.surfaceText : Theme.outline
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: KeyboardConfig.setColor(modelData)
                                     }
                                 }
-                                Item { Layout.fillWidth: true }
                             }
-
-                            Rectangle {
-                                Layout.preferredWidth: 150
-                                Layout.preferredHeight: 32
-                                radius: 8
-                                color: Theme.surface
-                                border.width: 1
-                                border.color: kbHexInput.activeFocus ? Theme.primary : Theme.outline
-                                TextInput {
-                                    id: kbHexInput
-                                    anchors.fill: parent
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 12
-                                    verticalAlignment: TextInput.AlignVCenter
-                                    color: Theme.surfaceText
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 13
-                                    clip: true
-                                    selectByMouse: true
-                                    selectionColor: Theme.primary
-                                    text: KeyboardConfig.color
-                                    inputMethodHints: Qt.ImhNoAutoUppercase
-                                    maximumLength: 7
-                                    onAccepted: pane.applyKbHex(text)
-                                }
-                            }
+                            Item { Layout.fillWidth: true }
                         }
 
-                        // Effect
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 10
-                            Text {
-                                Layout.preferredWidth: 78
-                                text: "Effect"
-                                color: Theme.surfaceText
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 13
-                            }
-                            Ui.Dropdown {
-                                Layout.fillWidth: true
-                                model: pane.kbEffects
-                                textRole: "label"
-                                currentIndex: pane.kbIndexOf(pane.kbEffects, KeyboardConfig.effect)
-                                onActivated: (i) => KeyboardConfig.setEffect(pane.kbEffects[i].key)
-                            }
-                        }
-
-                        // Brightness
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 10
-                            Text {
-                                Layout.preferredWidth: 78
-                                text: "Brightness"
-                                color: Theme.surfaceText
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 13
-                            }
-                            Ui.Dropdown {
-                                Layout.fillWidth: true
-                                model: pane.kbBrightnessLevels
-                                textRole: "label"
-                                currentIndex: pane.kbIndexOf(pane.kbBrightnessLevels, KeyboardConfig.brightness)
-                                onActivated: (i) => KeyboardConfig.setBrightness(pane.kbBrightnessLevels[i].key)
-                            }
-                        }
-
-                        // Speed — only breathe responds to it.
-                        RowLayout {
-                            Layout.fillWidth: true
-                            visible: KeyboardConfig.effect === "breathe"
-                            spacing: 10
-                            Text {
-                                Layout.preferredWidth: 78
-                                text: "Speed"
-                                color: Theme.surfaceText
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 13
-                            }
-                            Ui.Dropdown {
-                                Layout.fillWidth: true
-                                model: pane.kbSpeedLevels
-                                textRole: "label"
-                                currentIndex: pane.kbIndexOf(pane.kbSpeedLevels, KeyboardConfig.speed)
-                                onActivated: (i) => KeyboardConfig.setSpeed(pane.kbSpeedLevels[i].key)
-                            }
+                        Ui.TextField {
+                            id: kbHexInput
+                            variant: "field"
+                            maxLength: 7
+                            fontSize: 13
+                            Layout.preferredWidth: 150
+                            text: KeyboardConfig.color
+                            onAccepted: pane.applyKbHex(kbHexInput.text)
                         }
                     }
+
+                    // Effect
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+                        Text {
+                            Layout.preferredWidth: 78
+                            text: "Effect"
+                            color: Theme.surfaceText
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 13
+                        }
+                        Ui.Dropdown {
+                            Layout.fillWidth: true
+                            model: pane.kbEffects
+                            textRole: "label"
+                            currentIndex: pane.kbIndexOf(pane.kbEffects, KeyboardConfig.effect)
+                            onActivated: (i) => KeyboardConfig.setEffect(pane.kbEffects[i].key)
+                        }
+                    }
+
+                    // Brightness
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+                        Text {
+                            Layout.preferredWidth: 78
+                            text: "Brightness"
+                            color: Theme.surfaceText
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 13
+                        }
+                        Ui.Dropdown {
+                            Layout.fillWidth: true
+                            model: pane.kbBrightnessLevels
+                            textRole: "label"
+                            currentIndex: pane.kbIndexOf(pane.kbBrightnessLevels, KeyboardConfig.brightness)
+                            onActivated: (i) => KeyboardConfig.setBrightness(pane.kbBrightnessLevels[i].key)
+                        }
+                    }
+
+                    // Speed — only breathe responds to it.
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: KeyboardConfig.effect === "breathe"
+                        spacing: 10
+                        Text {
+                            Layout.preferredWidth: 78
+                            text: "Speed"
+                            color: Theme.surfaceText
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 13
+                        }
+                        Ui.Dropdown {
+                            Layout.fillWidth: true
+                            model: pane.kbSpeedLevels
+                            textRole: "label"
+                            currentIndex: pane.kbIndexOf(pane.kbSpeedLevels, KeyboardConfig.speed)
+                            onActivated: (i) => KeyboardConfig.setSpeed(pane.kbSpeedLevels[i].key)
+                        }
+                    }
+                }
+            }
+
+            // ── Surface style ─────────────────────────────────────────
+            Text {
+                text: "Surface style"
+                color: Theme.primary
+                font.family: Theme.fontFamily
+                font.pixelSize: 14
+                font.bold: true
+                Layout.topMargin: 6
+            }
+            Text {
+                text: "How panels are drawn across the shell. Glass is frosted and "
+                    + "translucent; Solid is flat and opaque. Colors still come from "
+                    + "your wallpaper either way."
+                color: Theme.outline
+                font.family: Theme.fontFamily
+                font.pixelSize: 12
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+                Repeater {
+                    model: [
+                        { key: "glass", label: "Glass" },
+                        { key: "solid", label: "Solid" }
+                    ]
+                    delegate: Rectangle {
+                        required property var modelData
+                        readonly property bool selected: Ui.UiStyle.surface === modelData.key
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 96
+                        radius: 10
+                        color: Theme.surfaceContainer
+                        border.width: selected ? 2 : 1
+                        border.color: selected ? Theme.primary : Theme.outline
+
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 10
+                            // Live preview: a base surface with an inner card, forced
+                            // to this card's preset regardless of the global choice.
+                            Ui.Surface {
+                                Layout.alignment: Qt.AlignHCenter
+                                implicitWidth: 120
+                                implicitHeight: 44
+                                preset: modelData.key
+                                level: 0
+                                radius: 8
+                                Ui.Surface {
+                                    anchors.centerIn: parent
+                                    width: 88
+                                    height: 22
+                                    preset: modelData.key
+                                    level: 1
+                                    radius: 6
+                                }
+                            }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.label
+                                color: parent.parent.selected ? Theme.primary : Theme.surfaceText
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 12
+                            }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: { Ui.UiStyle.surface = modelData.key; Ui.UiStyle.save(); }
+                        }
+                    }
+                }
+            }
+            // Real compositor backdrop blur — only meaningful for Glass.
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+                opacity: Ui.UiStyle.surface === "glass" ? 1.0 : 0.4
+                Text {
+                    Layout.fillWidth: true
+                    text: "Blur desktop behind panels"
+                    color: Theme.surfaceText
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 13
+                }
+                Ui.Toggle {
+                    checked: Ui.UiStyle.desktopBlur
+                    onToggled: (v) => { Ui.UiStyle.desktopBlur = v; Ui.UiStyle.save(); }
                 }
             }
 

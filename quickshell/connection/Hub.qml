@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import ".."
+import "../ui" as Ui
 
 PanelWindow {
     id: root
@@ -21,6 +22,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
     Component.onCompleted: ConnectionState.registerHub(root.screen, root)
     Component.onDestruction: {
@@ -28,13 +30,11 @@ PanelWindow {
         ConnectionState.hubExited();   // clear hubHovered so leaveTimer can fire on the next hover
     }
 
-    Rectangle {
+    Ui.Surface {
         id: surface
         anchors.fill: parent
+        level: 0
         radius: 14
-        color: Theme.surface
-        border.color: Theme.outline
-        border.width: 1
 
         opacity: 0
         Component.onCompleted: fadeIn.start()

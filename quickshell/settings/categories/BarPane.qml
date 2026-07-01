@@ -182,27 +182,11 @@ Item {
             }
             // Restores position + appearance + layout to the known-good baseline,
             // so over-tuning is always one click from working again.
-            Rectangle {
-                Layout.preferredHeight: 28
-                implicitWidth: resetLabel.implicitWidth + 22
-                radius: 8
-                color: resetMouse.containsMouse ? Theme.surfaceContainer : "transparent"
-                border.width: 1
-                border.color: Theme.outline
-                Text {
-                    id: resetLabel
-                    anchors.centerIn: parent
-                    text: "Reset to defaults"
-                    color: resetMouse.containsMouse ? Theme.primary : Theme.surfaceText
-                    font.family: Theme.fontFamily; font.pixelSize: 12
-                }
-                MouseArea {
-                    id: resetMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: BarConfig.resetDefaults()
-                }
+            Ui.Button {
+                kind: "ghost"
+                text: "Reset to defaults"
+                fontSize: 12
+                onClicked: BarConfig.resetDefaults()
             }
         }
         Text {

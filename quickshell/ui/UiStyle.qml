@@ -12,6 +12,8 @@ Singleton {
 
     property alias toggle: adapter.toggle     // "capsule" | "square" | "notch"
     property alias slider: adapter.slider     // "thin" | "thick"
+    property alias surface: adapter.surface   // "solid" | "glass"
+    property alias desktopBlur: adapter.desktopBlur  // real compositor backdrop blur behind glass
 
     function save() { view.writeAdapter(); }
 
@@ -25,6 +27,8 @@ Singleton {
             id: adapter
             property string toggle: "capsule"
             property string slider: "thin"
+            property string surface: "glass"
+            property bool desktopBlur: true
         }
     }
 }

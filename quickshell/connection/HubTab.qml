@@ -1,5 +1,6 @@
 import QtQuick
 import ".."
+import "../ui" as Ui
 import "../wifi"
 import "../bluetooth"
 import "../audio"
@@ -56,19 +57,14 @@ Item {
         return 1.0;
     }
 
-    Text {
-        anchors.centerIn: parent
-        text: root.glyph
-        font.family: "Monaspace Argon NF"
-        font.pixelSize: 22
-        color: root.isActive ? Theme.primary : Theme.surfaceText
-        opacity: root.iconOpacity
-    }
-
-    MouseArea {
+    Ui.IconButton {
         anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        bg: "bare"
+        size: 36
+        glyph: root.glyph
+        glyphSize: 22
+        active: root.isActive
+        opacity: root.iconOpacity
         onClicked: ConnectionState.tabClicked(root.tabKey, root.parentScreen)
     }
 }

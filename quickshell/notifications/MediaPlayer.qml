@@ -3,9 +3,12 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.Mpris
 import ".."
+import "../ui" as Ui
 
-Rectangle {
+Ui.Surface {
     id: root
+    level: 1
+    radius: 12
 
     // Pick the first player that's actively playing, otherwise the first paused one.
     readonly property var activePlayer: {
@@ -20,11 +23,6 @@ Rectangle {
     visible: activePlayer !== null
     implicitHeight: visible ? layout.implicitHeight + 20 : 0
 
-    radius: 12
-    color: Theme.surfaceContainer
-    border.color: Theme.outline
-    border.width: 1
-
     Behavior on implicitHeight {
         NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
     }
@@ -36,11 +34,11 @@ Rectangle {
         spacing: 12
 
         // Album art / fallback
-        Rectangle {
+        Ui.Surface {
+            level: 0
             Layout.preferredWidth: 56
             Layout.preferredHeight: 56
             radius: 8
-            color: Theme.surface
             clip: true
 
             Image {
@@ -109,52 +107,30 @@ Rectangle {
                     { glyph: "\u{F04AD}", action: "next", enabled: "canGoNext" }                  // skip-next
                 ]
 
-                delegate: Rectangle {
+                delegate: Ui.IconButton {
                     id: btn
                     required property var modelData
 
-                    Layout.preferredWidth: 28
-                    Layout.preferredHeight: 28
-                    radius: 14
+                    bg: "bare"
+                    glyphSize: 14
 
-                    readonly property bool isEnabled: root.activePlayer
+                    enabled: root.activePlayer
                         ? root.activePlayer[modelData.enabled] === true
                         : false
 
-                    color: btnMouse.containsMouse && isEnabled
-                        ? Theme.primary
-                        : "transparent"
+                    // play/pause reflects current playback state; others are static
+                    glyph: btn.modelData.action === "togglePlaying"
+                        ? (root.activePlayer?.playbackState === MprisPlaybackState.Playing
+                            ? "\u{F03E4}"   // pause
+                            : "\u{F040A}")  // play
+                        : btn.modelData.glyph
 
-                    Behavior on color { ColorAnimation { duration: 100 } }
-
-                    Text {
-                        anchors.centerIn: parent
-                        // play/pause reflects current playback state; others are static
-                        text: btn.modelData.action === "togglePlaying"
-                            ? (root.activePlayer?.playbackState === MprisPlaybackState.Playing
-                                ? "\u{F03E4}"   // pause
-                                : "\u{F040A}")  // play
-                            : btn.modelData.glyph
-                        color: btnMouse.containsMouse && btn.isEnabled
-                            ? Theme.primaryText
-                            : (btn.isEnabled ? Theme.surfaceText : Theme.outline)
-                        font.family: Theme.glyphFont
-                        font.pixelSize: 14
-                    }
-
-                    MouseArea {
-                        id: btnMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: btn.isEnabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        enabled: btn.isEnabled
-                        onClicked: {
-                            const p = root.activePlayer;
-                            if (!p) return;
-                            if (btn.modelData.action === "previous") p.previous();
-                            else if (btn.modelData.action === "next") p.next();
-                            else if (btn.modelData.action === "togglePlaying") p.togglePlaying();
-                        }
+                    onClicked: {
+                        const p = root.activePlayer;
+                        if (!p) return;
+                        if (btn.modelData.action === "previous") p.previous();
+                        else if (btn.modelData.action === "next") p.next();
+                        else if (btn.modelData.action === "togglePlaying") p.togglePlaying();
                     }
                 }
             }

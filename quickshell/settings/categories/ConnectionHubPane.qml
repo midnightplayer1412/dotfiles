@@ -63,16 +63,14 @@ Item {
     }
 
     // ── Live preview (hub glyph row), right, inset from edges ─────────
-    Rectangle {
+    Ui.Surface {
         id: preview
+        level: 1
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 260
         radius: 14
-        color: Theme.surfaceContainer
-        border.color: Theme.outline
-        border.width: 1
 
         Text {
             anchors.top: parent.top

@@ -22,6 +22,8 @@ Singleton {
     readonly property color surfaceContainer: colors?.surfaceContainer ?? "#2b2b3d"
     readonly property color outline:          colors?.outline          ?? "#6c7086"
     readonly property color error:            colors?.error            ?? "#f38ba8"
+    readonly property color errorText:        colors?.onError          ?? "#1e1e2e"
+    readonly property color errorContainer:   colors?.errorContainer   ?? "#93000a"
 
     // Bar geometry
     readonly property int barWidth: 48

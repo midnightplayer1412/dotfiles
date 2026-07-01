@@ -16,6 +16,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    WlrLayershell.namespace: Ui.Surfaces.blurNamespace
 
     color: "transparent"
 
@@ -51,15 +52,13 @@ PanelWindow {
         onClicked: WallpaperService.pickerVisible = false
     }
 
-    Rectangle {
+    Ui.Surface {
         id: panel
+        level: 0
         anchors.centerIn: parent
         width: Theme.wallpaperPickerWidth
         height: Theme.wallpaperPickerHeight
-        color: Theme.surface
         radius: Theme.wallpaperPickerRadius
-        border.color: Theme.outline
-        border.width: 1
 
         // Swallow clicks inside the panel (so they don't close it)
         MouseArea {
