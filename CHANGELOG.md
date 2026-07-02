@@ -6,6 +6,30 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-02
+
+#### Added
+- **overview / settings** (quickshell) — the **SUPER+TAB** window overview is now
+  a **swappable layout**, chosen in a new **Settings → Window Switcher** pane with
+  five options (each shown as a mini wireframe): **Grid** (the original centered
+  2×5 workspace grid, restyled), **Dock** (a bottom MRU strip of window cards),
+  **Exposé** (every window spread across the screen), **Side panel** (a vertical
+  workspace column docked to the edge *opposite the bar*), and **Mission Control**
+  (macOS-style). The choice persists to `overview-config.json` and the open
+  overview re-renders live, backed by a new `OverviewConfig` singleton +
+  dispatcher `Loader` in `Overview.qml`; an unknown/edited value falls back to
+  Grid. All layouts reuse the shared `OverviewState` (MRU order, focus, geometric
+  HJKL nav) and the `OverviewWindow` tile (live previews).
+- **overview** (quickshell) — **Mission Control** layout: a **Spaces strip** of
+  live workspace thumbnails pinned along the top, the **current workspace's
+  windows spread out** below, and **drag-a-window-onto-a-Space to move it** to
+  that workspace. Dragging shrinks the window into a small **proxy that tracks
+  the cursor** (via a new opt-in `OverviewWindow.dragProxyLongEdge` that shrinks
+  around the grab point and makes the grab point the drop hotspot), so a large
+  window no longer covers the Spaces and the drop lands exactly where you point.
+  Releasing **on a workspace panel** moves the window; releasing anywhere else
+  cancels (snaps back).
+
 ### 2026-07-01
 
 #### Added

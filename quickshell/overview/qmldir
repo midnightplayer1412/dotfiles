@@ -1,4 +1,8 @@
 singleton OverviewState 1.0 OverviewState.qml
 OverviewWindow 1.0 OverviewWindow.qml
 OverviewWidget 1.0 OverviewWidget.qml
+OverviewDock 1.0 OverviewDock.qml
+OverviewExpose 1.0 OverviewExpose.qml
+OverviewSide 1.0 OverviewSide.qml
+OverviewMission 1.0 OverviewMission.qml
 Overview 1.0 Overview.qml

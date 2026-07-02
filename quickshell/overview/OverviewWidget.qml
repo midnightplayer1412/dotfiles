@@ -29,6 +29,25 @@ Ui.Surface {
     level: 0
     radius: Theme.overviewRadius
 
+    // Self-contained entry animation (moved out of the Overview dispatcher so
+    // each layout owns how it appears). Fires on open and again if the user
+    // switches to this layout live from Settings.
+    opacity: 0
+    transform: Scale {
+        id: entryScale
+        origin.x: root.width / 2
+        origin.y: root.height / 2
+        xScale: 0.95
+        yScale: 0.95
+    }
+    Component.onCompleted: entryAnim.start()
+    ParallelAnimation {
+        id: entryAnim
+        NumberAnimation { target: root;       property: "opacity"; from: 0;    to: 1; duration: 160; easing.type: Easing.OutCubic }
+        NumberAnimation { target: entryScale; property: "xScale";  from: 0.95; to: 1; duration: 160; easing.type: Easing.OutCubic }
+        NumberAnimation { target: entryScale; property: "yScale";  from: 0.95; to: 1; duration: 160; easing.type: Easing.OutCubic }
+    }
+
     // Absorb clicks on widget padding so they don't reach Overview's outer
     // close-catcher. Declared first so the Grid renders above it.
     MouseArea {
@@ -75,7 +94,7 @@ Ui.Surface {
 
                 width:  root.cellW
                 height: root.cellH
-                radius: 8
+                radius: 10
                 z: wsId === root.draggingFromWs ? 1000 : 0
 
                 color: hovered ? Theme.surfaceContainer

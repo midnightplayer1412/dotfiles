@@ -5,6 +5,12 @@ import Quickshell.Hyprland
 import ".."
 import "../ui" as Ui
 
+// Fullscreen SUPER+TAB overview. This file owns the shared concerns —
+// layershell surface, focus grab, click-outside-to-close, and keyboard handling
+// (sticky HJKL nav + armed alt-tab Super-release commit). The visible layout is
+// dispatched from OverviewConfig.resolvedLayout into one of the layout
+// components below; each is a self-contained, self-animating Item that arranges
+// its own content within this panel.
 PanelWindow {
     id: root
 
@@ -29,33 +35,40 @@ PanelWindow {
         onCleared: OverviewState.close()
     }
 
-    // Click-outside-to-close
+    // Click-outside-to-close. Layout content sits above this and absorbs its own
+    // clicks (each layout swallows clicks on its background/padding).
     MouseArea {
         anchors.fill: parent
         onClicked: OverviewState.close()
     }
 
-    OverviewWidget {
-        id: widget
-        anchors.centerIn: parent
-        opacity: 0
-        transform: Scale {
-            id: entryScale
-            origin.x: widget.width / 2
-            origin.y: widget.height / 2
-            xScale: 0.95
-            yScale: 0.95
-        }
-
-        Component.onCompleted: entryAnim.start()
-        ParallelAnimation {
-            id: entryAnim
-            NumberAnimation { target: widget;      property: "opacity"; from: 0;    to: 1; duration: 160; easing.type: Easing.OutCubic }
-            NumberAnimation { target: entryScale;  property: "xScale";  from: 0.95; to: 1; duration: 160; easing.type: Easing.OutCubic }
-            NumberAnimation { target: entryScale;  property: "yScale";  from: 0.95; to: 1; duration: 160; easing.type: Easing.OutCubic }
+    // ── Layout dispatcher ────────────────────────────────────────────────
+    // Loader auto-resizes each layout to fill the panel; layouts position their
+    // own content (grid centers, dock docks bottom, side docks an edge, exposé
+    // fills). Rebinding on OverviewConfig.resolvedLayout re-renders live when the
+    // user picks a different layout in Settings while the overview is open.
+    Loader {
+        id: layoutLoader
+        anchors.fill: parent
+        sourceComponent: {
+            switch (OverviewConfig.resolvedLayout) {
+            case "dock":    return dockComp;
+            case "expose":  return exposeComp;
+            case "side":    return sideComp;
+            case "mission": return missionComp;
+            case "grid":
+            default:        return gridComp;
+            }
         }
     }
 
+    Component { id: gridComp;    OverviewWidget { anchors.centerIn: parent } }
+    Component { id: dockComp;    OverviewDock { } }
+    Component { id: exposeComp;  OverviewExpose { } }
+    Component { id: sideComp;    OverviewSide { } }
+    Component { id: missionComp; OverviewMission { } }
+
+    // ── Shared keyboard handling ─────────────────────────────────────────
     Item {
         anchors.fill: parent
         focus: true

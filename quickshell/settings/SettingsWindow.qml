@@ -27,6 +27,7 @@ PanelWindow {
     readonly property var categories: [
         { key: "appearance", label: "Appearance",     icon: sym + "/categories/applications-graphics-symbolic.svg" },
         { key: "bar",        label: "Bar",            icon: sym + "/actions/sidebar-show-symbolic.svg" },
+        { key: "overview",   label: "Window Switcher", icon: sym + "/actions/view-app-grid-symbolic.svg" },
         { key: "lock",       label: "Lock Screen",    icon: sym + "/actions/system-lock-screen-symbolic.svg" },
         { key: "launcher",   label: "Launcher",       icon: sym + "/categories/applications-all-symbolic.svg" }
     ]
@@ -134,6 +135,11 @@ PanelWindow {
                 Categories.BarPane {
                     anchors.fill: parent
                     visible: SettingsState.activeCategory === "bar"
+                }
+
+                Categories.OverviewPane {
+                    anchors.fill: parent
+                    visible: SettingsState.activeCategory === "overview"
                 }
 
                 Categories.LauncherPane {

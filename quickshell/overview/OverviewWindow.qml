@@ -27,6 +27,19 @@ Rectangle {
     property bool highlighted: false
     readonly property bool dragging: dragArea.drag.active
 
+    // Optional macOS-style drag proxy. 0 = disabled (drags at full size, drop
+    // hotspot = center — used by Grid/Exposé/Side). >0 = while dragging, shrink
+    // around the GRAB POINT so the long edge ≈ this many px, and use the grab
+    // point as the drop hotspot — so the drop lands under the cursor regardless
+    // of window size (used by Mission Control, where windows can be huge).
+    property real dragProxyLongEdge: 0
+    // Where inside the tile the drag began (item coords); the shrink origin and
+    // drop hotspot when dragProxyLongEdge > 0. Defaults to center.
+    property real grabX: width / 2
+    property real grabY: height / 2
+    readonly property real proxyScale: (dragProxyLongEdge > 0 && width > 0 && height > 0)
+        ? Math.min(1, dragProxyLongEdge / Math.max(width, height)) : 1
+
     signal clicked()
 
     readonly property string appClass: toplevel?.lastIpcObject?.class ?? ""
@@ -57,9 +70,23 @@ Rectangle {
     Behavior on border.color { ColorAnimation  { duration: 120 } }
     Behavior on scale        { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
 
+    // Drag-proxy shrink, around the grab point (composes with the highlight
+    // `scale` above). Identity (1.0) unless a proxy-enabled tile is dragging.
+    transform: Scale {
+        origin.x: root.grabX
+        origin.y: root.grabY
+        xScale: (root.dragProxyLongEdge > 0 && root.dragging) ? root.proxyScale : 1
+        yScale: (root.dragProxyLongEdge > 0 && root.dragging) ? root.proxyScale : 1
+        Behavior on xScale { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
+        Behavior on yScale { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
+    }
+
     Drag.active: dragArea.drag.active
-    Drag.hotSpot.x: width / 2
-    Drag.hotSpot.y: height / 2
+    // With the proxy on, the drop point is the grab point (kept under the cursor
+    // since drag.target moves the tile by the cursor delta, and the shrink origin
+    // is the same point) — so the drop lands where you point. Else: center.
+    Drag.hotSpot.x: dragProxyLongEdge > 0 ? grabX : width / 2
+    Drag.hotSpot.y: dragProxyLongEdge > 0 ? grabY : height / 2
     Drag.keys: ["overview-window"]
     Drag.source: root
 
@@ -148,6 +175,10 @@ Rectangle {
 
         onEntered: root.hovered = true
         onExited:  root.hovered = false
+
+        // Record where inside the tile the drag started, for the drag-proxy
+        // shrink origin + drop hotspot (see dragProxyLongEdge).
+        onPressed: (mouse) => { root.grabX = mouse.x; root.grabY = mouse.y }
 
         // Clamp the tile to the widget bounds on every drag move.
         onPositionChanged: {
