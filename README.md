@@ -96,6 +96,20 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   Configurable from **Settings → Launcher**: position (bottom or centered),
   recents layout (list rows or chip strip), and web-search engine (Google /
   DuckDuckGo / Bing / Brave). Persists to `~/.config/quickshell/launcher-*.json`.
+- **Overview / Window Switcher** — Full-screen window overview (`Super + Tab`)
+  with **five swappable layouts**, chosen live in Settings → **Window Switcher**:
+  **Grid** (workspace mini-monitors; configurable size + a 9-preset position),
+  **Dock** (a bottom most-recently-used strip of window cards), **Exposé** (every
+  window across all workspaces, each badged with its workspace), **Side panel** (a
+  vertical workspace column docked **Left / Right / Auto**, with drag-to-move
+  between workspaces and edge auto-scroll at a configurable speed), and **Mission
+  Control** (macOS-style — a Spaces strip on top, the current workspace's windows
+  below, drag a window onto a Space to move it via a cursor-tracking proxy). All
+  layouts share live window previews, **HJKL / arrow** navigation, workspace-aware
+  **drag-and-drop**, and a wallpaper backdrop so windows aren't shown twice. A
+  separate hold-to-cycle alt-tab (`Super + Alt + Tab`, MRU order, release to
+  focus) reuses the same engine. Persists to
+  `~/.config/quickshell/overview-config.json`.
 - **HUD** — Right-edge panel, volume and brightness sliders (auto-hide)
 - **Connection Hub** — Top-right drawer with Wi-Fi / Bluetooth / Audio / VPN
   tabs. The **Audio tab** is a full mixer: a master slider, output-device
@@ -137,7 +151,9 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   lockscreen config and persists it (lazy-loaded wallpaper grid). **Connection
   Hub** lets you drag to reorder the hub tabs and toggle each on/off, with a live
   glyph preview. **Launcher** sets the launcher position, recents layout, and
-  web-search engine. **About** (pinned to the bottom of the sidebar) shows a
+  web-search engine. **Window Switcher** picks the overview layout (with a mini
+  wireframe of each) and its per-layout options — Grid size/position, Side panel
+  edge and drag auto-scroll speed. **About** (pinned to the bottom of the sidebar) shows a
   read-only system/hardware snapshot — OS, kernel, host, compositor, uptime,
   CPU, GPU(s), memory, disk — gathered live each time the panel opens. New
   categories drop into `settings/categories/`.
