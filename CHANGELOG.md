@@ -6,6 +6,54 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-02
+
+#### Added
+- **overview / settings** (quickshell) — the **SUPER+TAB** window overview is now
+  a **swappable layout**, chosen in a new **Settings → Window Switcher** pane with
+  five options (each shown as a mini wireframe): **Grid** (the original centered
+  2×5 workspace grid, restyled), **Dock** (a bottom MRU strip of window cards),
+  **Exposé** (every window spread across the screen), **Side panel** (a vertical
+  workspace column docked to the edge *opposite the bar*), and **Mission Control**
+  (macOS-style). The choice persists to `overview-config.json` and the open
+  overview re-renders live, backed by a new `OverviewConfig` singleton +
+  dispatcher `Loader` in `Overview.qml`; an unknown/edited value falls back to
+  Grid. All layouts reuse the shared `OverviewState` (MRU order, focus, geometric
+  HJKL nav) and the `OverviewWindow` tile (live previews).
+- **overview** (quickshell) — **Mission Control** layout: a **Spaces strip** of
+  live workspace thumbnails pinned along the top, the **current workspace's
+  windows spread out** below, and **drag-a-window-onto-a-Space to move it** to
+  that workspace. Dragging shrinks the window into a small **proxy that tracks
+  the cursor** (via a new opt-in `OverviewWindow.dragProxyLongEdge` that shrinks
+  around the grab point and makes the grab point the drop hotspot), so a large
+  window no longer covers the Spaces and the drop lands exactly where you point.
+  Releasing **on a workspace panel** moves the window; releasing anywhere else
+  cancels (snaps back).
+- **overview** (quickshell) — overview layouts now paint a **wallpaper backdrop**
+  (shared `OverviewBackdrop`) so the real desktop windows sitting behind the
+  transparent overlay aren't shown twice — once for real and once as a live tile.
+  Applied to **Mission Control**, **Grid**, and **Exposé**.
+- **overview / settings** (quickshell) — the **Grid** layout is now
+  **configurable**: a **size** slider (60–140%) and a **3×3 position** picker
+  (center / edges / corners) in the Window Switcher pane, persisted to
+  `overview-config.json`; the grid re-scales and re-positions live. The pane now
+  scrolls when its content overflows.
+- **overview** (quickshell) — **Exposé** tiles now carry a **workspace badge**, so
+  you can tell which workspace each window lives on (Exposé aggregates windows
+  from every workspace into one view).
+- **overview** (quickshell) — **Dock** layout gains the **wallpaper backdrop**,
+  a **workspace badge** on each card, and **auto-scroll**: when HJKL/alt-tab
+  selection moves to a card scrolled off-screen, the strip scrolls to keep it in
+  view.
+- **overview / settings** (quickshell) — **Side panel** enhancements: a
+  **wallpaper backdrop**; a configurable **edge** (**Auto** = opposite the bar,
+  or force **Left**/**Right**); **auto-scroll** to the workspace holding the
+  selected window; and **drag-to-move** windows between workspaces — with **edge
+  auto-scroll** (drag near the top/bottom to reach off-screen workspaces) at a
+  configurable **speed**. All persisted to `overview-config.json`. Drag targets
+  are overlaid as direct children of the layout root because a `DropArea` nested
+  in the panel's `Flickable`/`Ui.Surface` never receives dragged windows.
+
 ### 2026-07-01
 
 #### Added
