@@ -17,7 +17,9 @@ Item {
         { key: "mission", label: "Mission Control" }
     ]
 
-    ColumnLayout {
+    // Scrollable — five layout cards plus the Grid options overflow the fixed
+    // panel height, so the content must scroll rather than spill out of bounds.
+    Ui.ScrollView {
         anchors.fill: parent
         spacing: 12
 
@@ -127,7 +129,113 @@ Item {
             }
         }
 
-        Item { Layout.fillHeight: true }
+        // ── Grid options (only relevant to the Grid layout) ──
+        // Grouped in a card; Size is a slider row, Position is a framed 3×3
+        // preset picker aligned to the right so the row reads cleanly.
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.topMargin: 8
+            visible: OverviewConfig.resolvedLayout === "grid"
+            radius: 12
+            color: Qt.darker(Theme.surface, 1.06)
+            border.width: 1
+            border.color: Theme.outline
+            implicitHeight: gridOpts.implicitHeight + 28
+
+            ColumnLayout {
+                id: gridOpts
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
+                spacing: 14
+
+                Text {
+                    text: "Grid options"; color: Theme.primary
+                    font.family: Theme.fontFamily; font.pixelSize: 14; font.bold: true
+                }
+
+                // Size
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+                    Text {
+                        text: "Size"; color: Theme.surfaceText; Layout.preferredWidth: 64
+                        font.family: Theme.fontFamily; font.pixelSize: 13
+                    }
+                    Ui.Slider {
+                        Layout.fillWidth: true
+                        from: OverviewConfig.gridScaleMin
+                        to: OverviewConfig.gridScaleMax
+                        stepSize: 0.05
+                        value: OverviewConfig.gridScale
+                        onMoved: (v) => OverviewConfig.gridScale = v
+                        onReleased: OverviewConfig.save()
+                    }
+                    Text {
+                        text: Math.round(OverviewConfig.gridScale * 100) + "%"
+                        color: Theme.surfaceText; Layout.preferredWidth: 42
+                        horizontalAlignment: Text.AlignRight
+                        font.family: Theme.fontFamily; font.pixelSize: 12
+                    }
+                }
+
+                // Position — label left, framed 3×3 picker right; the dot in each
+                // cell shows where the grid will sit.
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+                    Text {
+                        text: "Position"; color: Theme.surfaceText
+                        Layout.preferredWidth: 64
+                        Layout.alignment: Qt.AlignVCenter
+                        font.family: Theme.fontFamily; font.pixelSize: 13
+                    }
+                    Item { Layout.fillWidth: true }
+                    Rectangle {
+                        Layout.alignment: Qt.AlignVCenter
+                        radius: 8
+                        color: Qt.darker(Theme.surface, 1.2)
+                        border.width: 1
+                        border.color: Theme.outline
+                        implicitWidth:  posGrid.implicitWidth + 12
+                        implicitHeight: posGrid.implicitHeight + 12
+
+                        Grid {
+                            id: posGrid
+                            anchors.centerIn: parent
+                            columns: 3
+                            rowSpacing: 4
+                            columnSpacing: 4
+                            Repeater {
+                                model: OverviewConfig.gridPositions
+                                delegate: Rectangle {
+                                    required property string modelData
+                                    readonly property bool sel: OverviewConfig.resolvedGridPosition === modelData
+                                    width: 42; height: 28; radius: 5
+                                    color: sel ? Theme.primaryContainer
+                                         : phover.hovered ? Theme.surfaceContainer
+                                         :                  Qt.darker(Theme.surface, 1.12)
+                                    border.width: sel ? 2 : 1
+                                    border.color: sel ? Theme.primary : Theme.outline
+
+                                    Rectangle {
+                                        width: 11; height: 8; radius: 2
+                                        color: sel ? Theme.primary : Theme.outline
+                                        x: modelData.indexOf("left")  >= 0 ? 4
+                                         : modelData.indexOf("right") >= 0 ? parent.width - width - 4
+                                         :                                   (parent.width - width) / 2
+                                        y: modelData.indexOf("top")    >= 0 ? 4
+                                         : modelData.indexOf("bottom") >= 0 ? parent.height - height - 4
+                                         :                                    (parent.height - height) / 2
+                                    }
+
+                                    HoverHandler { id: phover }
+                                    TapHandler { onTapped: OverviewConfig.setGridPosition(modelData) }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // ── Wireframe sketch components (accent = active/selected element) ──

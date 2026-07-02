@@ -62,7 +62,14 @@ PanelWindow {
         }
     }
 
-    Component { id: gridComp;    OverviewWidget { anchors.centerIn: parent } }
+    Component {
+        id: gridComp
+        Item {
+            anchors.fill: parent
+            OverviewBackdrop {}
+            OverviewWidget { }   // self-positions from OverviewConfig.gridPosition
+        }
+    }
     Component { id: dockComp;    OverviewDock { } }
     Component { id: exposeComp;  OverviewExpose { } }
     Component { id: sideComp;    OverviewSide { } }

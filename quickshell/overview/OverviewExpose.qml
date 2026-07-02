@@ -40,6 +40,9 @@ Item {
         NumberAnimation { target: entryScale; property: "yScale";  from: 0.98; to: 1; duration: 170; easing.type: Easing.OutCubic }
     }
 
+    // Wallpaper backdrop (covers the real desktop so windows aren't shown twice).
+    OverviewBackdrop {}
+
     Repeater {
         model: expose.windows
 
@@ -58,6 +61,7 @@ Item {
             readonly property int rowi: Math.floor(index / expose.cols)
 
             readonly property var  ipc:  modelData?.lastIpcObject ?? ({})
+            readonly property int  wsId: modelData?.workspace?.id ?? (ipc.workspace?.id ?? -1)
             readonly property real winW: ipc.size?.[0] ?? 100
             readonly property real winH: ipc.size?.[1] ?? 100
             // Fit the window's aspect ratio inside its cell (letter/pillarboxed).
@@ -87,6 +91,27 @@ Item {
                 const a = toplevel?.address ?? "";
                 if (a) OverviewState.focusWindow(a);
                 OverviewState.close();
+            }
+
+            // Workspace badge — Exposé mixes windows from every workspace, so
+            // label each tile with the workspace it actually lives on.
+            Rectangle {
+                z: 20
+                visible: tile.wsId > 0
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.margins: 4
+                width: 22; height: 16; radius: 4
+                color: Theme.primary
+                opacity: 0.92
+                Text {
+                    anchors.centerIn: parent
+                    text: tile.wsId
+                    color: Theme.primaryText
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.bold: true
+                }
             }
         }
     }

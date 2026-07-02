@@ -16,6 +16,19 @@ Singleton {
     // Active layout variant. Overview.qml dispatches on this.
     property alias layout: adapter.layout   // "grid" | "dock" | "expose" | "side"
 
+    // Grid-layout tuning. gridScale grows/shrinks the whole grid (0.6–1.4);
+    // gridPosition places it at one of nine presets on screen.
+    property alias gridScale: adapter.gridScale
+    property alias gridPosition: adapter.gridPosition   // e.g. "center", "top-left", "bottom-right"
+
+    readonly property var gridPositions: [
+        "top-left",    "top",    "top-right",
+        "left",        "center", "right",
+        "bottom-left", "bottom", "bottom-right"
+    ]
+    readonly property real gridScaleMin: 0.6
+    readonly property real gridScaleMax: 1.4
+
     // Every layout the overview knows how to render, in picker order. A value
     // outside this set falls back to "grid" at the dispatcher.
     readonly property var knownLayouts: ["grid", "dock", "expose", "side", "mission"]
@@ -40,7 +53,7 @@ Singleton {
         knownLayouts.indexOf(layout) >= 0 ? layout : "grid"
 
     // Known-good baseline. resetDefaults() restores it.
-    readonly property var defaults: ({ layout: "grid" })
+    readonly property var defaults: ({ layout: "grid", gridScale: 1.0, gridPosition: "center" })
 
     function setLayout(key) {
         if (config.knownLayouts.indexOf(key) < 0) return;
@@ -48,8 +61,22 @@ Singleton {
         config.save();
     }
 
+    function setGridPosition(pos) {
+        if (config.gridPositions.indexOf(pos) < 0) return;
+        adapter.gridPosition = pos;
+        config.save();
+    }
+
+    // Clamp so a hand-edited JSON can't push the grid off-screen / to zero.
+    readonly property real resolvedGridScale:
+        Math.max(gridScaleMin, Math.min(gridScaleMax, gridScale))
+    readonly property string resolvedGridPosition:
+        gridPositions.indexOf(gridPosition) >= 0 ? gridPosition : "center"
+
     function resetDefaults() {
         adapter.layout = config.defaults.layout;
+        adapter.gridScale = config.defaults.gridScale;
+        adapter.gridPosition = config.defaults.gridPosition;
         config.save();
     }
 
@@ -64,6 +91,8 @@ Singleton {
         JsonAdapter {
             id: adapter
             property string layout: "grid"
+            property real gridScale: 1.0
+            property string gridPosition: "center"
         }
     }
 }

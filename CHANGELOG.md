@@ -29,6 +29,18 @@ grouped by date since this repo is unreleased / rolling.
   window no longer covers the Spaces and the drop lands exactly where you point.
   Releasing **on a workspace panel** moves the window; releasing anywhere else
   cancels (snaps back).
+- **overview** (quickshell) — overview layouts now paint a **wallpaper backdrop**
+  (shared `OverviewBackdrop`) so the real desktop windows sitting behind the
+  transparent overlay aren't shown twice — once for real and once as a live tile.
+  Applied to **Mission Control**, **Grid**, and **Exposé**.
+- **overview / settings** (quickshell) — the **Grid** layout is now
+  **configurable**: a **size** slider (60–140%) and a **3×3 position** picker
+  (center / edges / corners) in the Window Switcher pane, persisted to
+  `overview-config.json`; the grid re-scales and re-positions live. The pane now
+  scrolls when its content overflows.
+- **overview** (quickshell) — **Exposé** tiles now carry a **workspace badge**, so
+  you can tell which workspace each window lives on (Exposé aggregates windows
+  from every workspace into one view).
 
 ### 2026-07-01
 

@@ -8,9 +8,12 @@ import "../ui" as Ui
 Ui.Surface {
     id: root
 
-    readonly property int cellW: Theme.overviewCellWidth
-    readonly property int cellH: Theme.overviewCellHeight
-    readonly property int gap:   Theme.overviewCellGap
+    // Cell metrics scale with the user's grid-size setting; the mini-monitor
+    // aspect is preserved because width and height scale together.
+    readonly property real cfgScale: OverviewConfig.resolvedGridScale
+    readonly property int cellW: Math.round(Theme.overviewCellWidth * cfgScale)
+    readonly property int cellH: Math.round(Theme.overviewCellHeight * cfgScale)
+    readonly property int gap:   Math.round(Theme.overviewCellGap * cfgScale)
     readonly property int pad:   Theme.overviewPadding
     readonly property int inset: Theme.overviewCellInset
     readonly property int minTile: Theme.overviewWindowMinSize
@@ -20,6 +23,19 @@ Ui.Surface {
 
     implicitWidth:  gridW + pad * 2
     implicitHeight: gridH + pad * 2
+
+    // Self-position at one of nine presets within the full-screen parent (the
+    // grid layout wrapper), with a margin. Recomputes when size/scale changes.
+    readonly property int posMargin: 40
+    readonly property string _pos: OverviewConfig.resolvedGridPosition
+    x: !parent ? 0
+       : _pos.indexOf("left")  >= 0 ? posMargin
+       : _pos.indexOf("right") >= 0 ? parent.width - width - posMargin
+       :                              (parent.width - width) / 2
+    y: !parent ? 0
+       : _pos.indexOf("top")    >= 0 ? posMargin
+       : _pos.indexOf("bottom") >= 0 ? parent.height - height - posMargin
+       :                               (parent.height - height) / 2
 
     // Workspace id whose tile is currently being dragged. Used to elevate the
     // source cell's z above all other cells so the dragged tile renders on top

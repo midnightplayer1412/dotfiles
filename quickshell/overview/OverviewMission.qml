@@ -59,6 +59,9 @@ Item {
     Component.onCompleted: fadeIn.start()
     NumberAnimation { id: fadeIn; target: mc; property: "opacity"; from: 0; to: 1; duration: 170; easing.type: Easing.OutCubic }
 
+    // Wallpaper backdrop (covers the real desktop so windows aren't shown twice).
+    OverviewBackdrop {}
+
     // ── Spaces strip ──────────────────────────────────────────────────
     Ui.Surface {
         id: strip
