@@ -29,6 +29,15 @@ Singleton {
     readonly property real gridScaleMin: 0.6
     readonly property real gridScaleMax: 1.4
 
+    // Side-panel edge: "auto" docks opposite the bar; "left"/"right" force a side.
+    property alias sidePosition: adapter.sidePosition
+    readonly property var sidePositions: ["auto", "left", "right"]
+
+    // Side-panel drag auto-scroll speed (px per ~16ms tick while a drag hovers an edge).
+    property alias sideScrollSpeed: adapter.sideScrollSpeed
+    readonly property int sideScrollMin: 4
+    readonly property int sideScrollMax: 30
+
     // Every layout the overview knows how to render, in picker order. A value
     // outside this set falls back to "grid" at the dispatcher.
     readonly property var knownLayouts: ["grid", "dock", "expose", "side", "mission"]
@@ -53,7 +62,7 @@ Singleton {
         knownLayouts.indexOf(layout) >= 0 ? layout : "grid"
 
     // Known-good baseline. resetDefaults() restores it.
-    readonly property var defaults: ({ layout: "grid", gridScale: 1.0, gridPosition: "center" })
+    readonly property var defaults: ({ layout: "grid", gridScale: 1.0, gridPosition: "center", sidePosition: "auto", sideScrollSpeed: 12 })
 
     function setLayout(key) {
         if (config.knownLayouts.indexOf(key) < 0) return;
@@ -67,16 +76,28 @@ Singleton {
         config.save();
     }
 
+    function setSidePosition(pos) {
+        if (config.sidePositions.indexOf(pos) < 0) return;
+        adapter.sidePosition = pos;
+        config.save();
+    }
+
     // Clamp so a hand-edited JSON can't push the grid off-screen / to zero.
     readonly property real resolvedGridScale:
         Math.max(gridScaleMin, Math.min(gridScaleMax, gridScale))
     readonly property string resolvedGridPosition:
         gridPositions.indexOf(gridPosition) >= 0 ? gridPosition : "center"
+    readonly property string resolvedSidePosition:
+        sidePositions.indexOf(sidePosition) >= 0 ? sidePosition : "auto"
+    readonly property int resolvedSideScrollSpeed:
+        Math.max(sideScrollMin, Math.min(sideScrollMax, sideScrollSpeed))
 
     function resetDefaults() {
         adapter.layout = config.defaults.layout;
         adapter.gridScale = config.defaults.gridScale;
         adapter.gridPosition = config.defaults.gridPosition;
+        adapter.sidePosition = config.defaults.sidePosition;
+        adapter.sideScrollSpeed = config.defaults.sideScrollSpeed;
         config.save();
     }
 
@@ -93,6 +114,8 @@ Singleton {
             property string layout: "grid"
             property real gridScale: 1.0
             property string gridPosition: "center"
+            property string sidePosition: "auto"
+            property int sideScrollSpeed: 12
         }
     }
 }

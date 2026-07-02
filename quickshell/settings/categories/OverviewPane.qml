@@ -236,6 +236,102 @@ Item {
                 }
             }
         }
+
+        // ── Side panel options (only relevant to the Side layout) ──
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.topMargin: 8
+            visible: OverviewConfig.resolvedLayout === "side"
+            radius: 12
+            color: Qt.darker(Theme.surface, 1.06)
+            border.width: 1
+            border.color: Theme.outline
+            implicitHeight: sideOpts.implicitHeight + 28
+
+            ColumnLayout {
+                id: sideOpts
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
+                spacing: 12
+
+                Text {
+                    text: "Side panel options"; color: Theme.primary
+                    font.family: Theme.fontFamily; font.pixelSize: 14; font.bold: true
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+                    Text {
+                        text: "Position"; color: Theme.surfaceText
+                        Layout.preferredWidth: 64; Layout.alignment: Qt.AlignVCenter
+                        font.family: Theme.fontFamily; font.pixelSize: 13
+                    }
+                    Item { Layout.fillWidth: true }
+                    Row {
+                        spacing: 6
+                        Repeater {
+                            model: [
+                                { key: "auto",  label: "Auto" },
+                                { key: "left",  label: "Left" },
+                                { key: "right", label: "Right" }
+                            ]
+                            delegate: Rectangle {
+                                required property var modelData
+                                readonly property bool sel: OverviewConfig.resolvedSidePosition === modelData.key
+                                width: 62; height: 30; radius: 6
+                                color: sel ? Theme.primaryContainer
+                                     : shover.hovered ? Theme.surfaceContainer
+                                     :                   Qt.darker(Theme.surface, 1.12)
+                                border.width: sel ? 2 : 1
+                                border.color: sel ? Theme.primary : Theme.outline
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData.label
+                                    color: sel ? Theme.primary : Theme.surfaceText
+                                    font.family: Theme.fontFamily; font.pixelSize: 12
+                                    font.bold: sel
+                                }
+                                HoverHandler { id: shover }
+                                TapHandler { onTapped: OverviewConfig.setSidePosition(modelData.key) }
+                            }
+                        }
+                    }
+                }
+
+                // Auto-scroll speed (drag a window near a panel edge to scroll).
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+                    Text {
+                        text: "Speed"; color: Theme.surfaceText; Layout.preferredWidth: 64
+                        Layout.alignment: Qt.AlignVCenter
+                        font.family: Theme.fontFamily; font.pixelSize: 13
+                    }
+                    Ui.Slider {
+                        Layout.fillWidth: true
+                        from: OverviewConfig.sideScrollMin
+                        to: OverviewConfig.sideScrollMax
+                        stepSize: 1
+                        value: OverviewConfig.sideScrollSpeed
+                        onMoved: (v) => OverviewConfig.sideScrollSpeed = v
+                        onReleased: OverviewConfig.save()
+                    }
+                    Text {
+                        text: OverviewConfig.sideScrollSpeed
+                        color: Theme.surfaceText; Layout.preferredWidth: 28
+                        horizontalAlignment: Text.AlignRight
+                        font.family: Theme.fontFamily; font.pixelSize: 12
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "Auto docks the panel to the edge opposite your bar; drag a window near the top/bottom edge to scroll."
+                    color: Theme.surfaceText; opacity: 0.7; wrapMode: Text.WordWrap
+                    font.family: Theme.fontFamily; font.pixelSize: 11
+                }
+            }
+        }
     }
 
     // ── Wireframe sketch components (accent = active/selected element) ──

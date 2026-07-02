@@ -21,6 +21,40 @@ Item {
     readonly property int gap:   12
     readonly property int pad:   12
 
+    // Wallpaper backdrop (covers the real desktop so windows aren't shown twice).
+    OverviewBackdrop {}
+
+    // Follow the selection: with more cards than fit on screen, HJKL (or armed
+    // alt-tab) can land on a card scrolled out of view, so scroll the strip to
+    // reveal the selected card.
+    readonly property var selWin: OverviewState.armed
+        ? OverviewState.highlightedWindow : OverviewState.keyboardSelectedWindow
+    readonly property int selIndex: selWin ? windows.indexOf(selWin) : -1
+    onSelIndexChanged: Qt.callLater(ensureVisible)
+    Component.onCompleted: Qt.callLater(ensureVisible)
+
+    function ensureVisible() {
+        if (selIndex < 0) return;
+        const cardLeft  = selIndex * (cardW + gap);
+        const cardRight = cardLeft + cardW;
+        const maxX = Math.max(0, flick.contentWidth - flick.width);
+        let target = flick.contentX;
+        if (cardLeft < flick.contentX)                     target = cardLeft;
+        else if (cardRight > flick.contentX + flick.width) target = cardRight - flick.width;
+        target = Math.max(0, Math.min(target, maxX));
+        if (Math.abs(target - flick.contentX) > 1) {
+            scrollAnim.to = target;
+            scrollAnim.restart();
+        }
+    }
+    NumberAnimation {
+        id: scrollAnim
+        target: flick
+        property: "contentX"
+        duration: 200
+        easing.type: Easing.OutCubic
+    }
+
     Ui.Surface {
         id: strip
         level: 0
@@ -77,6 +111,8 @@ Item {
                         readonly property string title:    toplevel?.lastIpcObject?.title ?? ""
                         readonly property string address:  toplevel?.address ?? ""
                         readonly property bool   active:    toplevel?.activated ?? false
+                        readonly property int    wsId:      toplevel?.workspace?.id
+                            ?? (toplevel?.lastIpcObject?.workspace?.id ?? -1)
                         readonly property bool highlighted: OverviewState.armed
                             ? OverviewState.highlightedWindow === modelData
                             : OverviewState.keyboardSelectedWindow === modelData
@@ -147,6 +183,27 @@ Item {
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }
+                            }
+                        }
+
+                        // Workspace badge — the MRU strip mixes windows from all
+                        // workspaces, so label each card with the one it's on.
+                        Rectangle {
+                            z: 20
+                            visible: card.wsId > 0
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.margins: 5
+                            width: 22; height: 16; radius: 4
+                            color: Theme.primary
+                            opacity: 0.92
+                            Text {
+                                anchors.centerIn: parent
+                                text: card.wsId
+                                color: Theme.primaryText
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                font.bold: true
                             }
                         }
 

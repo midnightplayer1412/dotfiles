@@ -41,6 +41,18 @@ grouped by date since this repo is unreleased / rolling.
 - **overview** (quickshell) — **Exposé** tiles now carry a **workspace badge**, so
   you can tell which workspace each window lives on (Exposé aggregates windows
   from every workspace into one view).
+- **overview** (quickshell) — **Dock** layout gains the **wallpaper backdrop**,
+  a **workspace badge** on each card, and **auto-scroll**: when HJKL/alt-tab
+  selection moves to a card scrolled off-screen, the strip scrolls to keep it in
+  view.
+- **overview / settings** (quickshell) — **Side panel** enhancements: a
+  **wallpaper backdrop**; a configurable **edge** (**Auto** = opposite the bar,
+  or force **Left**/**Right**); **auto-scroll** to the workspace holding the
+  selected window; and **drag-to-move** windows between workspaces — with **edge
+  auto-scroll** (drag near the top/bottom to reach off-screen workspaces) at a
+  configurable **speed**. All persisted to `overview-config.json`. Drag targets
+  are overlaid as direct children of the layout root because a `DropArea` nested
+  in the panel's `Flickable`/`Ui.Surface` never receives dragged windows.
 
 ### 2026-07-01
 
