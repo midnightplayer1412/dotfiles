@@ -74,31 +74,38 @@ Item {
 
                         RowLayout {
                             Layout.fillWidth: true
+                            spacing: 8
                             Text {
                                 Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
                                 text: Widgets.WidgetRegistry.descriptors[wrow.modelData].label
                                 color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 13
                             }
                             Ui.IconButton {
                                 visible: wrow.schema.length > 0
+                                Layout.alignment: Qt.AlignVCenter
                                 glyph: "\u{F0493}"   // nf-md-cog
+                                glyphSize: 19
+                                size: 32
                                 active: wrow.expanded
                                 onClicked: pane.expandedId = wrow.expanded ? "" : wrow.modelData
                             }
                             Item {
                                 Layout.preferredWidth: 80
+                                Layout.alignment: Qt.AlignVCenter
                                 implicitHeight: dtog.implicitHeight
                                 Ui.Toggle {
-                                    id: dtog; anchors.horizontalCenter: parent.horizontalCenter
+                                    id: dtog; anchors.centerIn: parent
                                     checked: wrow.rd.enabled[wrow.modelData]
                                     onToggled: Widgets.WidgetsConfig.toggleDesktop(wrow.modelData)
                                 }
                             }
                             Item {
                                 Layout.preferredWidth: 80
+                                Layout.alignment: Qt.AlignVCenter
                                 implicitHeight: btog.implicitHeight
                                 Ui.Toggle {
-                                    id: btog; anchors.horizontalCenter: parent.horizontalCenter
+                                    id: btog; anchors.centerIn: parent
                                     checked: wrow.rdash.enabled[wrow.modelData]
                                     onToggled: Widgets.WidgetsConfig.toggleDashboard(wrow.modelData)
                                 }
