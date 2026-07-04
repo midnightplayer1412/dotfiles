@@ -332,6 +332,76 @@ Item {
                 }
             }
         }
+
+        // ── Mission Control options (only relevant to the Mission layout) ──
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.topMargin: 8
+            visible: OverviewConfig.resolvedLayout === "mission"
+            radius: 12
+            color: Qt.darker(Theme.surface, 1.06)
+            border.width: 1
+            border.color: Theme.outline
+            implicitHeight: missionOpts.implicitHeight + 28
+
+            ColumnLayout {
+                id: missionOpts
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
+                spacing: 12
+
+                Text {
+                    text: "Mission Control options"; color: Theme.primary
+                    font.family: Theme.fontFamily; font.pixelSize: 14; font.bold: true
+                }
+
+                // Workspace thumbnail size (scales the top Spaces bar).
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+                    Text {
+                        text: "Workspace size"; color: Theme.surfaceText; Layout.preferredWidth: 100
+                        font.family: Theme.fontFamily; font.pixelSize: 13
+                    }
+                    Ui.Slider {
+                        Layout.fillWidth: true
+                        from: OverviewConfig.missionScaleMin
+                        to: OverviewConfig.missionScaleMax
+                        stepSize: 0.05
+                        value: OverviewConfig.missionScale
+                        onMoved: (v) => OverviewConfig.missionScale = v
+                        onReleased: OverviewConfig.save()
+                    }
+                    Text {
+                        text: Math.round(OverviewConfig.missionScale * 100) + "%"
+                        color: Theme.surfaceText; Layout.preferredWidth: 42
+                        horizontalAlignment: Text.AlignRight
+                        font.family: Theme.fontFamily; font.pixelSize: 12
+                    }
+                }
+
+                // Dynamic Spaces (macOS-style): occupied workspaces + a + button.
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Dynamic workspaces"; color: Theme.surfaceText
+                        font.family: Theme.fontFamily; font.pixelSize: 13
+                    }
+                    Ui.Toggle {
+                        checked: OverviewConfig.missionDynamic
+                        onToggled: (v) => { OverviewConfig.missionDynamic = v; OverviewConfig.save(); }
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "Workspace size scales the top Spaces bar. Dynamic workspaces shows only spaces that have windows, plus a + button that opens the next empty workspace."
+                    color: Theme.surfaceText; opacity: 0.7; wrapMode: Text.WordWrap
+                    font.family: Theme.fontFamily; font.pixelSize: 11
+                }
+            }
+        }
     }
 
     // ── Wireframe sketch components (accent = active/selected element) ──

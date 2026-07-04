@@ -6,6 +6,34 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-04
+
+#### Added
+- **overview** (quickshell) — **Mission Control** now shows **live window
+  previews** inside the top Spaces thumbnails (a per-window `ScreencopyView`,
+  gated on `Theme.overviewLivePreviews`), falling back to the colored window
+  rectangles when a capture is unavailable (e.g. NVIDIA DMA-BUF flakiness).
+- **overview / settings** (quickshell) — new **Mission Control options** card in
+  **Settings → Window Switcher**: a **Workspace size** slider (`missionScale`,
+  0.6–1.4) that scales the Spaces bar, and a **Dynamic workspaces** toggle
+  (`missionDynamic`). Both persist to `overview-config.json`.
+- **overview** (quickshell) — **Dynamic workspaces** (macOS-style): the Spaces
+  bar shows only the occupied workspaces (plus the active one) and an
+  **Add-workspace (+)** tile that switches to the next empty workspace.
+- **overview** (quickshell) — **HJKL keyboard navigation of the Spaces bar**:
+  from the top window row **K** hops up into the bar, **H/L** walk the
+  workspaces, **Enter** switches, **J** drops back to the windows (a two-tier
+  `navZone` in `OverviewState`, inert for every other layout).
+
+#### Changed
+- **overview** (quickshell) — the Mission Control Spaces bar is now a **frosted,
+  edge-to-edge glass bar** pinned to the top screen edge (an in-scene
+  `MultiEffect` blur of the wallpaper, masked to a rounded-bottom band),
+  replacing the centered floating card.
+- **overview** (quickshell) — the Spaces bar **shrinks its tiles to fit** the
+  screen width (like macOS) instead of overflowing off the edges when the
+  workspace size or the workspace count is large.
+
 ### 2026-07-02
 
 #### Added
