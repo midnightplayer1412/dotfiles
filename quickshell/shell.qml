@@ -239,6 +239,13 @@ ShellRoot {
         }
     }
 
+    // Desktop widgets — one bottom-layer window per screen; each self-gates to
+    // the primary screen (v1), like the mascot.
+    Variants {
+        model: Quickshell.screens
+        Widgets.DesktopLayer { required property var modelData; screen: modelData }
+    }
+
     // Wake WallpaperService at startup so state.json is loaded and the
     // cycle Timer runs from boot. ShellRoot doesn't support attached
     // Component lifecycle, so host the wake-up on an inert Item.
