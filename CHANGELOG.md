@@ -31,6 +31,18 @@ grouped by date since this repo is unreleased / rolling.
   `/yt`, `/wiki`, `/maps`, and `/chatgpt` (opens a **temporary chat** with the
   prompt prefilled). **Power / session**: `/lock` (the Quickshell lockscreen),
   `/logout`, `/suspend`, `/hibernate`, `/reboot`, `/shutdown`.
+- **widgets** (quickshell) — new **desktop widget system** (`quickshell/widgets/`):
+  self-contained widgets that live on a free-drag **desktop layer** (bottom
+  layer, drag anywhere, positions persist, gapless flush stacks) and a
+  **SUPER+W command-center dashboard** overlay. First set: **Clock**, **Calendar**,
+  **System monitor** (CPU/RAM), **Weather** (open-meteo, location in Settings),
+  and **Media** (MPRIS; auto-hides when nothing is playing). A `WidgetRegistry`
+  catalogs widgets (adding one = a descriptor + a component), and everything
+  persists to `~/.config/quickshell/widgets-config.json`.
+- **widgets / settings** (quickshell) — new **Settings → Widgets** pane:
+  per-widget **Desktop** / **Dashboard** toggles, a **drag-to-reorder** dashboard
+  order board (same pattern as the Bar widget board), a **Weather location**
+  (lat/lon) field, and a **Restore default layout** button.
 
 #### Changed
 - **overview** (quickshell) — the Mission Control Spaces bar is now a **frosted,

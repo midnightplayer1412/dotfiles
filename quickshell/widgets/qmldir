@@ -1,0 +1,11 @@
+singleton WidgetRegistry 1.0 WidgetRegistry.qml
+singleton WidgetsConfig 1.0 WidgetsConfig.qml
+singleton DashboardState 1.0 DashboardState.qml
+WidgetFrame 1.0 WidgetFrame.qml
+DesktopLayer 1.0 DesktopLayer.qml
+ClockWidget 1.0 ClockWidget.qml
+CalendarWidget 1.0 CalendarWidget.qml
+SysMonitorWidget 1.0 SysMonitorWidget.qml
+MediaWidget 1.0 MediaWidget.qml
+WeatherWidget 1.0 WeatherWidget.qml
+Dashboard 1.0 Dashboard.qml

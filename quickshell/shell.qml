@@ -12,6 +12,7 @@ import "cheatsheet" as Cheatsheet
 import "wallpaper" as Wallpaper
 import "mascot" as Mascot
 import "settings" as Settings
+import "widgets" as Widgets
 
 ShellRoot {
     function focusedScreen() {
@@ -68,6 +69,11 @@ ShellRoot {
     GlobalShortcut {
         name: "settings_toggle"
         onPressed: Settings.SettingsState.toggle(focusedScreen())
+    }
+
+    GlobalShortcut {
+        name: "dashboard_toggle"
+        onPressed: Widgets.DashboardState.toggle(focusedScreen())
     }
 
     // Status bar on each screen
@@ -236,6 +242,20 @@ ShellRoot {
             required property var modelData
             screen: modelData
         }
+    }
+
+    // Desktop widgets — one bottom-layer window per screen; each self-gates to
+    // the primary screen (v1), like the mascot.
+    Variants {
+        model: Quickshell.screens
+        Widgets.DesktopLayer { required property var modelData; screen: modelData }
+    }
+
+    // Widget dashboard — overlay on the target screen when visible.
+    Variants {
+        model: Widgets.DashboardState.visible && Widgets.DashboardState.targetScreen
+            ? [Widgets.DashboardState.targetScreen] : []
+        Widgets.Dashboard { required property var modelData; screen: modelData }
     }
 
     // Wake WallpaperService at startup so state.json is loaded and the
