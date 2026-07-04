@@ -68,6 +68,7 @@ Hyprland compositor config split into modular files:
 | Super + C | Toggle float & center |
 | Super + / | Keybinding cheatsheet |
 | Super + N | Notification center |
+| Super + W | Widget dashboard |
 | Super + Backspace | Settings panel |
 | Super + Escape | Lock screen (Quickshell) |
 | Super + Shift + Escape | Lock screen (hyprlock fallback) |
@@ -110,6 +111,14 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   separate hold-to-cycle alt-tab (`Super + Alt + Tab`, MRU order, release to
   focus) reuses the same engine. Persists to
   `~/.config/quickshell/overview-config.json`.
+- **Desktop widgets** — Self-contained widgets on a free-drag **desktop layer**
+  (drag anywhere, positions persist, gapless flush stacks) plus a **SUPER+W
+  command-center dashboard** overlay. First set: **Clock**, **Calendar**,
+  **System monitor**, **Weather** (open-meteo), and **Media** (auto-hides when
+  nothing plays). A `WidgetRegistry` makes adding a widget a two-step change.
+  **Settings → Widgets** has per-widget Desktop/Dashboard toggles, a
+  drag-to-reorder dashboard order, a weather location field, and restore-to-default;
+  persists to `~/.config/quickshell/widgets-config.json`.
 - **HUD** — Right-edge panel, volume and brightness sliders (auto-hide)
 - **Connection Hub** — Top-right drawer with Wi-Fi / Bluetooth / Audio / VPN
   tabs. The **Audio tab** is a full mixer: a master slider, output-device
