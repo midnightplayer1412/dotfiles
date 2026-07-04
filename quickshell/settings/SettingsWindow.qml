@@ -29,7 +29,8 @@ PanelWindow {
         { key: "bar",        label: "Bar",            icon: sym + "/actions/sidebar-show-symbolic.svg" },
         { key: "overview",   label: "Window Switcher", icon: sym + "/actions/view-app-grid-symbolic.svg" },
         { key: "lock",       label: "Lock Screen",    icon: sym + "/actions/system-lock-screen-symbolic.svg" },
-        { key: "launcher",   label: "Launcher",       icon: sym + "/categories/applications-all-symbolic.svg" }
+        { key: "launcher",   label: "Launcher",       icon: sym + "/categories/applications-all-symbolic.svg" },
+        { key: "widgets",    label: "Widgets",        icon: sym + "/actions/view-dual-symbolic.svg" }
     ]
 
     HyprlandFocusGrab {
@@ -145,6 +146,11 @@ PanelWindow {
                 Categories.LauncherPane {
                     anchors.fill: parent
                     visible: SettingsState.activeCategory === "launcher"
+                }
+
+                Categories.WidgetsPane {
+                    anchors.fill: parent
+                    visible: SettingsState.activeCategory === "widgets"
                 }
 
                 Categories.SystemInfoPane {
