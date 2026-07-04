@@ -106,34 +106,114 @@ Item {
                 Text { text: "Dashboard order"; color: Theme.primary
                        font.family: Theme.fontFamily; font.pixelSize: 14; font.bold: true }
 
-                Repeater {
-                    model: Widgets.WidgetsConfig.resolvedDashboard.order
-                    delegate: RowLayout {
-                        required property var modelData
-                        required property int index
-                        readonly property var order: Widgets.WidgetsConfig.resolvedDashboard.order
-                        Layout.fillWidth: true
-                        Text {
-                            Layout.fillWidth: true
-                            text: (index + 1) + ".  " + Widgets.WidgetRegistry.descriptors[modelData].label
-                            color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 13
+                Text {
+                    Layout.fillWidth: true
+                    text: "Drag to reorder how widgets appear in the dashboard."
+                    color: Theme.surfaceText; opacity: 0.7; wrapMode: Text.WordWrap
+                    font.family: Theme.fontFamily; font.pixelSize: 12
+                }
+
+                // Drag-to-reorder board (same pattern as the Bar widget board):
+                // stable Repeater model (registry ids), a mutable `slots` array the
+                // drag mutates, rows bound to computed y so siblings reflow live.
+                Item {
+                    id: orderBoard
+                    Layout.fillWidth: true
+                    Layout.topMargin: 2
+                    Layout.preferredHeight: Math.max(1, orderBoard.slots.length) * orderBoard.rowH
+
+                    readonly property real rowH: 38
+                    // Mutable order. Re-synced from config when idle; mutated freely
+                    // during a drag (never rebound mid-drag, so motion isn't clobbered).
+                    property var slots: []
+                    property string dragKey: ""
+                    property real dragY: 0
+                    property real dragBaseY: 0
+
+                    function syncSlots() {
+                        if (orderBoard.dragKey !== "") return;
+                        orderBoard.slots = Widgets.WidgetsConfig.resolvedDashboard.order.slice();
+                    }
+                    Component.onCompleted: orderBoard.syncSlots()
+                    Connections {
+                        target: Widgets.WidgetsConfig
+                        function onResolvedDashboardChanged() { orderBoard.syncSlots() }
+                    }
+
+                    function updateDrag(ty) {
+                        orderBoard.dragY = orderBoard.dragBaseY + ty;
+                        const cur = orderBoard.slots.indexOf(orderBoard.dragKey);
+                        if (cur < 0) return;
+                        let tgt = Math.round(orderBoard.dragY / orderBoard.rowH);
+                        tgt = Math.max(0, Math.min(orderBoard.slots.length - 1, tgt));
+                        if (tgt !== cur) {
+                            const ns = orderBoard.slots.slice();
+                            ns.splice(cur, 1);
+                            ns.splice(tgt, 0, orderBoard.dragKey);
+                            orderBoard.slots = ns;
                         }
-                        Ui.IconButton {
-                            glyph: "\u{F0143}"   // nf-md-chevron-up
-                            enabled: index > 0
-                            onClicked: {
-                                const o = order.slice();
-                                const t = o[index - 1]; o[index - 1] = o[index]; o[index] = t;
-                                Widgets.WidgetsConfig.setDashboardOrder(o);
+                    }
+                    function commitDrag() {
+                        if (orderBoard.dragKey === "") return;
+                        const o = orderBoard.slots.slice();
+                        orderBoard.dragKey = "";
+                        Widgets.WidgetsConfig.setDashboardOrder(o);
+                    }
+
+                    Repeater {
+                        model: Widgets.WidgetRegistry.ids
+                        delegate: Rectangle {
+                            id: chip
+                            required property string modelData
+                            readonly property int slot: orderBoard.slots.indexOf(modelData)
+                            readonly property bool dragging: orderBoard.dragKey === modelData
+
+                            visible: slot >= 0
+                            x: 0
+                            width: orderBoard.width
+                            height: orderBoard.rowH - 6
+                            y: dragging ? orderBoard.dragY : slot * orderBoard.rowH
+                            z: dragging ? 10 : 1
+                            radius: 8
+                            color: dragging ? Theme.primary : Theme.surfaceContainer
+                            border.width: 1
+                            border.color: dragging ? Theme.primary : Theme.outline
+
+                            Behavior on y { enabled: !chip.dragging; NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 10; anchors.rightMargin: 8
+                                spacing: 6
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: Widgets.WidgetRegistry.descriptors[chip.modelData].label
+                                    elide: Text.ElideRight
+                                    color: chip.dragging ? Theme.primaryText : Theme.surfaceText
+                                    font.family: Theme.fontFamily; font.pixelSize: 13
+                                }
+                                Text {
+                                    text: "\u{F01DB}"   // nf-md-drag
+                                    font.family: Theme.glyphFont; font.pixelSize: 15
+                                    color: chip.dragging ? Theme.primaryText : Theme.outline
+                                }
                             }
-                        }
-                        Ui.IconButton {
-                            glyph: "\u{F0140}"   // nf-md-chevron-down
-                            enabled: index < order.length - 1
-                            onClicked: {
-                                const o = order.slice();
-                                const t = o[index + 1]; o[index + 1] = o[index]; o[index] = t;
-                                Widgets.WidgetsConfig.setDashboardOrder(o);
+
+                            DragHandler {
+                                target: null
+                                xAxis.enabled: false
+                                yAxis.enabled: true
+                                cursorShape: Qt.ClosedHandCursor
+                                onActiveChanged: {
+                                    if (active) {
+                                        orderBoard.dragKey = chip.modelData;
+                                        orderBoard.dragBaseY = chip.slot * orderBoard.rowH;
+                                        orderBoard.dragY = orderBoard.dragBaseY;
+                                    } else {
+                                        orderBoard.commitDrag();
+                                    }
+                                }
+                                onActiveTranslationChanged: if (active) orderBoard.updateDrag(activeTranslation.y)
                             }
                         }
                     }
