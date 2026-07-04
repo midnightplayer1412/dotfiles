@@ -66,7 +66,8 @@ PanelWindow {
             for (let k = 0; k < inStack.length; k++) { if (y < inStack[k].y) { idx = k; break; } }
             WidgetsConfig.moveWidget(id, best.id, idx, best.dx, best.dy);
         } else {
-            WidgetsConfig.moveWidget(id, "", 0, Math.max(0, Math.min(x, sw - d.w)), Math.max(0, y));
+            const sh = layer.screen ? layer.screen.height : 1080;
+            WidgetsConfig.moveWidget(id, "", 0, Math.max(0, Math.min(x, sw - d.w)), Math.max(0, Math.min(y, sh - d.h)));
         }
     }
 
@@ -95,7 +96,11 @@ PanelWindow {
                 anchors.fill: parent
                 property real ox: 0
                 property real oy: 0
-                onPressed: mouse => { layer.draggingId = cell.wid; layer.dragX = cell.x; layer.dragY = cell.y; ox = mouse.x; oy = mouse.y }
+                // Capture the widget's real position BEFORE flipping draggingId:
+                // setting draggingId re-evaluates cell.x/y to read dragX/dragY, so
+                // reading cell.x afterwards would return a stale value (widget would
+                // snap to 0,0). Order matters — draggingId is set last.
+                onPressed: mouse => { layer.dragX = cell.x; layer.dragY = cell.y; ox = mouse.x; oy = mouse.y; layer.draggingId = cell.wid }
                 onPositionChanged: mouse => {
                     if (layer.draggingId !== cell.wid) return;
                     layer.dragX = cell.x + (mouse.x - ox);
