@@ -128,7 +128,10 @@ PanelWindow {
                 level: 1
                 Layout.fillWidth: true
                 Layout.preferredHeight: Theme.launcherSearchHeight
-                radius: Theme.launcherSearchHeight / 2
+                // Concentric with the panel: inner radius = panel radius − the
+                // gap to it (launcherMargin), so the search-bar corner runs
+                // parallel to the panel corner instead of a mismatched pill.
+                radius: Theme.launcherRadius - Theme.launcherMargin
 
                 RowLayout {
                     anchors.fill: parent
@@ -417,6 +420,89 @@ PanelWindow {
                         onHoveredChanged: {
                             if (hovered) resultsList.currentIndex = rowDelegate.index;
                         }
+                    }
+                }
+            }
+
+            // ── Hint footer: available modes + key actions ──────────────
+            // Always-on discoverability strip for the prefix modes (which are
+            // otherwise invisible until you know them) and the key actions. The
+            // active mode highlights, and the ↵ label adapts to it.
+            //
+            // Extra bottom inset so the row clears the panel's rounded corners:
+            // total clearance = launcherMargin (container) + this = launcherRadius,
+            // keeping the text inside the straight-edge region, not the corner arc.
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.bottomMargin: Theme.launcherRadius - Theme.launcherMargin
+                spacing: 6
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 1
+                    color: Theme.outline
+                    opacity: 0.25
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    // Match the bottom clearance so the row is inset evenly from
+                    // the rounded panel on the sides too (the divider above stays
+                    // full-width as a clean separator).
+                    Layout.leftMargin: Theme.launcherRadius - Theme.launcherMargin
+                    Layout.rightMargin: Theme.launcherRadius - Theme.launcherMargin
+                    spacing: 12
+
+                    Repeater {
+                        model: [
+                            { key: "/", label: "commands" },
+                            { key: "!", label: "shell" },
+                            { key: "=", label: "calc" }
+                        ]
+                        delegate: RowLayout {
+                            id: modeChip
+                            required property var modelData
+                            readonly property bool activeMode: searchInput.text.startsWith(modelData.key)
+                            spacing: 4
+                            Text {
+                                text: modeChip.modelData.key
+                                color: modeChip.activeMode ? Theme.primary : Theme.outline
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                font.bold: true
+                            }
+                            Text {
+                                text: modeChip.modelData.label
+                                color: modeChip.activeMode ? Theme.surfaceText : Theme.outline
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                font.bold: modeChip.activeMode
+                            }
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Text {
+                        text: searchInput.text.startsWith("=") ? "↵ copy"
+                            : searchInput.text.startsWith("!") ? "↵ run"
+                            : "↵ open"
+                        color: Theme.outline
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                    }
+                    Text {
+                        visible: searchInput.text.startsWith("/")
+                        text: "⇥ complete"
+                        color: Theme.outline
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                    }
+                    Text {
+                        text: "esc close"
+                        color: Theme.outline
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
                     }
                 }
             }

@@ -44,6 +44,21 @@ QtObject {
             comment: "Previous track",
             match: "prev",
         },
+
+        // Web search shortcuts — open a targeted search in the browser.
+        { name: "/gh",   icon: "github",    comment: "Search GitHub",      match: "gh",   takesArgs: true },
+        { name: "/yt",   icon: "youtube",   comment: "Search YouTube",     match: "yt",   takesArgs: true },
+        { name: "/wiki", icon: "wikipedia", comment: "Search Wikipedia",   match: "wiki", takesArgs: true },
+        { name: "/maps", icon: "maps",      comment: "Search Google Maps", match: "maps", takesArgs: true },
+        { name: "/chatgpt", icon: "chatgpt", comment: "Ask ChatGPT (temporary chat)", match: "chatgpt", takesArgs: true },
+
+        // Power / session — loginctl / systemctl / hyprctl.
+        { name: "/lock",      icon: "system-lock-screen",       comment: "Lock the screen",           match: "lock" },
+        { name: "/logout",    icon: "system-log-out",           comment: "Exit the Hyprland session", match: "logout" },
+        { name: "/suspend",   icon: "system-suspend",           comment: "Suspend to RAM",            match: "suspend" },
+        { name: "/hibernate", icon: "system-suspend-hibernate", comment: "Hibernate to disk",         match: "hibernate" },
+        { name: "/reboot",    icon: "system-reboot",            comment: "Restart the system",        match: "reboot" },
+        { name: "/shutdown",  icon: "system-shutdown",          comment: "Power off the system",      match: "shutdown" },
     ]
 
     function activePlayer() {
@@ -85,6 +100,41 @@ QtObject {
         } else if (cmd === "prev") {
             const p = activePlayer();
             if (p && p.canGoPrevious) p.previous();
+        } else if (cmd === "gh") {
+            Qt.openUrlExternally(args
+                ? "https://github.com/search?q=" + encodeURIComponent(args) + "&type=repositories"
+                : "https://github.com");
+        } else if (cmd === "yt") {
+            Qt.openUrlExternally(args
+                ? "https://www.youtube.com/results?search_query=" + encodeURIComponent(args)
+                : "https://www.youtube.com");
+        } else if (cmd === "wiki") {
+            Qt.openUrlExternally(args
+                ? "https://en.wikipedia.org/w/index.php?search=" + encodeURIComponent(args)
+                : "https://en.wikipedia.org");
+        } else if (cmd === "maps") {
+            Qt.openUrlExternally(args
+                ? "https://www.google.com/maps/search/" + encodeURIComponent(args)
+                : "https://www.google.com/maps");
+        } else if (cmd === "chatgpt") {
+            // Temporary chat (temporary-chat=true) with the prompt prefilled (q=).
+            Qt.openUrlExternally(args
+                ? "https://chatgpt.com/?temporary-chat=true&q=" + encodeURIComponent(args)
+                : "https://chatgpt.com/?temporary-chat=true");
+        } else if (cmd === "lock") {
+            // Same mechanism as SUPER+Escape (the Quickshell lockscreen).
+            Quickshell.execDetached(["qs", "-p",
+                Quickshell.env("HOME") + "/.config/quickshell/lock-screen.qml", "-d", "-n"]);
+        } else if (cmd === "logout") {
+            Quickshell.execDetached(["hyprctl", "dispatch", "exit"]);
+        } else if (cmd === "suspend") {
+            Quickshell.execDetached(["systemctl", "suspend"]);
+        } else if (cmd === "hibernate") {
+            Quickshell.execDetached(["systemctl", "hibernate"]);
+        } else if (cmd === "reboot") {
+            Quickshell.execDetached(["systemctl", "reboot"]);
+        } else if (cmd === "shutdown") {
+            Quickshell.execDetached(["systemctl", "poweroff"]);
         }
     }
 

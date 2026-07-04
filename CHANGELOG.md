@@ -24,6 +24,13 @@ grouped by date since this repo is unreleased / rolling.
   from the top window row **K** hops up into the bar, **H/L** walk the
   workspaces, **Enter** switches, **J** drops back to the windows (a two-tier
   `navZone` in `OverviewState`, inert for every other layout).
+- **launcher** (quickshell) — a **hint footer** showing the prefix modes
+  (`/` commands, `!` shell, `=` calc) and key actions (↵ / ⇥ / esc); the active
+  mode highlights and the ↵ label adapts (open / run / copy) as you type.
+- **launcher** (quickshell) — new `/` commands. **Web shortcuts**: `/gh`,
+  `/yt`, `/wiki`, `/maps`, and `/chatgpt` (opens a **temporary chat** with the
+  prompt prefilled). **Power / session**: `/lock` (the Quickshell lockscreen),
+  `/logout`, `/suspend`, `/hibernate`, `/reboot`, `/shutdown`.
 
 #### Changed
 - **overview** (quickshell) — the Mission Control Spaces bar is now a **frosted,
@@ -33,6 +40,10 @@ grouped by date since this repo is unreleased / rolling.
 - **overview** (quickshell) — the Spaces bar **shrinks its tiles to fit** the
   screen width (like macOS) instead of overflowing off the edges when the
   workspace size or the workspace count is large.
+- **launcher** (quickshell) — the search bar now uses a **concentric radius**
+  (`launcherRadius − launcherMargin`) instead of a full pill, so its corner runs
+  parallel to the panel corner; the hint footer is inset to clear the rounded
+  corners.
 
 ### 2026-07-02
 
