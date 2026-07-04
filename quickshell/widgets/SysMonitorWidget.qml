@@ -4,14 +4,25 @@ import Quickshell.Io
 import ".."
 
 // CPU + RAM usage. CPU from /proc/stat deltas, RAM from /proc/meminfo, polled
-// every 2s via a short-lived process (mirrors bar/Resources.qml).
+// every 2s via a short-lived process (mirrors bar/Resources.qml). Which metrics
+// show is per-widget-configurable (WidgetsConfig.setting("sysmonitor", …)).
 Item {
     id: w
     readonly property bool relevant: true
 
+    readonly property bool showCpu: WidgetsConfig.setting("sysmonitor", "showCpu")
+    readonly property bool showRam: WidgetsConfig.setting("sysmonitor", "showRam")
+
     property real cpu: 0      // 0..1
     property real mem: 0      // 0..1
     property var _prev: null
+
+    readonly property var rows: {
+        const r = [];
+        if (showCpu) r.push({ label: "CPU", v: w.cpu });
+        if (showRam) r.push({ label: "RAM", v: w.mem });
+        return r;
+    }
 
     Timer {
         interval: 2000; running: true; repeat: true; triggeredOnStart: true
@@ -45,8 +56,18 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         spacing: 10
+
+        Text {
+            visible: w.rows.length === 0
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            text: "No metrics enabled"
+            color: Theme.surfaceText; opacity: 0.6
+            font.family: Theme.fontFamily; font.pixelSize: 12
+        }
+
         Repeater {
-            model: [{ label: "CPU", v: w.cpu }, { label: "RAM", v: w.mem }]
+            model: w.rows
             delegate: RowLayout {
                 required property var modelData
                 Layout.fillWidth: true

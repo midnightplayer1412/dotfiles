@@ -43,8 +43,17 @@ grouped by date since this repo is unreleased / rolling.
   per-widget **Desktop** / **Dashboard** toggles, a **drag-to-reorder** dashboard
   order board (same pattern as the Bar widget board), a **Weather location**
   (lat/lon) field, and a **Restore default layout** button.
+- **widgets / settings** (quickshell) — **per-widget settings**: a widget declares
+  an optional `settings` schema in its registry descriptor (fields of type
+  toggle/enum/text/number) and the Widgets pane renders it via an inline **gear**
+  expander — no per-widget UI code. **Clock** (12/24h, seconds, date), **Weather**
+  (°C/°F, label, lat/lon), **System monitor** (show CPU/RAM), **Calendar** (week
+  starts Mon/Sun). Values persist under `settings[id]` in `widgets-config.json`.
 
 #### Changed
+- **widgets** (quickshell) — the Weather widget's location moved from a standalone
+  "Weather location" card into its **per-widget settings** (one mechanism for all
+  widget config); existing coordinates migrate automatically on first load.
 - **overview** (quickshell) — the Mission Control Spaces bar is now a **frosted,
   edge-to-edge glass bar** pinned to the top screen edge (an in-scene
   `MultiEffect` blur of the wallpaper, masked to a rounded-bottom band),

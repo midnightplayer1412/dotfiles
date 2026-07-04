@@ -5,11 +5,15 @@ import "../../ui" as Ui
 import "../../widgets" as Widgets
 import "../.."
 
-// Widgets settings: enable each widget per surface, reorder the dashboard, set
-// the weather location, and restore defaults. Rows are driven by the registry,
-// so newly-registered widgets appear here automatically.
+// Widgets settings: enable each widget per surface, open its gear for the
+// widget's own options, reorder the dashboard, and restore defaults. Rows are
+// driven by the registry, so newly-registered widgets appear here automatically,
+// and a widget's settings panel is rendered generically from its schema.
 Item {
     id: pane
+
+    // Which widget's inline settings panel is open (one at a time; "" = none).
+    property string expandedId: ""
 
     Ui.ScrollView {
         anchors.fill: parent
@@ -28,12 +32,12 @@ Item {
         }
         Text {
             Layout.fillWidth: true
-            text: "Toggle each widget on the desktop or the SUPER+W dashboard. Drag widgets on the desktop to place them; positions are saved."
+            text: "Toggle each widget on the desktop or the SUPER+W dashboard, and open the gear for a widget's own options. Drag widgets on the desktop to place them; positions are saved."
             color: Theme.surfaceText; opacity: 0.7; wrapMode: Text.WordWrap
             font.family: Theme.fontFamily; font.pixelSize: 12
         }
 
-        // Per-widget surface toggles.
+        // Per-widget surface toggles + settings gear.
         Rectangle {
             Layout.fillWidth: true; Layout.topMargin: 4
             radius: 12; color: Qt.darker(Theme.surface, 1.06)
@@ -58,32 +62,159 @@ Item {
 
                 Repeater {
                     model: Widgets.WidgetRegistry.ids
-                    delegate: RowLayout {
+                    delegate: ColumnLayout {
+                        id: wrow
                         required property var modelData
                         readonly property var rd: Widgets.WidgetsConfig.resolvedDesktop
                         readonly property var rdash: Widgets.WidgetsConfig.resolvedDashboard
+                        readonly property var schema: Widgets.WidgetRegistry.descriptors[modelData].settings || []
+                        readonly property bool expanded: pane.expandedId === modelData
                         Layout.fillWidth: true
-                        Text {
+                        spacing: 8
+
+                        RowLayout {
                             Layout.fillWidth: true
-                            text: Widgets.WidgetRegistry.descriptors[modelData].label
-                            color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 13
-                        }
-                        Item {
-                            Layout.preferredWidth: 80
-                            implicitHeight: dtog.implicitHeight
-                            Ui.Toggle {
-                                id: dtog; anchors.horizontalCenter: parent.horizontalCenter
-                                checked: rd.enabled[modelData]
-                                onToggled: Widgets.WidgetsConfig.toggleDesktop(modelData)
+                            spacing: 8
+                            Text {
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
+                                text: Widgets.WidgetRegistry.descriptors[wrow.modelData].label
+                                color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 13
+                            }
+                            Ui.IconButton {
+                                visible: wrow.schema.length > 0
+                                Layout.alignment: Qt.AlignVCenter
+                                glyph: "\u{F0493}"   // nf-md-cog
+                                glyphSize: 19
+                                size: 32
+                                active: wrow.expanded
+                                onClicked: pane.expandedId = wrow.expanded ? "" : wrow.modelData
+                            }
+                            Item {
+                                Layout.preferredWidth: 80
+                                Layout.alignment: Qt.AlignVCenter
+                                implicitHeight: dtog.implicitHeight
+                                Ui.Toggle {
+                                    id: dtog; anchors.centerIn: parent
+                                    checked: wrow.rd.enabled[wrow.modelData]
+                                    onToggled: Widgets.WidgetsConfig.toggleDesktop(wrow.modelData)
+                                }
+                            }
+                            Item {
+                                Layout.preferredWidth: 80
+                                Layout.alignment: Qt.AlignVCenter
+                                implicitHeight: btog.implicitHeight
+                                Ui.Toggle {
+                                    id: btog; anchors.centerIn: parent
+                                    checked: wrow.rdash.enabled[wrow.modelData]
+                                    onToggled: Widgets.WidgetsConfig.toggleDashboard(wrow.modelData)
+                                }
                             }
                         }
-                        Item {
-                            Layout.preferredWidth: 80
-                            implicitHeight: btog.implicitHeight
-                            Ui.Toggle {
-                                id: btog; anchors.horizontalCenter: parent.horizontalCenter
-                                checked: rdash.enabled[modelData]
-                                onToggled: Widgets.WidgetsConfig.toggleDashboard(modelData)
+
+                        // Inline settings panel — rendered generically from the schema.
+                        // Spans the same width as the parent rows so a field's 80px
+                        // right column lines its toggle up with the row's toggles.
+                        Rectangle {
+                            visible: wrow.expanded && wrow.schema.length > 0
+                            Layout.fillWidth: true
+                            radius: 8; color: Qt.darker(Theme.surface, 1.16)
+                            border.width: 1; border.color: Theme.outline
+                            implicitHeight: fields.implicitHeight + 20
+
+                            ColumnLayout {
+                                id: fields
+                                anchors { left: parent.left; right: parent.right; top: parent.top
+                                          leftMargin: 14; rightMargin: 0; topMargin: 10 }
+                                spacing: 10
+
+                                Repeater {
+                                    model: wrow.schema
+                                    delegate: RowLayout {
+                                        id: field
+                                        required property var modelData   // the field spec
+                                        readonly property string wid: wrow.modelData
+                                        readonly property var f: modelData
+                                        readonly property var cur: Widgets.WidgetsConfig.setting(wid, f.key)
+                                        Layout.fillWidth: true
+                                        spacing: 10
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            Layout.alignment: Qt.AlignVCenter
+                                            text: field.f.label
+                                            color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 12
+                                        }
+
+                                        // toggle — 80px right column matching the parent row's toggles
+                                        Item {
+                                            visible: field.f.type === "toggle"
+                                            Layout.preferredWidth: 80
+                                            Layout.alignment: Qt.AlignVCenter
+                                            implicitHeight: ftog.implicitHeight
+                                            Ui.Toggle {
+                                                id: ftog; anchors.centerIn: parent
+                                                checked: field.cur === true
+                                                onToggled: (v) => Widgets.WidgetsConfig.setSetting(field.wid, field.f.key, v)
+                                            }
+                                        }
+
+                                        // enum — segmented buttons
+                                        Row {
+                                            visible: field.f.type === "enum"
+                                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                                            Layout.rightMargin: 14
+                                            spacing: 6
+                                            Repeater {
+                                                model: field.f.options || []
+                                                delegate: Rectangle {
+                                                    required property var modelData   // { value, label }
+                                                    readonly property bool sel: field.cur === modelData.value
+                                                    width: 48; height: 28; radius: 6
+                                                    color: sel ? Theme.primaryContainer
+                                                         : ehover.hovered ? Theme.surfaceContainer
+                                                         :                   Qt.darker(Theme.surface, 1.2)
+                                                    border.width: sel ? 2 : 1
+                                                    border.color: sel ? Theme.primary : Theme.outline
+                                                    Text {
+                                                        anchors.centerIn: parent
+                                                        text: modelData.label
+                                                        color: sel ? Theme.primary : Theme.surfaceText
+                                                        font.family: Theme.fontFamily; font.pixelSize: 12; font.bold: sel
+                                                    }
+                                                    HoverHandler { id: ehover }
+                                                    TapHandler { onTapped: Widgets.WidgetsConfig.setSetting(field.wid, field.f.key, modelData.value) }
+                                                }
+                                            }
+                                        }
+
+                                        // text / number
+                                        Rectangle {
+                                            visible: field.f.type === "text" || field.f.type === "number"
+                                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                                            Layout.rightMargin: 14
+                                            Layout.preferredWidth: 130; implicitHeight: 30; radius: 8
+                                            color: Qt.darker(Theme.surface, 1.2)
+                                            border.width: 1; border.color: Theme.outline
+                                            TextInput {
+                                                anchors.fill: parent; anchors.margins: 8
+                                                verticalAlignment: Text.AlignVCenter
+                                                clip: true
+                                                color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 13
+                                                text: String(field.cur)
+                                                inputMethodHints: field.f.type === "number" ? Qt.ImhFormattedNumbersOnly : Qt.ImhNone
+                                                onEditingFinished: {
+                                                    if (field.f.type === "number") {
+                                                        const v = parseFloat(text);
+                                                        if (!isNaN(v)) Widgets.WidgetsConfig.setSetting(field.wid, field.f.key, v);
+                                                    } else {
+                                                        Widgets.WidgetsConfig.setSetting(field.wid, field.f.key, text);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -217,62 +348,6 @@ Item {
                             }
                         }
                     }
-                }
-            }
-        }
-
-        // Weather location.
-        Rectangle {
-            Layout.fillWidth: true; Layout.topMargin: 8
-            radius: 12; color: Qt.darker(Theme.surface, 1.06)
-            border.width: 1; border.color: Theme.outline
-            implicitHeight: wxCol.implicitHeight + 28
-
-            ColumnLayout {
-                id: wxCol
-                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
-                spacing: 10
-
-                Text { text: "Weather location"; color: Theme.primary
-                       font.family: Theme.fontFamily; font.pixelSize: 14; font.bold: true }
-
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 10
-                    Repeater {
-                        model: [
-                            { label: "Lat", key: "weatherLat" },
-                            { label: "Lon", key: "weatherLon" }
-                        ]
-                        delegate: RowLayout {
-                            required property var modelData
-                            spacing: 6
-                            Text { text: modelData.label; color: Theme.surfaceText
-                                   font.family: Theme.fontFamily; font.pixelSize: 13 }
-                            Rectangle {
-                                Layout.preferredWidth: 110; implicitHeight: 30; radius: 8
-                                color: Qt.darker(Theme.surface, 1.2)
-                                border.width: 1; border.color: Theme.outline
-                                TextInput {
-                                    id: ti
-                                    anchors.fill: parent; anchors.margins: 8
-                                    verticalAlignment: Text.AlignVCenter
-                                    color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 13
-                                    text: String(Widgets.WidgetsConfig[modelData.key])
-                                    inputMethodHints: Qt.ImhFormattedNumbersOnly
-                                    onEditingFinished: {
-                                        const v = parseFloat(text);
-                                        if (!isNaN(v)) { Widgets.WidgetsConfig[modelData.key] = v; Widgets.WidgetsConfig.save(); }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: "Find your coordinates at open-meteo.com or Google Maps. Applies to the Weather widget."
-                    color: Theme.surfaceText; opacity: 0.6; wrapMode: Text.WordWrap
-                    font.family: Theme.fontFamily; font.pixelSize: 11
                 }
             }
         }
