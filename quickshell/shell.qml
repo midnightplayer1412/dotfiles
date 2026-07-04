@@ -71,6 +71,11 @@ ShellRoot {
         onPressed: Settings.SettingsState.toggle(focusedScreen())
     }
 
+    GlobalShortcut {
+        name: "dashboard_toggle"
+        onPressed: Widgets.DashboardState.toggle(focusedScreen())
+    }
+
     // Status bar on each screen
     Variants {
         model: Quickshell.screens
@@ -244,6 +249,13 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
         Widgets.DesktopLayer { required property var modelData; screen: modelData }
+    }
+
+    // Widget dashboard — overlay on the target screen when visible.
+    Variants {
+        model: Widgets.DashboardState.visible && Widgets.DashboardState.targetScreen
+            ? [Widgets.DashboardState.targetScreen] : []
+        Widgets.Dashboard { required property var modelData; screen: modelData }
     }
 
     // Wake WallpaperService at startup so state.json is loaded and the
