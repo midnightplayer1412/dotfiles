@@ -10,10 +10,13 @@ Item {
     property var today: new Date()
     Timer { interval: 60000; running: true; repeat: true; onTriggered: w.today = new Date() }
 
+    readonly property bool sundayFirst: WidgetsConfig.setting("calendar", "weekStart") === "sun"
     readonly property int year: today.getFullYear()
     readonly property int month: today.getMonth()
-    // JS: 0=Sun. Shift so Monday is column 0.
-    readonly property int firstCol: (new Date(year, month, 1).getDay() + 6) % 7
+    // JS getDay(): 0=Sun. Column of the 1st depends on the week-start setting.
+    readonly property int firstCol: sundayFirst
+        ? new Date(year, month, 1).getDay()
+        : (new Date(year, month, 1).getDay() + 6) % 7
     readonly property int daysInMonth: new Date(year, month + 1, 0).getDate()
 
     ColumnLayout {
@@ -28,7 +31,8 @@ Item {
             Layout.fillWidth: true
             columns: 7; rowSpacing: 2; columnSpacing: 2
             Repeater {
-                model: ["M", "T", "W", "T", "F", "S", "S"]
+                model: w.sundayFirst ? ["S", "M", "T", "W", "T", "F", "S"]
+                                     : ["M", "T", "W", "T", "F", "S", "S"]
                 delegate: Text {
                     required property string modelData
                     Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter

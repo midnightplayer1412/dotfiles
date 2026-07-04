@@ -3,12 +3,18 @@ import QtQuick.Layouts
 import Quickshell.Io
 import ".."
 
-// Current weather from open-meteo (no API key). Coordinates come from
-// WidgetsConfig.weatherLat/Lon (set in Settings). Refetches every 15 min.
+// Current weather from open-meteo (no API key). Location + units come from the
+// widget's own settings (WidgetsConfig.setting("weather", …)). Refetches on any
+// of those changing, and every 15 min.
 Item {
     id: w
     readonly property bool relevant: true
-    readonly property bool located: WidgetsConfig.weatherLat !== 0 || WidgetsConfig.weatherLon !== 0
+
+    readonly property real lat: WidgetsConfig.setting("weather", "lat")
+    readonly property real lon: WidgetsConfig.setting("weather", "lon")
+    readonly property string units: WidgetsConfig.setting("weather", "units")
+    readonly property string label: WidgetsConfig.setting("weather", "label")
+    readonly property bool located: lat !== 0 || lon !== 0
 
     property real temp: 0
     property int code: -1
@@ -17,13 +23,16 @@ Item {
     function refetch() {
         if (!located) return;
         wxProc.command = ["sh", "-c",
-            "curl -s 'https://api.open-meteo.com/v1/forecast?latitude=" + WidgetsConfig.weatherLat +
-            "&longitude=" + WidgetsConfig.weatherLon + "&current=temperature_2m,weather_code'"];
+            "curl -s 'https://api.open-meteo.com/v1/forecast?latitude=" + lat +
+            "&longitude=" + lon + "&current=temperature_2m,weather_code" +
+            (units === "f" ? "&temperature_unit=fahrenheit" : "") + "'"];
         wxProc.running = true;
     }
 
     Component.onCompleted: refetch()
-    onLocatedChanged: refetch()
+    onLatChanged: refetch()
+    onLonChanged: refetch()
+    onUnitsChanged: refetch()
     Timer { interval: 900000; running: true; repeat: true; onTriggered: w.refetch() }
 
     Process {
@@ -59,13 +68,13 @@ Item {
             spacing: 10
             Text { text: w.glyphFor(w.code); font.family: Theme.glyphFont; font.pixelSize: 40; color: Theme.primary }
             Text {
-                text: Math.round(w.temp) + "°"
-                color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 34; font.bold: true
+                text: Math.round(w.temp) + (w.units === "f" ? "°F" : "°C")
+                color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 30; font.bold: true
             }
         }
         Text {
             Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter
-            text: WidgetsConfig.weatherLabel || "Weather"
+            text: w.label || "Weather"
             color: Theme.surfaceText; opacity: 0.7; font.family: Theme.fontFamily; font.pixelSize: 12
         }
     }

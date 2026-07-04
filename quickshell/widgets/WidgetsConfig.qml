@@ -122,9 +122,40 @@ Singleton {
         if (pa && pb) { pa.s.widgets[pa.i] = b; pb.s.widgets[pb.i] = a; _writeDesktop(d); }
     }
 
+    // ---- Per-widget settings ----
+    // Resolve a widget's settings against its descriptor schema: saved value or
+    // the field default. Weather falls back to the legacy top-level
+    // weatherLat/Lon/Label aliases when its per-widget keys aren't set yet, so an
+    // existing config keeps its coordinates with no migration step.
+    function resolvedSettings(id) {
+        const schema = WidgetRegistry.descriptors[id].settings || [];
+        const saved = (adapter.settings && adapter.settings[id]) || {};
+        const out = ({});
+        for (const f of schema)
+            out[f.key] = (saved[f.key] !== undefined) ? saved[f.key] : f.default;
+        if (id === "weather") {
+            if (saved.lat === undefined && adapter.weatherLat !== 0) out.lat = adapter.weatherLat;
+            if (saved.lon === undefined && adapter.weatherLon !== 0) out.lon = adapter.weatherLon;
+            if (saved.label === undefined && adapter.weatherLabel) out.label = adapter.weatherLabel;
+        }
+        return out;
+    }
+
+    function setting(id, key) { return resolvedSettings(id)[key]; }
+
+    function setSetting(id, key, value) {
+        const all = Object.assign({}, adapter.settings || {});
+        const one = Object.assign({}, all[id] || {});
+        one[key] = value;
+        all[id] = one;
+        adapter.settings = all;
+        save();
+    }
+
     function restoreDefaults() {
         adapter.desktop = JSON.parse(JSON.stringify(defaultDesktop));
         adapter.dashboard = JSON.parse(JSON.stringify(defaultDashboard));
+        adapter.settings = ({});
         save();
     }
 
@@ -139,6 +170,9 @@ Singleton {
             id: adapter
             property var desktop: ({})
             property var dashboard: ({})
+            property var settings: ({})
+            // Legacy weather location (pre per-widget-settings). Kept so old
+            // configs still parse and migrate via resolvedSettings("weather").
             property real weatherLat: 0
             property real weatherLon: 0
             property string weatherLabel: ""
