@@ -258,5 +258,7 @@ PanelWindow {
         Region { property var e: desk.placedVisible[10] ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? e.w : 0; height: e ? e.h : 0 }
         Region { property var e: desk.placedVisible[11] ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? e.w : 0; height: e ? e.h : 0 }
     }
-    mask: desk.draggingId !== "" ? null : widgetMask
+    // Drop the mask while dragging OR resizing so the gesture keeps receiving
+    // pointer events after the cursor leaves the widget's (masked) rect.
+    mask: (desk.draggingId !== "" || desk.resizingId !== "") ? null : widgetMask
 }
