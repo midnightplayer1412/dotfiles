@@ -12,6 +12,7 @@ import "cheatsheet" as Cheatsheet
 import "wallpaper" as Wallpaper
 import "mascot" as Mascot
 import "settings" as Settings
+import "widgets" as Widgets
 
 ShellRoot {
     function focusedScreen() {
