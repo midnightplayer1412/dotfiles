@@ -154,7 +154,7 @@ Item {
                                             implicitHeight: ftog.implicitHeight
                                             Ui.Toggle {
                                                 id: ftog; anchors.centerIn: parent
-                                                checked: field.f.type === "toggle" ? field.cur : false
+                                                checked: field.cur === true
                                                 onToggled: (v) => Widgets.WidgetsConfig.setSetting(field.wid, field.f.key, v)
                                             }
                                         }

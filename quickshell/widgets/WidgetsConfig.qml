@@ -156,6 +156,12 @@ Singleton {
         adapter.desktop = JSON.parse(JSON.stringify(defaultDesktop));
         adapter.dashboard = JSON.parse(JSON.stringify(defaultDashboard));
         adapter.settings = ({});
+        // Also clear the legacy weather aliases so restore is identical whether or
+        // not the user was migrated (otherwise a migrated user's location would
+        // survive a restore while a fresh user's wouldn't).
+        adapter.weatherLat = 0;
+        adapter.weatherLon = 0;
+        adapter.weatherLabel = "";
         save();
     }
 
