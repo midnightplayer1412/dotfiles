@@ -9,9 +9,9 @@ import ".."
 // click-through); mask dropped during a drag (same trick as mascot/Mascot.qml).
 // If the Task 1 spike FAILED, see the arrange-mode fallback note in the plan.
 PanelWindow {
-    id: layer
+    id: desk
     readonly property string targetName: Quickshell.screens.length > 0 ? Quickshell.screens[0].name : ""
-    visible: layer.screen && layer.screen.name === targetName
+    visible: desk.screen && desk.screen.name === targetName
 
     WlrLayershell.layer: WlrLayer.Bottom
     exclusionMode: ExclusionMode.Ignore
@@ -33,12 +33,12 @@ PanelWindow {
         void relevanceTick;
         const out = [];
         const rd = WidgetsConfig.resolvedDesktop;
-        const sw = layer.screen ? layer.screen.width : 1920;
+        const sw = desk.screen ? desk.screen.width : 1920;
         for (const s of rd.stacks) {
             let cy = s.dy;
             for (const id of s.widgets) {
                 if (!rd.enabled[id]) continue;
-                if (layer.relevance[id] === false) continue;
+                if (desk.relevance[id] === false) continue;
                 const d = WidgetRegistry.descriptors[id];
                 const x = s.anchor === "top-right" ? (sw - s.dx - d.w) : s.dx;
                 out.push({ id: id, stackId: s.id, x: x, y: cy });
@@ -51,7 +51,7 @@ PanelWindow {
     // Nearest column within 120px => insert there by y; else free drop at (x,y).
     function commitDrop(id, x, y) {
         const rd = WidgetsConfig.resolvedDesktop;
-        const sw = layer.screen ? layer.screen.width : 1920;
+        const sw = desk.screen ? desk.screen.width : 1920;
         const d = WidgetRegistry.descriptors[id];
         const cx = x + d.w / 2;
         let best = null, bestDist = 1e9;
@@ -61,25 +61,25 @@ PanelWindow {
             if (dist < bestDist) { bestDist = dist; best = s; }
         }
         if (best && bestDist < 120) {
-            const inStack = layer.placed.filter(p => p.stackId === best.id && p.id !== id);
+            const inStack = desk.placed.filter(p => p.stackId === best.id && p.id !== id);
             let idx = inStack.length;
             for (let k = 0; k < inStack.length; k++) { if (y < inStack[k].y) { idx = k; break; } }
             WidgetsConfig.moveWidget(id, best.id, idx, best.dx, best.dy);
         } else {
-            const sh = layer.screen ? layer.screen.height : 1080;
+            const sh = desk.screen ? desk.screen.height : 1080;
             WidgetsConfig.moveWidget(id, "", 0, Math.max(0, Math.min(x, sw - d.w)), Math.max(0, Math.min(y, sh - d.h)));
         }
     }
 
     Repeater {
-        model: layer.placed
+        model: desk.placed
         delegate: Item {
             id: cell
             required property var modelData
             readonly property string wid: modelData.id
-            x: layer.draggingId === wid ? layer.dragX : modelData.x
-            y: layer.draggingId === wid ? layer.dragY : modelData.y
-            z: layer.draggingId === wid ? 100 : 1
+            x: desk.draggingId === wid ? desk.dragX : modelData.x
+            y: desk.draggingId === wid ? desk.dragY : modelData.y
+            z: desk.draggingId === wid ? 100 : 1
             width: fr.width
             height: fr.height
 
@@ -88,8 +88,8 @@ PanelWindow {
                 widgetId: cell.wid
                 content: WidgetRegistry.componentFor(cell.wid)
                 enabled: true
-                onRelevantChanged: layer.setRelevance(cell.wid, relevant)
-                Component.onCompleted: layer.setRelevance(cell.wid, relevant)
+                onRelevantChanged: desk.setRelevance(cell.wid, relevant)
+                Component.onCompleted: desk.setRelevance(cell.wid, relevant)
             }
 
             MouseArea {
@@ -100,16 +100,16 @@ PanelWindow {
                 // setting draggingId re-evaluates cell.x/y to read dragX/dragY, so
                 // reading cell.x afterwards would return a stale value (widget would
                 // snap to 0,0). Order matters — draggingId is set last.
-                onPressed: mouse => { layer.dragX = cell.x; layer.dragY = cell.y; ox = mouse.x; oy = mouse.y; layer.draggingId = cell.wid }
+                onPressed: mouse => { desk.dragX = cell.x; desk.dragY = cell.y; ox = mouse.x; oy = mouse.y; desk.draggingId = cell.wid }
                 onPositionChanged: mouse => {
-                    if (layer.draggingId !== cell.wid) return;
-                    layer.dragX = cell.x + (mouse.x - ox);
-                    layer.dragY = cell.y + (mouse.y - oy);
+                    if (desk.draggingId !== cell.wid) return;
+                    desk.dragX = cell.x + (mouse.x - ox);
+                    desk.dragY = cell.y + (mouse.y - oy);
                 }
                 onReleased: {
-                    if (layer.draggingId !== cell.wid) return;
-                    layer.commitDrop(cell.wid, layer.dragX, layer.dragY);
-                    layer.draggingId = "";
+                    if (desk.draggingId !== cell.wid) return;
+                    desk.commitDrop(cell.wid, desk.dragX, desk.dragY);
+                    desk.draggingId = "";
                 }
             }
         }
@@ -123,18 +123,18 @@ PanelWindow {
     // covers the current registry with headroom — bump it if the catalog grows.
     Region {
         id: widgetMask
-        Region { property var e: layer.placed[0]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[1]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[2]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[3]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[4]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[5]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[6]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[7]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[8]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[9]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[10] ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
-        Region { property var e: layer.placed[11] ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[0]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[1]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[2]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[3]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[4]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[5]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[6]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[7]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[8]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[9]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[10] ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: desk.placed[11] ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
     }
-    mask: layer.draggingId !== "" ? null : widgetMask
+    mask: desk.draggingId !== "" ? null : widgetMask
 }
