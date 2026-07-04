@@ -113,17 +113,19 @@ Item {
                         }
 
                         // Inline settings panel — rendered generically from the schema.
+                        // Spans the same width as the parent rows so a field's 80px
+                        // right column lines its toggle up with the row's toggles.
                         Rectangle {
                             visible: wrow.expanded && wrow.schema.length > 0
                             Layout.fillWidth: true
-                            Layout.leftMargin: 6; Layout.rightMargin: 2
                             radius: 8; color: Qt.darker(Theme.surface, 1.16)
                             border.width: 1; border.color: Theme.outline
                             implicitHeight: fields.implicitHeight + 20
 
                             ColumnLayout {
                                 id: fields
-                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                                anchors { left: parent.left; right: parent.right; top: parent.top
+                                          leftMargin: 14; rightMargin: 0; topMargin: 10 }
                                 spacing: 10
 
                                 Repeater {
@@ -139,20 +141,29 @@ Item {
 
                                         Text {
                                             Layout.fillWidth: true
+                                            Layout.alignment: Qt.AlignVCenter
                                             text: field.f.label
                                             color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 12
                                         }
 
-                                        // toggle
-                                        Ui.Toggle {
+                                        // toggle — 80px right column matching the parent row's toggles
+                                        Item {
                                             visible: field.f.type === "toggle"
-                                            checked: field.f.type === "toggle" ? field.cur : false
-                                            onToggled: (v) => Widgets.WidgetsConfig.setSetting(field.wid, field.f.key, v)
+                                            Layout.preferredWidth: 80
+                                            Layout.alignment: Qt.AlignVCenter
+                                            implicitHeight: ftog.implicitHeight
+                                            Ui.Toggle {
+                                                id: ftog; anchors.centerIn: parent
+                                                checked: field.f.type === "toggle" ? field.cur : false
+                                                onToggled: (v) => Widgets.WidgetsConfig.setSetting(field.wid, field.f.key, v)
+                                            }
                                         }
 
                                         // enum — segmented buttons
                                         Row {
                                             visible: field.f.type === "enum"
+                                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                                            Layout.rightMargin: 14
                                             spacing: 6
                                             Repeater {
                                                 model: field.f.options || []
@@ -180,6 +191,8 @@ Item {
                                         // text / number
                                         Rectangle {
                                             visible: field.f.type === "text" || field.f.type === "number"
+                                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                                            Layout.rightMargin: 14
                                             Layout.preferredWidth: 130; implicitHeight: 30; radius: 8
                                             color: Qt.darker(Theme.surface, 1.2)
                                             border.width: 1; border.color: Theme.outline
