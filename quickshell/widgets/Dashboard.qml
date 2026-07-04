@@ -38,18 +38,33 @@ PanelWindow {
         MouseArea { anchors.fill: parent; onClicked: DashboardState.close() }
     }
 
-    Flow {
+    // Content sized to the flow, centered. A swallow MouseArea sits UNDER the
+    // flow so clicks on a tile (or in the spacing between tiles) don't fall
+    // through to the backdrop and close the dashboard — clicks only close when
+    // they land on the dark margin outside the content. Mirrors SettingsWindow's
+    // card. Widget-internal MouseAreas (e.g. Media transport) sit above and still
+    // receive their clicks.
+    Item {
+        id: content
         anchors.centerIn: parent
-        width: Math.min(root.width - 160, 980)
-        spacing: 20
+        width: flow.width
+        height: flow.height
 
-        Repeater {
-            model: root.items
-            delegate: WidgetFrame {
-                required property var modelData
-                widgetId: modelData
-                content: WidgetRegistry.componentFor(modelData)
-                enabled: true
+        MouseArea { anchors.fill: parent }
+
+        Flow {
+            id: flow
+            width: Math.min(root.width - 160, 980)
+            spacing: 20
+
+            Repeater {
+                model: root.items
+                delegate: WidgetFrame {
+                    required property var modelData
+                    widgetId: modelData
+                    content: WidgetRegistry.componentFor(modelData)
+                    enabled: true
+                }
             }
         }
     }
