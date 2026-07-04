@@ -91,7 +91,7 @@ Item {
             }
         }
 
-        // Dashboard order (▲/▼ swap with the neighbour).
+        // Dashboard order (drag a row to reorder).
         Rectangle {
             Layout.fillWidth: true; Layout.topMargin: 8
             radius: 12; color: Qt.darker(Theme.surface, 1.06)
