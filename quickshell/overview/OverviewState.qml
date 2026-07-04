@@ -23,13 +23,18 @@ Singleton {
         // refresh once on open to pick up any moves done outside the overview.
         Hyprland.refreshToplevels();
         // Start sticky-mode selection on the focused window so HJKL has an anchor.
+        navZone = "windows";
+        navWs = -1;
         seedKeyboardSelection();
     }
     function close() {
         visible = false;
         armed = false;
         keyboardSelectedAddress = "";
+        navZone = "windows";
+        navWs = -1;
         clearTileGeometry();
+        clearSpaceGeometry();
     }
 
     // Slow tick while the overview is open, in case the user repositions
@@ -128,6 +133,18 @@ Singleton {
     // score = along-axis distance + selectPerpWeight * perpendicular distance.
     readonly property real selectPerpWeight: 2
 
+    // ── Two-tier nav (Mission Control: Spaces bar ⇄ windows) ─────────────
+    // The sticky selection lives in one of two zones: the center windows
+    // (default) or the top Spaces bar. K hops up into the bar, J drops back.
+    // Inert for every other layout — they never call registerSpace(), so
+    // spaceGeometry stays empty and _hasSpaces() is false.
+    property string navZone: "windows"       // "windows" | "spaces"
+    property int    navWs: -1                 // selected workspace id in "spaces"
+    property var spaceGeometry: ({})          // wsId -> { cx, cy } in layout coords
+    function registerSpace(wsId, cx, cy) { spaceGeometry[wsId] = { cx: cx, cy: cy }; }
+    function clearSpaceGeometry() { spaceGeometry = ({}); }
+    function _hasSpaces() { for (const k in spaceGeometry) return true; return false; }
+
     function registerTile(address, cx, cy) {
         if (!address) return;
         tileGeometry[_addr(address)] = { cx: cx, cy: cy };
@@ -147,10 +164,19 @@ Singleton {
     // there is none. Falls back to any registered tile if the current
     // selection's geometry isn't known yet (tiles register just after open).
     function selectStep(dir) {
+        // ── Spaces zone (Mission Control top bar) ──
+        if (navZone === "spaces") {
+            if (dir === "h" || dir === "l") { _stepSpace(dir); return; }
+            if (dir === "j") { _spacesToWindows(); return; }
+            return;   // "k" — already at the top
+        }
+
+        // ── Windows zone (geometric; all layouts) ──
         const geom = tileGeometry;
         const cur = geom[keyboardSelectedAddress];
         if (!cur) {
             for (const a in geom) { keyboardSelectedAddress = a; return; }
+            if (dir === "k" && _hasSpaces()) _windowsToSpaces(null);
             return;
         }
         const eps = 1;
@@ -169,10 +195,52 @@ Singleton {
             const score = along + selectPerpWeight * perp;
             if (score < bestScore) { bestScore = score; best = a; }
         }
+        if (best) { keyboardSelectedAddress = best; return; }
+        // Nothing that way. Going up with a Spaces bar present → hop into it.
+        if (dir === "k" && _hasSpaces()) _windowsToSpaces(cur.cx);
+    }
+
+    // Enter the Spaces bar, selecting the space nearest horizontally to fromCx
+    // (or the first space when fromCx is null).
+    function _windowsToSpaces(fromCx) {
+        let best = -1, bestD = Infinity;
+        for (const id in spaceGeometry) {
+            const d = fromCx === null ? 0 : Math.abs(spaceGeometry[id].cx - fromCx);
+            if (d < bestD) { bestD = d; best = parseInt(id); }
+        }
+        if (best >= 0) { navWs = best; navZone = "spaces"; }
+    }
+
+    // Walk the Spaces bar left ("h") / right ("l"), ordered by screen x.
+    function _stepSpace(dir) {
+        const ids = Object.keys(spaceGeometry).map(k => parseInt(k))
+            .sort((a, b) => spaceGeometry[a].cx - spaceGeometry[b].cx);
+        if (ids.length === 0) return;
+        const i = ids.indexOf(navWs);
+        if (i < 0) { navWs = ids[0]; return; }
+        navWs = dir === "l" ? ids[Math.min(ids.length - 1, i + 1)]
+                            : ids[Math.max(0, i - 1)];
+    }
+
+    // Drop from the Spaces bar back to the window nearest the current space.
+    function _spacesToWindows() {
+        const sp = spaceGeometry[navWs];
+        navZone = "windows";
+        if (!sp) return;
+        let best = "", bestD = Infinity;
+        for (const a in tileGeometry) {
+            const d = Math.abs(tileGeometry[a].cx - sp.cx);
+            if (d < bestD) { bestD = d; best = a; }
+        }
         if (best) keyboardSelectedAddress = best;
     }
 
     function selectCommit() {
+        if (navZone === "spaces") {
+            if (navWs >= 0) focusWorkspace(navWs);
+            close();
+            return;
+        }
         if (keyboardSelectedAddress) focusWindow(keyboardSelectedAddress);
         close();
     }

@@ -38,6 +38,20 @@ Singleton {
     readonly property int sideScrollMin: 4
     readonly property int sideScrollMax: 30
 
+    // Mission Control tuning. missionScale grows/shrinks the top Spaces
+    // thumbnails; the bar height derives from them, so it follows along.
+    property alias missionScale: adapter.missionScale
+    readonly property real missionScaleMin: 0.6
+    readonly property real missionScaleMax: 1.4
+    readonly property real resolvedMissionScale:
+        Math.max(missionScaleMin, Math.min(missionScaleMax, missionScale))
+
+    // Dynamic Spaces (macOS-style): when true the top bar shows only the
+    // occupied workspaces (+ the active one) and an Add-workspace (+) button
+    // that switches to the next empty workspace. When false the bar shows the
+    // fixed 1..workspacesShown set.
+    property alias missionDynamic: adapter.missionDynamic
+
     // Every layout the overview knows how to render, in picker order. A value
     // outside this set falls back to "grid" at the dispatcher.
     readonly property var knownLayouts: ["grid", "dock", "expose", "side", "mission"]
@@ -62,7 +76,7 @@ Singleton {
         knownLayouts.indexOf(layout) >= 0 ? layout : "grid"
 
     // Known-good baseline. resetDefaults() restores it.
-    readonly property var defaults: ({ layout: "grid", gridScale: 1.0, gridPosition: "center", sidePosition: "auto", sideScrollSpeed: 12 })
+    readonly property var defaults: ({ layout: "grid", gridScale: 1.0, gridPosition: "center", sidePosition: "auto", sideScrollSpeed: 12, missionScale: 1.0, missionDynamic: false })
 
     function setLayout(key) {
         if (config.knownLayouts.indexOf(key) < 0) return;
@@ -98,6 +112,8 @@ Singleton {
         adapter.gridPosition = config.defaults.gridPosition;
         adapter.sidePosition = config.defaults.sidePosition;
         adapter.sideScrollSpeed = config.defaults.sideScrollSpeed;
+        adapter.missionScale = config.defaults.missionScale;
+        adapter.missionDynamic = config.defaults.missionDynamic;
         config.save();
     }
 
@@ -116,6 +132,8 @@ Singleton {
             property string gridPosition: "center"
             property string sidePosition: "auto"
             property int sideScrollSpeed: 12
+            property real missionScale: 1.0
+            property bool missionDynamic: false
         }
     }
 }
