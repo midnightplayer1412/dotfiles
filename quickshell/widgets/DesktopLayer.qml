@@ -115,20 +115,26 @@ PanelWindow {
         }
     }
 
-    // Union of the widget rects — only these grab the pointer. Instantiator adds
-    // each child Region to the enclosing Region's default children.
+    // Union of the widget rects — only these grab the pointer; empty desktop is
+    // click-through. `regions` is a READ-ONLY list populated solely by declared
+    // children (an Instantiator can't feed it), so use a fixed pool of slots each
+    // bound to placed[i]; out-of-range slots collapse to 0x0 and contribute
+    // nothing. The pool must be >= the max simultaneously-placed widget count; 12
+    // covers the current registry with headroom — bump it if the catalog grows.
     Region {
         id: widgetMask
-        Instantiator {
-            model: layer.placed
-            delegate: Region {
-                required property var modelData
-                x: modelData.x
-                y: modelData.y
-                width: WidgetRegistry.descriptors[modelData.id].w
-                height: WidgetRegistry.descriptors[modelData.id].h
-            }
-        }
+        Region { property var e: layer.placed[0]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[1]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[2]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[3]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[4]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[5]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[6]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[7]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[8]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[9]  ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[10] ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
+        Region { property var e: layer.placed[11] ?? null; x: e ? e.x : 0; y: e ? e.y : 0; width: e ? WidgetRegistry.descriptors[e.id].w : 0; height: e ? WidgetRegistry.descriptors[e.id].h : 0 }
     }
     mask: layer.draggingId !== "" ? null : widgetMask
 }
