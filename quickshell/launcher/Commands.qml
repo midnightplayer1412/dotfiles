@@ -150,7 +150,7 @@ QtObject {
     function runShell(text) {
         const cmd = text.substring(1).trim();
         if (!cmd) return;
-        Quickshell.execDetached(["ghostty", "-e", "sh", "-c", cmd + "; exec $SHELL"]);
+        Quickshell.execDetached(["kitty", "sh", "-c", cmd + "; exec $SHELL"]);
     }
 
     function filter(text) {

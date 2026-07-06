@@ -6,6 +6,28 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-06
+
+#### Changed
+- **terminal** — switched the default terminal from **ghostty to kitty**.
+  Ghostty's `background-opacity` renders **intermittently opaque** on this
+  NVIDIA dual-GPU box (a GTK4/Wayland alpha race — confirmed ghostty-specific;
+  kitty facing the identical desktop is reliably transparent). Kitty is themed
+  to match: Monaspace Neon NF @ 13, `window_padding_width 8`, block cursor,
+  `background_opacity 0.5` (Hyprland `decoration:blur` supplies the frosted
+  look), and the ghostty split keybinds ported (`ctrl+shift+h/j/k/l` split,
+  `alt+h/j/k/l` move, `alt+enter` zoom the active split).
+- **launchers** — repointed every terminal launch to kitty: `Super+Return`
+  (`$terminal`), `Super+E` (`$fileManager` → `kitty yazi`), the launcher `>`
+  run-command (`Commands.qml`), and the `text/plain` default handler
+  (`nvim-kitty.desktop`).
+
+#### Added
+- **kitty** — new tracked `kitty/kitty.conf`, plus a Matugen
+  `kitty-colors.conf` template wired into `matugen/config.toml` so kitty's
+  palette regenerates on every wallpaper change (generated `kitty/theme.conf`
+  is gitignored, mirroring `yazi/theme.toml`).
+
 ### 2026-07-04
 
 #### Added
