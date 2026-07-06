@@ -213,12 +213,12 @@ PanelWindow {
                     property real baseScale: 1
                     property real pressVal: 0
                     function _val(mx, my) {
-                        const c = mapToItem(desk, mx, my);
+                        const c = mapToItem(null, mx, my);
                         const d = WidgetRegistry.descriptors[cell.wid];
                         return ((c.x - refX) / d.w + (c.y - refY) / d.h) / 2;
                     }
                     onPressed: mouse => {
-                        const tl = cell.mapToItem(desk, 0, 0);
+                        const tl = cell.mapToItem(null, 0, 0);
                         refX = tl.x; refY = tl.y;
                         baseScale = WidgetsConfig.scaleOf(cell.wid);
                         pressVal = _val(mouse.x, mouse.y);
