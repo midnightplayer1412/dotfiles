@@ -21,6 +21,11 @@ grouped by date since this repo is unreleased / rolling.
   (`$terminal`), `Super+E` (`$fileManager` → `kitty yazi`), the launcher `>`
   run-command (`Commands.qml`), and the `text/plain` default handler
   (`nvim-kitty.desktop`).
+- **cheatsheet** (quickshell) — the `Super+/` terminal tab now reflects **kitty**
+  instead of ghostty (keymap renamed `ghostty.json` → `kitty.json`; auto-discovered
+  via the `keymaps/*.json` glob): `ctrl+shift+h/l` side-by-side split,
+  `ctrl+shift+k/j` stacked split, `alt+hjkl` focus window, `alt+enter` zoom,
+  `alt+0` reset split sizes.
 
 #### Added
 - **kitty** — new tracked `kitty/kitty.conf`, plus a Matugen
