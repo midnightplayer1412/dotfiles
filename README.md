@@ -112,13 +112,15 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   focus) reuses the same engine. Persists to
   `~/.config/quickshell/overview-config.json`.
 - **Desktop widgets** — Self-contained widgets on a free-drag **desktop layer**
-  (drag anywhere, positions persist, gapless flush stacks) plus a **SUPER+W
-  command-center dashboard** overlay. First set: **Clock**, **Calendar**,
-  **System monitor**, **Weather** (open-meteo), and **Media** (auto-hides when
-  nothing plays). A `WidgetRegistry` makes adding a widget a two-step change.
-  **Settings → Widgets** has per-widget Desktop/Dashboard toggles, a
-  drag-to-reorder dashboard order, a weather location field, and restore-to-default;
-  persists to `~/.config/quickshell/widgets-config.json`.
+  (drag anywhere, positions persist, gapless flush stacks). Each is **resizable**
+  via a corner grip (aspect-locked per-widget scale, 0.6–2×) and **snaps to a
+  grid** while dragging (Shift bypasses). Plus a **SUPER+W command-center
+  dashboard** overlay. First set: **Clock**, **Calendar**, **System monitor**,
+  **Weather** (open-meteo), and **Media** (auto-hides when nothing plays). A
+  `WidgetRegistry` makes adding a widget a two-step change. **Settings → Widgets**
+  has per-widget Desktop/Dashboard toggles, a drag-to-reorder dashboard order, a
+  **Desktop placement** card (snap toggle + grid size), a weather location field,
+  and restore-to-default; persists to `~/.config/quickshell/widgets-config.json`.
 - **HUD** — Right-edge panel, volume and brightness sliders (auto-hide)
 - **Connection Hub** — Top-right drawer with Wi-Fi / Bluetooth / Audio / VPN
   tabs. The **Audio tab** is a full mixer: a master slider, output-device

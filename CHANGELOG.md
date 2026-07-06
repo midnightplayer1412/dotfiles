@@ -26,7 +26,18 @@ grouped by date since this repo is unreleased / rolling.
 - **kitty** — new tracked `kitty/kitty.conf`, plus a Matugen
   `kitty-colors.conf` template wired into `matugen/config.toml` so kitty's
   palette regenerates on every wallpaper change (generated `kitty/theme.conf`
-  is gitignored, mirroring `yazi/theme.toml`).
+  is gitignored, mirroring `yazi/theme.toml`). `apply-theme.sh` then sends every
+  running kitty `SIGUSR1`, so the new palette **hot-reloads live** — and with
+  `dynamic_background_opacity` on, the background alpha reloads too — no restart.
+
+#### Fixed
+- **widgets** (quickshell) — the **desktop widget resize grip** now actually
+  resizes. `resizeArea` mapped coordinates against the `PanelWindow` root, which
+  is **not a `QQuickItem`**, so `mapToItem` threw (`"Could not convert argument 0
+  … to const QQuickItem*"`) on the first line of `onPressed` — aborting before
+  `resizingId` was set, so every motion event hit the guard and bailed (the grip
+  silently did nothing, while body-drag worked because it never calls
+  `mapToItem`). Now maps to scene coordinates via `mapToItem(null, …)`.
 
 ### 2026-07-04
 
@@ -71,6 +82,12 @@ grouped by date since this repo is unreleased / rolling.
   expander — no per-widget UI code. **Clock** (12/24h, seconds, date), **Weather**
   (°C/°F, label, lat/lon), **System monitor** (show CPU/RAM), **Calendar** (week
   starts Mon/Sun). Values persist under `settings[id]` in `widgets-config.json`.
+- **widgets** (quickshell) — desktop widgets are now **resizable** and
+  **snap to a grid**: a bottom-right corner grip sets an aspect-locked per-widget
+  scale (0.6–2×, persisted; content scales so text/graphics grow with the box),
+  and dragging snaps to a configurable grid (Shift bypasses; a faint grid overlay
+  shows during a drag). Adds a **Settings → Widgets** *Desktop placement* card
+  (snap toggle + grid size); *Restore default layout* also resets scales/snap.
 
 #### Changed
 - **widgets** (quickshell) — the Weather widget's location moved from a standalone
