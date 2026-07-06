@@ -137,7 +137,7 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   **Do Not Disturb** toggle silences popups while still collecting history
   (critical notifications still pop through).
 - **Cheatsheet** — Full-screen keybinding overlay (`Super + /`). Per-app tabs
-  (Hyprland, nvim, tmux, ghostty, yazi) highlight each app's bound keys on a
+  (Hyprland, nvim, tmux, kitty, yazi) highlight each app's bound keys on a
   CSS-drawn keyboard; hover a key to see its binding in the detail bar.
   Keymaps are JSON files under `cheatsheet/keymaps/` (one per app); the
   Hyprland map is generated from `binds.conf` by `hypr/scripts/gen-keymap.sh`.

@@ -1,0 +1,17 @@
+{
+  "app": "kitty",
+  "id": "kitty",
+  "binds": [
+    { "key": "R", "mods": ["CTRL", "SHIFT"], "category": "App", "desc": "Reload config" },
+    { "key": "H", "mods": ["CTRL", "SHIFT"], "category": "Split", "desc": "New split (side-by-side)" },
+    { "key": "L", "mods": ["CTRL", "SHIFT"], "category": "Split", "desc": "New split (side-by-side)" },
+    { "key": "K", "mods": ["CTRL", "SHIFT"], "category": "Split", "desc": "New split (stacked)" },
+    { "key": "J", "mods": ["CTRL", "SHIFT"], "category": "Split", "desc": "New split (stacked)" },
+    { "key": "H", "mods": ["ALT"], "category": "Split", "desc": "Focus window left" },
+    { "key": "J", "mods": ["ALT"], "category": "Split", "desc": "Focus window down" },
+    { "key": "K", "mods": ["ALT"], "category": "Split", "desc": "Focus window up" },
+    { "key": "L", "mods": ["ALT"], "category": "Split", "desc": "Focus window right" },
+    { "key": "RETURN", "mods": ["ALT"], "category": "Split", "desc": "Zoom active split" },
+    { "key": "0", "mods": ["ALT"], "category": "Split", "desc": "Reset split sizes (50/50)" }
+  ]
+}
