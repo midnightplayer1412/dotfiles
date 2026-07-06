@@ -8,6 +8,10 @@ output_path = "~/.config/quickshell/theme/colors.json"
 input_path  = "~/.config/matugen/templates/tmux-colors.conf"
 output_path = "~/.config/tmux/colors.conf"
 
+[templates.kitty]
+input_path  = "~/.config/matugen/templates/kitty-colors.conf"
+output_path = "~/.config/kitty/theme.conf"
+
 [templates.yazi-theme]
 input_path  = "~/.config/matugen/templates/yazi-theme.toml"
 output_path = "~/.config/yazi/theme.toml"

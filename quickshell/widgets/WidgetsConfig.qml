@@ -15,6 +15,26 @@ Singleton {
     property alias weatherLon: adapter.weatherLon
     property alias weatherLabel: adapter.weatherLabel
 
+    // Desktop placement: snap dragged widgets to a grid; per-widget resize scale.
+    property alias snapEnabled: adapter.snapEnabled
+    property alias gridSize: adapter.gridSize
+    readonly property int gridMin: 8
+    readonly property int gridMax: 48
+    readonly property int resolvedGridSize: Math.max(gridMin, Math.min(gridMax, gridSize))
+    readonly property real scaleMin: 0.6
+    readonly property real scaleMax: 2.0
+
+    function scaleOf(id) {
+        const s = adapter.scales ? adapter.scales[id] : undefined;
+        return s === undefined ? 1.0 : Math.max(scaleMin, Math.min(scaleMax, s));
+    }
+    function setScale(id, s) {
+        const all = Object.assign({}, adapter.scales || {});
+        all[id] = Math.max(scaleMin, Math.min(scaleMax, s));
+        adapter.scales = all;
+        save();
+    }
+
     // ---- Defaults derived from the registry ----
     readonly property var defaultDesktop: {
         const byStack = ({});
@@ -156,6 +176,9 @@ Singleton {
         adapter.desktop = JSON.parse(JSON.stringify(defaultDesktop));
         adapter.dashboard = JSON.parse(JSON.stringify(defaultDashboard));
         adapter.settings = ({});
+        adapter.scales = ({});
+        adapter.snapEnabled = true;
+        adapter.gridSize = 16;
         // Also clear the legacy weather aliases so restore is identical whether or
         // not the user was migrated (otherwise a migrated user's location would
         // survive a restore while a fresh user's wouldn't).
@@ -177,6 +200,9 @@ Singleton {
             property var desktop: ({})
             property var dashboard: ({})
             property var settings: ({})
+            property var scales: ({})
+            property bool snapEnabled: true
+            property int gridSize: 16
             // Legacy weather location (pre per-widget-settings). Kept so old
             // configs still parse and migrate via resolvedSettings("weather").
             property real weatherLat: 0

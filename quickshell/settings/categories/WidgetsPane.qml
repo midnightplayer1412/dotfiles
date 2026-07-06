@@ -351,5 +351,66 @@ Item {
                 }
             }
         }
+
+        // Desktop placement — snap grid (resize is the widget's corner handle).
+        Rectangle {
+            Layout.fillWidth: true; Layout.topMargin: 8
+            radius: 12; color: Qt.darker(Theme.surface, 1.06)
+            border.width: 1; border.color: Theme.outline
+            implicitHeight: placeCol.implicitHeight + 28
+
+            ColumnLayout {
+                id: placeCol
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
+                spacing: 12
+
+                Text { text: "Desktop placement"; color: Theme.primary
+                       font.family: Theme.fontFamily; font.pixelSize: 14; font.bold: true }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Snap to grid"; color: Theme.surfaceText
+                        font.family: Theme.fontFamily; font.pixelSize: 13
+                    }
+                    Ui.Toggle {
+                        checked: Widgets.WidgetsConfig.snapEnabled
+                        onToggled: (v) => { Widgets.WidgetsConfig.snapEnabled = v; Widgets.WidgetsConfig.save(); }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+                    Text {
+                        text: "Grid size"; color: Theme.surfaceText; Layout.preferredWidth: 72
+                        font.family: Theme.fontFamily; font.pixelSize: 13
+                    }
+                    Ui.Slider {
+                        Layout.fillWidth: true
+                        from: Widgets.WidgetsConfig.gridMin
+                        to: Widgets.WidgetsConfig.gridMax
+                        stepSize: 1
+                        value: Widgets.WidgetsConfig.gridSize
+                        onMoved: (v) => Widgets.WidgetsConfig.gridSize = v
+                        onReleased: Widgets.WidgetsConfig.save()
+                    }
+                    Text {
+                        text: Widgets.WidgetsConfig.resolvedGridSize + " px"
+                        color: Theme.surfaceText; Layout.preferredWidth: 44
+                        horizontalAlignment: Text.AlignRight
+                        font.family: Theme.fontFamily; font.pixelSize: 12
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "Widgets snap to this grid while dragging on the desktop. Hold Shift to place freely. Drag a widget's bottom-right corner to resize it."
+                    color: Theme.surfaceText; opacity: 0.6; wrapMode: Text.WordWrap
+                    font.family: Theme.fontFamily; font.pixelSize: 11
+                }
+            }
+        }
     }
 }
