@@ -36,6 +36,11 @@ fi
 
 tmux source-file "$HOME/.config/tmux/tmux.conf" 2>/dev/null || true
 
+# Kitty re-reads its config (and the include'd theme.conf) on SIGUSR1; with
+# dynamic_background_opacity set, colors + alpha reload live in every running
+# instance. No-ops if no kitty is running.
+pkill -SIGUSR1 -x kitty 2>/dev/null || true
+
 # Retint the keyboard backlight to the freshly-generated palette. Self-guards
 # and no-ops when asusctl/asusd or the feature is off; `|| true` ensures a
 # keyboard hiccup never fails the theme apply.
