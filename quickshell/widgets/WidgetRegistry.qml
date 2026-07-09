@@ -18,7 +18,7 @@ Singleton {
                 { key: "showSeconds", label: "Show seconds", type: "toggle", default: false },
                 { key: "showDate",    label: "Show date",    type: "toggle", default: true }
             ] },
-        "calendar":   { label: "Calendar", w: 236, h: 250, desktop: { stack: "left",  order: 1 }, dashboard: { span: 1 },
+        "calendar":   { label: "Calendar", w: 236, h: 285, desktop: { stack: "left",  order: 1 }, dashboard: { span: 1 },
             settings: [
                 { key: "weekStart", label: "Week starts", type: "enum", default: "mon",
                   options: [{ value: "mon", label: "Mon" }, { value: "sun", label: "Sun" }] }

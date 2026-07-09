@@ -142,9 +142,26 @@ PanelWindow {
             x: desk.draggingId === wid ? desk.dragX : pos.x
             y: desk.draggingId === wid ? desk.dragY : pos.y
             z: (desk.draggingId === wid || desk.resizingId === wid) ? 100 : 1
-            visible: pos.visible
             width: fr.width
             height: fr.height
+
+            // Enter/leave (fade + subtle pop) and reflow glide, all driven by
+            // relevance via pos.visible. layout/placedVisible/mask stay instant
+            // (they read pos.visible directly), so siblings retarget the moment
+            // relevance flips and only the rendered cell animates — no animated
+            // state is fed back into the layout binding (keeps it loop-free).
+            transformOrigin: Item.Center
+            opacity: pos.visible ? 1 : 0
+            scale: pos.visible ? 1 : 0.92
+            visible: opacity > 0.01
+            Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+            Behavior on scale   { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+            // Glide only for idle, relevance-driven reflow; during a drag/resize
+            // the cell must track the cursor 1:1, so gate the Behavior off then.
+            Behavior on y {
+                enabled: desk.draggingId === "" && desk.resizingId === ""
+                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+            }
 
             HoverHandler { id: cellHover }
 

@@ -427,6 +427,77 @@ Item {
                 }
             }
 
+            // ── Widget style ──────────────────────────────────────────
+            Text {
+                text: "Widget style"
+                color: Theme.primary
+                font.family: Theme.fontFamily
+                font.pixelSize: 14
+                font.bold: true
+                Layout.topMargin: 6
+            }
+            Text {
+                text: "How desktop and dashboard widgets look. Refined is polished and "
+                    + "balanced; Minimal is airy and monochrome; Playful adds gradients "
+                    + "and radial gauges; Data-dense packs in more per tile."
+                color: Theme.outline
+                font.family: Theme.fontFamily
+                font.pixelSize: 12
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+                Repeater {
+                    model: [
+                        { key: "refined", label: "Refined",    hint: "Polished default" },
+                        { key: "minimal", label: "Minimal",    hint: "Airy · mono" },
+                        { key: "playful", label: "Playful",    hint: "Gradients · rings" },
+                        { key: "dense",   label: "Data-dense", hint: "More per tile" }
+                    ]
+                    delegate: Rectangle {
+                        required property var modelData
+                        readonly property bool selected: Ui.UiStyle.widgetStyle === modelData.key
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 78
+                        radius: 10
+                        color: Theme.surfaceContainer
+                        border.width: selected ? 2 : 1
+                        border.color: selected ? Theme.primary : Theme.outline
+
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            width: parent.width - 16
+                            spacing: 6
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.label
+                                color: parent.parent.selected ? Theme.primary : Theme.surfaceText
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 13
+                                font.bold: true
+                            }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                Layout.fillWidth: true
+                                horizontalAlignment: Text.AlignHCenter
+                                text: modelData.hint
+                                color: Theme.outline
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: { Ui.UiStyle.widgetStyle = modelData.key; Ui.UiStyle.save(); }
+                        }
+                    }
+                }
+            }
+
             // ── Connection layout ─────────────────────────────────────
             Text {
                 text: "Connection layout"

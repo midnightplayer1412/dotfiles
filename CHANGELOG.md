@@ -6,6 +6,44 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-09
+
+#### Added
+- **widgets** (quickshell) — a global **Widget style** setting with four presets,
+  picked in **Settings → Appearance** and re-skinning every desktop/dashboard
+  widget live (mirrors the Surface/Toggle style machinery: `UiStyle.widgetStyle`
+  persisted to `ui-style.json`, tokens resolved by a new `ui/WidgetStyle.qml`
+  singleton, colours derived from Theme so they track Matugen):
+  - **Refined** (default) — polished baseline: gradient-accented bars, hairline
+    frame, soft type.
+  - **Minimal** — borderless, airy, thin monochrome type, one quiet accent.
+  - **Playful** — bold gradients, big glyphs, radial CPU/RAM **rings**, pill
+    media controls, and an edge-to-edge gradient clock tile (painted at frame
+    level so its corner radius matches the surface at any resize scale).
+  - **Data-dense** — more per tile: rings **plus a CPU sparkline**, weather
+    hi/lo + humidity + wind, a media scrub bar with times, clock seconds + week.
+- **widgets** (quickshell) — enter/leave (fade + subtle pop) and reflow-glide
+  **animations** for both the desktop layer and the `Super+W` dashboard, driven
+  by widget relevance without feeding animated state back into the layout binding
+  (stays loop-free; drag/resize gates the glide off so cells track the cursor 1:1).
+
+#### Fixed
+- **widgets** (quickshell) — the `Super+W` dashboard **showed only the clock**.
+  The tile grid sized its width from `root.width`, which is **0 until the layer
+  surface is configured**, so every tile briefly wrapped to its own row; the
+  reflow to full width then raced the `populate` fade-in and stranded every
+  *moved* tile at **opacity 0** (the clock, index 0, never moved, so it alone
+  faded in). Now keyed off `root.screen.width` (known immediately) — no reflow,
+  no race.
+- **widgets** (quickshell) — the **CPU/RAM bars reset to 0 and regrew** on every
+  2-second poll. The rows array embedded the live value, so each poll rebuilt it,
+  recreated the bar delegates, and animated their width from 0. The row array is
+  now structure-only (stable across polls) and each bar reads its value by key, so
+  the `Behavior` glides from the previous level.
+- **calendar** widget (quickshell) — larger, legible day numbers with room to
+  breathe (taller base tile), and **equal-width columns** (weekday headers are now
+  wrapped like the day cells, so Fri–Sun no longer get squeezed).
+
 ### 2026-07-06
 
 #### Changed

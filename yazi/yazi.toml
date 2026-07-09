@@ -19,9 +19,13 @@ group = "git"
 edit = [
     { run = 'nvim "$@"', block = true, for = "unix" },
 ]
+browser = [
+    { run = 'brave "$@"', orphan = true, desc = "Open in browser", for = "unix" },
+]
 
 [open]
 prepend_rules = [
+    { mime = "text/html",                                use = ["browser", "edit"] },
     { mime = "text/*",                                   use = "edit" },
     { mime = "application/{json,jsonc,toml,yaml,x-yaml,xml,javascript,x-shellscript,x-perl,x-ruby}", use = "edit" },
     { mime = "*/{javascript,typescript}",                use = "edit" },

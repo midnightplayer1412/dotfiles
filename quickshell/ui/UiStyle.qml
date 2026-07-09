@@ -15,6 +15,7 @@ Singleton {
     property alias surface: adapter.surface   // "solid" | "glass"
     property alias desktopBlur: adapter.desktopBlur  // real compositor backdrop blur behind glass
     property alias connectionLayout: adapter.connectionLayout  // "tiles" | "accordion" | "stacked"
+    property alias widgetStyle: adapter.widgetStyle  // "refined" | "minimal" | "playful" | "dense"
 
     function save() { view.writeAdapter(); }
 
@@ -31,6 +32,7 @@ Singleton {
             property string surface: "glass"
             property bool desktopBlur: true
             property string connectionLayout: "tiles"
+            property string widgetStyle: "refined"
         }
     }
 }

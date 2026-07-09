@@ -2,10 +2,12 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
 import ".."
+import "../ui" as Ui
 
 // Current weather from open-meteo (no API key). Location + units come from the
 // widget's own settings (WidgetsConfig.setting("weather", …)). Refetches on any
-// of those changing, and every 15 min.
+// of those changing, and every 15 min. Look follows the active widget style;
+// the Data-dense preset also surfaces hi/lo, humidity and wind.
 Item {
     id: w
     readonly property bool relevant: true
@@ -16,15 +18,26 @@ Item {
     readonly property string label: WidgetsConfig.setting("weather", "label")
     readonly property bool located: lat !== 0 || lon !== 0
 
+    readonly property string preset: Ui.WidgetStyle.preset
+    readonly property bool dense: Ui.WidgetStyle.dense
+
     property real temp: 0
     property int code: -1
     property bool ok: false
+    property real hi: 0
+    property real lo: 0
+    property int humidity: 0
+    property real wind: 0
+
+    readonly property string unitSuffix: units === "f" ? "°F" : "°C"
 
     function refetch() {
         if (!located) return;
         wxProc.command = ["sh", "-c",
             "curl -s 'https://api.open-meteo.com/v1/forecast?latitude=" + lat +
-            "&longitude=" + lon + "&current=temperature_2m,weather_code" +
+            "&longitude=" + lon +
+            "&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m" +
+            "&daily=temperature_2m_max,temperature_2m_min&timezone=auto" +
             (units === "f" ? "&temperature_unit=fahrenheit" : "") + "'"];
         wxProc.running = true;
     }
@@ -43,6 +56,10 @@ Item {
                     const j = JSON.parse(text);
                     w.temp = j.current.temperature_2m;
                     w.code = j.current.weather_code;
+                    w.humidity = j.current.relative_humidity_2m;
+                    w.wind = j.current.wind_speed_10m;
+                    w.hi = j.daily.temperature_2m_max[0];
+                    w.lo = j.daily.temperature_2m_min[0];
                     w.ok = true;
                 } catch (e) { w.ok = false; }
             }
@@ -59,25 +76,66 @@ Item {
         return "\u{F0596}";                                 // pour/storm
     }
 
+    // ── Compact (non-dense): centered glyph + temp, label under ──────
     ColumnLayout {
         anchors.fill: parent
         spacing: 4
-        visible: w.located && w.ok
+        visible: w.located && w.ok && !w.dense
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
             spacing: 10
-            Text { text: w.glyphFor(w.code); font.family: Theme.glyphFont; font.pixelSize: 40; color: Theme.primary }
             Text {
-                text: Math.round(w.temp) + (w.units === "f" ? "°F" : "°C")
-                color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 30; font.bold: true
+                text: w.glyphFor(w.code)
+                font.family: Theme.glyphFont
+                font.pixelSize: w.preset === "playful" ? 48 : 40
+                color: w.preset === "minimal" ? Theme.surfaceText : Theme.primary
+                opacity: w.preset === "minimal" ? 0.8 : 1
+            }
+            Text {
+                text: Math.round(w.temp) + w.unitSuffix
+                color: w.preset === "minimal" ? Theme.surfaceText : Ui.WidgetStyle.accent
+                font.family: Theme.fontFamily
+                font.pixelSize: 30
+                font.weight: Ui.WidgetStyle.titleWeight
             }
         }
         Text {
             Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter
             text: w.label || "Weather"
-            color: Theme.surfaceText; opacity: 0.7; font.family: Theme.fontFamily; font.pixelSize: 12
+            color: Theme.surfaceText; opacity: Ui.WidgetStyle.subOpacity
+            font.family: Theme.fontFamily; font.pixelSize: 12
         }
     }
+
+    // ── Dense: glyph + temp + hi/lo, then humidity / wind line ───────
+    ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: 2
+        spacing: 8
+        visible: w.located && w.ok && w.dense
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+            Text { text: w.glyphFor(w.code); font.family: Theme.glyphFont; font.pixelSize: 30; color: Theme.primary }
+            Text {
+                text: Math.round(w.temp) + w.unitSuffix
+                color: Theme.surfaceText; font.family: Theme.fontFamily; font.pixelSize: 26; font.bold: true
+            }
+            Text {
+                text: "↑" + Math.round(w.hi) + "°  ↓" + Math.round(w.lo) + "°"
+                color: Theme.surfaceText; opacity: Ui.WidgetStyle.subOpacity
+                font.family: Theme.fontFamily; font.pixelSize: 13
+                Layout.alignment: Qt.AlignVCenter
+            }
+        }
+        Text {
+            Layout.fillWidth: true
+            text: (w.label ? w.label + "  ·  " : "") + "\u{F058E} " + w.humidity + "%   \u{F059D} " + Math.round(w.wind) + " km/h"
+            color: Theme.surfaceText; opacity: Ui.WidgetStyle.subOpacity
+            font.family: Theme.fontFamily; font.pixelSize: 12
+        }
+    }
+
     Text {
         anchors.centerIn: parent
         visible: !w.located

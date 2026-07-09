@@ -1,5 +1,6 @@
 singleton UiStyle 1.0 UiStyle.qml
 singleton Surfaces 1.0 Surfaces.qml
+singleton WidgetStyle 1.0 WidgetStyle.qml
 Surface 1.0 Surface.qml
 Button 1.0 Button.qml
 IconButton 1.0 IconButton.qml

@@ -24,10 +24,27 @@ Item {
     visible: enabled && relevant
 
     // Background fills the scaled box and is drawn at full resolution (crisp).
+    // Radius/border follow the active widget style (Minimal drops the hairline).
     Ui.Surface {
         anchors.fill: parent
         level: 1
-        radius: 16
+        radius: Ui.WidgetStyle.frameRadius
+        showBorder: Ui.WidgetStyle.frameBorder
+    }
+
+    // Optional full-bleed gradient background. A widget opts in by exposing
+    // `bgGradient: true` plus `bgA`/`bgB` colors (e.g. the Playful clock). Drawn
+    // at frame level — NOT inside the scaled content — so its corner radius
+    // matches the surface exactly at any scaleFactor.
+    Rectangle {
+        anchors.fill: parent
+        visible: loader.item && loader.item.bgGradient === true
+        radius: Ui.WidgetStyle.frameRadius
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0; color: (loader.item && loader.item.bgA) ? loader.item.bgA : "transparent" }
+            GradientStop { position: 1; color: (loader.item && loader.item.bgB) ? loader.item.bgB : "transparent" }
+        }
     }
 
     // Content laid out at natural (descriptor) size, then scaled to fill — so the
@@ -42,7 +59,7 @@ Item {
         Loader {
             id: loader
             anchors.fill: parent
-            anchors.margins: 10
+            anchors.margins: Ui.WidgetStyle.framePad
             sourceComponent: frame.content
         }
     }

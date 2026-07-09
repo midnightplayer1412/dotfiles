@@ -54,8 +54,29 @@ PanelWindow {
 
         Flow {
             id: flow
-            width: Math.min(root.width - 160, 980)
+            // Key off the screen width (known immediately), NOT root.width, which
+            // is 0 until the layer surface is configured. A transient 0 width made
+            // every tile wrap to its own row, then the reflow to full width raced
+            // with the populate fade-in and stranded the moved tiles at opacity 0
+            // — so only the clock (index 0, never moved) appeared.
+            width: Math.min(root.screen.width - 160, 980)
             spacing: 20
+
+            // Tiles fade + pop in when the dashboard opens (populate) or when a
+            // widget becomes relevant while it's open (add); repositioning glides
+            // (move). Flow has no `remove` transition, so a tile going irrelevant
+            // mid-view vanishes instantly and the rest glide to fill.
+            populate: Transition {
+                NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
+                NumberAnimation { properties: "scale"; from: 0.92; to: 1; duration: 160; easing.type: Easing.OutCubic }
+            }
+            add: Transition {
+                NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
+                NumberAnimation { properties: "scale"; from: 0.92; to: 1; duration: 160; easing.type: Easing.OutCubic }
+            }
+            move: Transition {
+                NumberAnimation { properties: "x,y"; duration: 160; easing.type: Easing.OutCubic }
+            }
 
             Repeater {
                 model: root.items
