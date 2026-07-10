@@ -1,6 +1,9 @@
 singleton WidgetRegistry 1.0 WidgetRegistry.qml
 singleton WidgetsConfig 1.0 WidgetsConfig.qml
 singleton DashboardState 1.0 DashboardState.qml
+singleton LyricsConfig 1.0 LyricsConfig.qml
+singleton LyricsState 1.0 LyricsState.qml
+singleton LyricsService 1.0 LyricsService.qml
 WidgetFrame 1.0 WidgetFrame.qml
 DesktopLayer 1.0 DesktopLayer.qml
 ClockWidget 1.0 ClockWidget.qml
@@ -9,3 +12,9 @@ SysMonitorWidget 1.0 SysMonitorWidget.qml
 MediaWidget 1.0 MediaWidget.qml
 WeatherWidget 1.0 WeatherWidget.qml
 Dashboard 1.0 Dashboard.qml
+LyricsPanel 1.0 LyricsPanel.qml
+LyricsKaraoke 1.0 LyricsKaraoke.qml
+LyricsSingleLine 1.0 LyricsSingleLine.qml
+LyricsTripleLine 1.0 LyricsTripleLine.qml
+LyricsScrollColumn 1.0 LyricsScrollColumn.qml
+InstrumentalDots 1.0 InstrumentalDots.qml

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Hyprland
 import "../../ui" as Ui
 import "../../widgets" as Widgets
@@ -14,6 +15,14 @@ Item {
 
     // Which widget's inline settings panel is open (one at a time; "" = none).
     property string expandedId: ""
+
+    // Screen options for the lyrics-strip monitor picker: "Primary (auto)" plus
+    // every connected screen by name.
+    readonly property var lyricsScreens: {
+        const out = [{ key: "", label: "Primary (auto)" }];
+        for (const s of Quickshell.screens) out.push({ key: s.name, label: s.name });
+        return out;
+    }
 
     Ui.ScrollView {
         anchors.fill: parent
@@ -217,6 +226,278 @@ Item {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        // Lyrics strip — an edge-docked overlay, not a grid widget, so it gets its
+        // own card using the same gear-to-expand settings pattern as the rows above.
+        Rectangle {
+            id: lyrCard
+            Layout.fillWidth: true; Layout.topMargin: 8
+            radius: 12; color: Qt.darker(Theme.surface, 1.06)
+            border.width: 1; border.color: Theme.outline
+            implicitHeight: lyrCol.implicitHeight + 28
+            property bool expanded: false
+
+            // Small reusable field helpers below keep each row terse.
+            ColumnLayout {
+                id: lyrCol
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
+                spacing: 12
+
+                // Header: glyph + label + gear + master enable.
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    Text {
+                        text: "\u{F0387}"   // nf-md-music
+                        font.family: Theme.glyphFont; font.pixelSize: 20
+                        color: Theme.primary; Layout.alignment: Qt.AlignVCenter
+                    }
+                    ColumnLayout {
+                        Layout.fillWidth: true; spacing: 1
+                        Text {
+                            text: "Lyrics strip"; color: Theme.surfaceText
+                            font.family: Theme.fontFamily; font.pixelSize: 13; font.bold: true
+                        }
+                        Text {
+                            text: "Synced lyrics docked to a screen edge while media plays."
+                            color: Theme.outline; font.family: Theme.fontFamily; font.pixelSize: 11
+                            Layout.fillWidth: true; wrapMode: Text.WordWrap
+                        }
+                    }
+                    Ui.IconButton {
+                        Layout.alignment: Qt.AlignVCenter
+                        glyph: "\u{F0493}"   // nf-md-cog
+                        glyphSize: 19; size: 32
+                        active: lyrCard.expanded
+                        onClicked: lyrCard.expanded = !lyrCard.expanded
+                    }
+                    Ui.Toggle {
+                        Layout.alignment: Qt.AlignVCenter
+                        checked: Widgets.LyricsConfig.enabled
+                        onToggled: (v) => Widgets.LyricsConfig.set("enabled", v)
+                    }
+                }
+
+                // Expanded settings — all lyrics options, grouped.
+                ColumnLayout {
+                    visible: lyrCard.expanded && Widgets.LyricsConfig.enabled
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    // ── Placement ──────────────────────────────────
+                    Text { text: "Placement"; color: Theme.primary; Layout.topMargin: 2
+                           font.family: Theme.fontFamily; font.pixelSize: 12; font.bold: true }
+
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Text { Layout.preferredWidth: 88; text: "Position"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Repeater {
+                            model: [{ key: "top", label: "Top" }, { key: "bottom", label: "Bottom" }]
+                            delegate: Rectangle {
+                                required property var modelData
+                                readonly property bool sel: Widgets.LyricsConfig.position === modelData.key
+                                Layout.fillWidth: true; Layout.preferredHeight: 32; radius: 8
+                                color: Theme.surfaceContainer
+                                border.width: sel ? 2 : 1; border.color: sel ? Theme.primary : Theme.outline
+                                Text { anchors.centerIn: parent; text: modelData.label
+                                       color: parent.sel ? Theme.primary : Theme.surfaceText
+                                       font.family: Theme.fontFamily; font.pixelSize: 12 }
+                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: Widgets.LyricsConfig.set("position", modelData.key) }
+                            }
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        visible: Quickshell.screens.length > 1
+                        Text { Layout.preferredWidth: 88; text: "Screen"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Ui.Dropdown {
+                            Layout.fillWidth: true
+                            model: pane.lyricsScreens
+                            textRole: "label"
+                            currentIndex: Math.max(0, pane.lyricsScreens.findIndex(
+                                e => e.key === Widgets.LyricsConfig.screenName))
+                            onActivated: (i) => Widgets.LyricsConfig.set("screenName", pane.lyricsScreens[i].key)
+                        }
+                    }
+
+                    // ── Appearance ─────────────────────────────────
+                    Text { text: "Appearance"; color: Theme.primary; Layout.topMargin: 4
+                           font.family: Theme.fontFamily; font.pixelSize: 12; font.bold: true }
+
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Text { Layout.preferredWidth: 88; text: "Layout"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Repeater {
+                            model: [{ key: "single", label: "Single" }, { key: "triple", label: "Triple" }, { key: "scroll", label: "Scroll" }]
+                            delegate: Rectangle {
+                                required property var modelData
+                                readonly property bool sel: Widgets.LyricsConfig.layoutMode === modelData.key
+                                Layout.fillWidth: true; Layout.preferredHeight: 32; radius: 8
+                                color: Theme.surfaceContainer
+                                border.width: sel ? 2 : 1; border.color: sel ? Theme.primary : Theme.outline
+                                Text { anchors.centerIn: parent; text: modelData.label
+                                       color: parent.sel ? Theme.primary : Theme.surfaceText
+                                       font.family: Theme.fontFamily; font.pixelSize: 12 }
+                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: Widgets.LyricsConfig.set("layoutMode", modelData.key) }
+                            }
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Text { Layout.fillWidth: true; text: "Transparent background"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Ui.Toggle {
+                            checked: Widgets.LyricsConfig.background === "transparent"
+                            onToggled: (v) => Widgets.LyricsConfig.set("background", v ? "transparent" : "theme")
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Text { Layout.preferredWidth: 88; text: "Font size"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Ui.Slider {
+                            Layout.fillWidth: true; from: 0.8; to: 1.6; stepSize: 0.05
+                            value: Widgets.LyricsConfig.fontScale
+                            onMoved: (v) => Widgets.LyricsConfig.fontScale = Math.round(v * 20) / 20
+                            onReleased: Widgets.LyricsConfig.save()
+                        }
+                        Text { Layout.preferredWidth: 44; horizontalAlignment: Text.AlignRight
+                               text: Widgets.LyricsConfig.fontScale.toFixed(2) + "x"; color: Theme.outline
+                               font.family: Theme.fontFamily; font.pixelSize: 12 }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Text { Layout.preferredWidth: 88; text: "Strip height"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Ui.Slider {
+                            Layout.fillWidth: true; from: 0.7; to: 1.6; stepSize: 0.05
+                            value: Widgets.LyricsConfig.heightScale
+                            onMoved: (v) => Widgets.LyricsConfig.heightScale = Math.round(v * 20) / 20
+                            onReleased: Widgets.LyricsConfig.save()
+                        }
+                        Text { Layout.preferredWidth: 44; horizontalAlignment: Text.AlignRight
+                               text: Widgets.LyricsConfig.heightScale.toFixed(2) + "x"; color: Theme.outline
+                               font.family: Theme.fontFamily; font.pixelSize: 12 }
+                    }
+
+                    // ── Lyrics source ──────────────────────────────
+                    Text { text: "Lyrics source"; color: Theme.primary; Layout.topMargin: 4
+                           font.family: Theme.fontFamily; font.pixelSize: 12; font.bold: true }
+
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Text { Layout.fillWidth: true; text: "Use local .lrc files"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Ui.Toggle {
+                            checked: Widgets.LyricsConfig.useLocalFiles
+                            onToggled: (v) => Widgets.LyricsConfig.set("useLocalFiles", v)
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        visible: Widgets.LyricsConfig.useLocalFiles
+                        Text { Layout.preferredWidth: 88; text: "Lyrics folder"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Ui.TextField {
+                            id: lyrDirInput
+                            variant: "field"; fontSize: 13
+                            Layout.fillWidth: true
+                            text: Widgets.LyricsConfig.lyricsDir
+                            onAccepted: Widgets.LyricsConfig.set("lyricsDir", lyrDirInput.text)
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        ColumnLayout {
+                            Layout.fillWidth: true; spacing: 1
+                            Text { text: "Cached lyrics"; color: Theme.surfaceText
+                                   font.family: Theme.fontFamily; font.pixelSize: 13 }
+                            Text { text: "Wipe downloaded lyrics so the current track re-fetches."
+                                   color: Theme.outline; font.family: Theme.fontFamily; font.pixelSize: 11
+                                   Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                        }
+                        Ui.Button {
+                            kind: "ghost"; text: "Clear cache"; fontSize: 12
+                            onClicked: Widgets.LyricsService.clearCache()
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        ColumnLayout {
+                            Layout.fillWidth: true; spacing: 1
+                            Text { text: "Save lyrics to disk"; color: Theme.surfaceText
+                                   font.family: Theme.fontFamily; font.pixelSize: 13 }
+                            Text {
+                                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                                color: Widgets.LyricsService.saveStatus === "failed" ? Theme.error : Theme.outline
+                                font.family: Theme.fontFamily; font.pixelSize: 11
+                                text: Widgets.LyricsService.saveStatus === "saved" ? "Saved ✓"
+                                    : Widgets.LyricsService.saveStatus === "failed" ? "Save failed"
+                                    : Widgets.LyricsService.canSaveLrc ? "Write a .lrc next to the track, or into your lyrics folder."
+                                    : "Play a local track, or set a lyrics folder above, to save."
+                            }
+                        }
+                        Ui.Button {
+                            kind: "ghost"; text: "Save .lrc"; fontSize: 12
+                            enabled: Widgets.LyricsService.canSaveLrc
+                            opacity: enabled ? 1 : 0.4
+                            onClicked: Widgets.LyricsService.saveLrc()
+                        }
+                    }
+
+                    // ── Behavior ───────────────────────────────────
+                    Text { text: "Behavior"; color: Theme.primary; Layout.topMargin: 4
+                           font.family: Theme.fontFamily; font.pixelSize: 12; font.bold: true }
+
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Text { Layout.fillWidth: true; text: "Slide in/out animation"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Ui.Toggle {
+                            checked: Widgets.LyricsConfig.animate
+                            onToggled: (v) => Widgets.LyricsConfig.set("animate", v)
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Text { Layout.fillWidth: true; text: "Auto-hide when paused"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Ui.Toggle {
+                            checked: Widgets.LyricsConfig.hideWhenPaused
+                            onToggled: (v) => Widgets.LyricsConfig.set("hideWhenPaused", v)
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Text { Layout.fillWidth: true; text: "Show “No lyrics found”"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Ui.Toggle {
+                            checked: Widgets.LyricsConfig.showWhenEmpty
+                            onToggled: (v) => Widgets.LyricsConfig.set("showWhenEmpty", v)
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Text { Layout.preferredWidth: 88; text: "Sync offset"; color: Theme.surfaceText
+                               font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        Ui.Slider {
+                            Layout.fillWidth: true; from: -2000; to: 2000; stepSize: 50
+                            value: Widgets.LyricsConfig.offsetMs
+                            onMoved: (v) => Widgets.LyricsConfig.offsetMs = Math.round(v)
+                            onReleased: Widgets.LyricsConfig.save()
+                        }
+                        Text { Layout.preferredWidth: 44; horizontalAlignment: Text.AlignRight
+                               text: (Widgets.LyricsConfig.offsetMs / 1000).toFixed(2) + "s"; color: Theme.outline
+                               font.family: Theme.fontFamily; font.pixelSize: 12 }
                     }
                 }
             }

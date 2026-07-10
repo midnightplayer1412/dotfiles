@@ -76,6 +76,16 @@ ShellRoot {
         onPressed: Widgets.DashboardState.toggle(focusedScreen())
     }
 
+    GlobalShortcut {
+        name: "lyrics_toggle"
+        onPressed: Widgets.LyricsState.toggle(focusedScreen())
+    }
+
+    GlobalShortcut {
+        name: "lyrics_karaoke_toggle"
+        onPressed: Widgets.LyricsState.toggleKaraoke(focusedScreen())
+    }
+
     // Status bar on each screen
     Variants {
         model: Quickshell.screens
@@ -256,6 +266,20 @@ ShellRoot {
         model: Widgets.DashboardState.visible && Widgets.DashboardState.targetScreen
             ? [Widgets.DashboardState.targetScreen] : []
         Widgets.Dashboard { required property var modelData; screen: modelData }
+    }
+
+    // Synced lyrics strip — one window per screen; each self-gates to the primary
+    // screen (v1) and shows only while a player with lyrics is active.
+    Variants {
+        model: Quickshell.screens
+        Widgets.LyricsPanel { required property var modelData; screen: modelData }
+    }
+
+    // Full-screen karaoke overlay — only on the target screen while toggled on.
+    Variants {
+        model: Widgets.LyricsState.karaoke && Widgets.LyricsState.targetScreen
+            ? [Widgets.LyricsState.targetScreen] : []
+        Widgets.LyricsKaraoke { required property var modelData; screen: modelData }
     }
 
     // Wake WallpaperService at startup so state.json is loaded and the

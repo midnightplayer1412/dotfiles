@@ -36,3 +36,6 @@ gtk-3.0/gtk.css
 gtk-4.0/gtk.css
 gtk-3.0/bookmarks
 docs/superpowers/
+
+# Lyrics strip runtime settings
+quickshell/lyrics-config.json

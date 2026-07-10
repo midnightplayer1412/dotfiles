@@ -6,6 +6,42 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-10
+
+#### Added
+- **lyrics strip** (quickshell) — a new edge-docked **synced-lyrics** overlay that
+  auto-shows while media plays (`Super+Y` toggles). A `PanelWindow` on the **top or
+  bottom** edge that follows the shared Solid/Glass surface theme, is
+  **click-through** (empty input `mask` — pointer events pass through), dodges the
+  bar via `BarConfig.clearance`, floats over the desktop (`ExclusionMode.Ignore`,
+  never shrinks the workspace), and rounds only the corners facing into the screen.
+  - **Three layouts**, chosen live in Settings: **Single** (one active line),
+    **Triple** (prev / current / next), and **Scroll** (auto-centering column).
+    Plain (untimed) lyrics fall back to the scroll view and show an **"unsynced"**
+    badge so the missing karaoke highlight reads as a data limit, not a bug.
+  - **Resolution** in one shell pass, highest priority first: a local **`.lrc`
+    sidecar** next to the track, an `Artist - Title.lrc` in a configured **lyrics
+    folder**, the **LRCLIB disk cache**, then **LRCLIB** `/api/get` → `/api/search`
+    (prefers a real timed version over plain). Hits cache; misses write a
+    `notfound` marker with a **7-day self-heal**, so a song stays offline after its
+    first fetch. Local paths pass as positional args (no filename escaping). No API
+    key.
+  - **Instrumental** stretches (intro / breaks / note-only lines) show pulsing
+    **dots** instead of a frozen line, in both the strip and the karaoke view.
+  - **Full-screen karaoke** (`Super+Shift+Y`) — a dimmed, blurred overlay where the
+    whole lyric sheet is one column that **glides upward line by line** and the
+    active line **swells** into the center (accent, bold), neighbours fading by
+    distance; click-outside / Esc / the keybind close it.
+  - **Settings → Widgets → "Lyrics strip"** (gear to expand, matching the other
+    widgets): placement (position + per-monitor screen), appearance (layout,
+    transparent background toggle, font-size and strip-height sliders), source
+    (local-file toggle + folder), a **Clear cache** button and a **Save `.lrc`**
+    button (persists the fetched lyrics next to the track or into the folder), and
+    behavior (slide animation, auto-hide when paused, show "No lyrics found", sync
+    offset). Persists to `~/.config/quickshell/lyrics-config.json` (git-ignored
+    runtime state).
+  - Cheatsheet (`Super+/`) lists both lyrics binds under **Media**.
+
 ### 2026-07-09
 
 #### Added

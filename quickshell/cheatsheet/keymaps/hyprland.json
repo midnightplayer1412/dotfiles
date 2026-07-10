@@ -63,6 +63,8 @@
     { "key": "S", "mods": ["SUPER", "SHIFT"], "category": "Screenshot", "desc": "Region" },
     { "key": "PRINT", "mods": [], "category": "Screenshot", "desc": "Full screen" },
     { "key": "PRINT", "mods": ["SUPER", "SHIFT"], "category": "Screenshot", "desc": "Active window" },
-    { "key": "C", "mods": ["SUPER", "SHIFT"], "category": "Apps", "desc": "Color picker" }
+    { "key": "C", "mods": ["SUPER", "SHIFT"], "category": "Apps", "desc": "Color picker" },
+    { "key": "Y", "mods": ["SUPER"], "category": "Media", "desc": "Lyrics strip" },
+    { "key": "Y", "mods": ["SUPER", "SHIFT"], "category": "Media", "desc": "Full-screen karaoke lyrics" }
   ]
 }

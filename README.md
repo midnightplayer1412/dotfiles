@@ -69,6 +69,8 @@ Hyprland compositor config split into modular files:
 | Super + / | Keybinding cheatsheet |
 | Super + N | Notification center |
 | Super + W | Widget dashboard |
+| Super + Y | Lyrics strip (toggle) |
+| Super + Shift + Y | Full-screen karaoke lyrics |
 | Super + Backspace | Settings panel |
 | Super + Escape | Lock screen (Quickshell) |
 | Super + Shift + Escape | Lock screen (hyprlock fallback) |
@@ -121,6 +123,23 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   has per-widget Desktop/Dashboard toggles, a drag-to-reorder dashboard order, a
   **Desktop placement** card (snap toggle + grid size), a weather location field,
   and restore-to-default; persists to `~/.config/quickshell/widgets-config.json`.
+- **Lyrics strip** — An edge-docked **synced-lyrics** overlay that appears while
+  media plays. Dock it to the **top or bottom** edge; it follows the shared
+  Solid/Glass surface theme (or goes fully **transparent** — just outlined text),
+  is **click-through** (pointer passes straight through), dodges the bar, and
+  rounds only the corners facing into the screen. Three layouts — **Single**,
+  **Triple**, and **Scroll** — chosen live; plain (untimed) lyrics fall back to
+  the scroll view with an **"unsynced"** badge, and instrumental passages show
+  pulsing dots. Lyrics resolve from **local `.lrc`** (a sidecar next to the track,
+  or an `Artist - Title.lrc` in a configured folder) first, then **LRCLIB**
+  online with a disk cache — so a song stays offline after its first fetch (misses
+  cache too, with a 7-day self-heal). `Super + Y` toggles the strip; `Super +
+  Shift + Y` opens a **full-screen karaoke** overlay where the sheet glides up
+  line by line and the active line swells into the center. **Settings → Widgets →
+  Lyrics strip** (gear to expand) sets placement/screen, layout, transparent
+  background, font size & strip height, local-file source + folder, **Clear
+  cache** / **Save `.lrc`**, and behavior (slide animation, auto-hide when paused,
+  sync offset). Persists to `~/.config/quickshell/lyrics-config.json`.
 - **HUD** — Right-edge panel, volume and brightness sliders (auto-hide)
 - **Connection Hub** — Top-right drawer with Wi-Fi / Bluetooth / Audio / VPN
   tabs. The **Audio tab** is a full mixer: a master slider, output-device
