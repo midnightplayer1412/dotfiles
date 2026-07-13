@@ -47,6 +47,56 @@ PanelWindow {
         return UsageStore.topIds(LauncherConfig.maxRecents).map(id => byId[id]).filter(Boolean);
     }
 
+    // ── Layout preset resolution ──────────────────────────────────────
+    // The selected layout drives the inner surface's size/anchors and whether
+    // results render as the row list or the icon grid. All four share the same
+    // search engine (filteredModel), inventory, and keyboard handling.
+    readonly property string layout: LauncherConfig.layout
+    readonly property bool gridMode: layout === "grid"
+    readonly property int edgeGap: Theme.launcherSidebarGap
+
+    // Grid can only tile app results; prefix modes (/ ! =) and the no-match web
+    // fallback drop back to the row list for that query.
+    readonly property bool prefixQuery: searchInput.text.startsWith("/")
+                                        || searchInput.text.startsWith("!")
+                                        || searchInput.text.startsWith("=")
+    readonly property bool showGrid: gridMode && !prefixQuery && !filteredModel.noMatches
+
+    readonly property int gridIconPx: LauncherConfig.gridIconSize === "small" ? Theme.launcherGridIconSmall
+                                    : LauncherConfig.gridIconSize === "large" ? Theme.launcherGridIconLarge
+                                    : Theme.launcherGridIconMedium
+
+    readonly property real surfaceWidth: {
+        switch (layout) {
+        case "spotlight":
+            return LauncherConfig.spotlightSize === "small" ? Theme.launcherSpotlightWidthSmall
+                 : LauncherConfig.spotlightSize === "large" ? Theme.launcherSpotlightWidthLarge
+                 : Theme.launcherSpotlightWidthMedium;
+        case "sidebar":
+            return LauncherConfig.sidebarWidth === "narrow" ? Theme.launcherSidebarWidthNarrow
+                 : LauncherConfig.sidebarWidth === "wide" ? Theme.launcherSidebarWidthWide
+                 : Theme.launcherSidebarWidthMedium;
+        case "grid":
+            return root.screen ? root.screen.width : 0;
+        default:
+            return Theme.launcherWidth;
+        }
+    }
+    readonly property real surfaceHeight: {
+        switch (layout) {
+        case "spotlight":
+            return LauncherConfig.spotlightSize === "small" ? Theme.launcherSpotlightHeightSmall
+                 : LauncherConfig.spotlightSize === "large" ? Theme.launcherSpotlightHeightLarge
+                 : Theme.launcherSpotlightHeightMedium;
+        case "sidebar":
+            return (root.screen ? root.screen.height : 0) - root.edgeGap * 2;
+        case "grid":
+            return root.screen ? root.screen.height : 0;
+        default:
+            return Theme.launcherHeight;
+        }
+    }
+
     // Wrap a DesktopEntry as a unified result row.
     function wrapApp(app) {
         return {
@@ -64,6 +114,7 @@ PanelWindow {
         let idx = 0;
         while (idx < vals.length && vals[idx] && vals[idx].isHeader) idx++;
         resultsList.currentIndex = idx < vals.length ? idx : 0;
+        if (appGrid) appGrid.currentIndex = 0;   // guarded: may fire before appGrid is built
     }
     function moveSel(dir) {
         const vals = filteredModel.values;
@@ -89,16 +140,27 @@ PanelWindow {
     Ui.Surface {
         id: content
         level: 0
-        radius: Theme.launcherRadius
+        radius: root.gridMode ? 0 : Theme.launcherRadius
 
-        width: Theme.launcherWidth
-        height: Theme.launcherHeight
-        anchors.horizontalCenter: parent.horizontalCenter
-        // Position is configurable (Settings → Launcher): pinned bottom, or
-        // centered like a floating window. Unused anchor is left undefined.
-        anchors.bottom: LauncherConfig.position === "center" ? undefined : parent.bottom
+        // Size comes from the active layout preset; grid fills the whole screen
+        // (its blurred backdrop is the layer surface itself — no separate dim).
+        width: root.surfaceWidth
+        height: root.surfaceHeight
+
+        // Anchors per layout. Bar: bottom or center (Position). Spotlight & grid:
+        // dead-centered. Sidebar: pinned to an edge, vertically centered, full
+        // height. Unused anchors are left undefined so they don't conflict.
+        anchors.horizontalCenter: (root.gridMode || root.layout === "bar" || root.layout === "spotlight")
+                                  ? parent.horizontalCenter : undefined
+        anchors.verticalCenter: (root.gridMode || root.layout === "spotlight" || root.layout === "sidebar"
+                                 || (root.layout === "bar" && LauncherConfig.position === "center"))
+                                ? parent.verticalCenter : undefined
+        anchors.bottom: (root.layout === "bar" && LauncherConfig.position !== "center") ? parent.bottom : undefined
         anchors.bottomMargin: Theme.launcherMargin
-        anchors.verticalCenter: LauncherConfig.position === "center" ? parent.verticalCenter : undefined
+        anchors.left: (root.layout === "sidebar" && LauncherConfig.sidebarEdge === "left") ? parent.left : undefined
+        anchors.right: (root.layout === "sidebar" && LauncherConfig.sidebarEdge === "right") ? parent.right : undefined
+        anchors.leftMargin: root.edgeGap
+        anchors.rightMargin: root.edgeGap
         opacity: 0
 
         Component.onCompleted: entryAnim.start()
@@ -120,13 +182,16 @@ PanelWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: Theme.launcherMargin
-            spacing: 8
+            anchors.margins: root.gridMode ? 48 : Theme.launcherMargin
+            anchors.topMargin: root.gridMode ? 56 : Theme.launcherMargin
+            spacing: root.gridMode ? 20 : 8
 
-            // Search bar
+            // Search bar (capped + centered in the full-screen grid layout)
             Ui.Surface {
                 level: 1
                 Layout.fillWidth: true
+                Layout.maximumWidth: root.gridMode ? 640 : 100000
+                Layout.alignment: Qt.AlignHCenter
                 Layout.preferredHeight: Theme.launcherSearchHeight
                 // Concentric with the panel: inner radius = panel radius − the
                 // gap to it (launcherMargin), so the search-bar corner runs
@@ -174,8 +239,25 @@ PanelWindow {
 
                         Keys.priority: Keys.BeforeItem
                         Keys.onPressed: event => {
+                            const ctrl = event.modifiers & Qt.ControlModifier;
+
+                            // 2-D navigation when the icon grid is showing. Left/Right
+                            // are only captured here so they stay text-cursor keys in
+                            // the list layouts.
+                            if (root.showGrid) {
+                                if (event.key === Qt.Key_Down || (event.key === Qt.Key_J && ctrl)) {
+                                    appGrid.move(1, 0); event.accepted = true; return;
+                                } else if (event.key === Qt.Key_Up || (event.key === Qt.Key_K && ctrl)) {
+                                    appGrid.move(-1, 0); event.accepted = true; return;
+                                } else if (event.key === Qt.Key_Right || (event.key === Qt.Key_L && ctrl)) {
+                                    appGrid.move(0, 1); event.accepted = true; return;
+                                } else if (event.key === Qt.Key_Left || (event.key === Qt.Key_H && ctrl)) {
+                                    appGrid.move(0, -1); event.accepted = true; return;
+                                }
+                            }
+
                             if (event.key === Qt.Key_Down
-                                    || (event.key === Qt.Key_J && (event.modifiers & Qt.ControlModifier))) {
+                                    || (event.key === Qt.Key_J && ctrl)) {
                                 root.moveSel(1);
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Tab) {
@@ -188,12 +270,12 @@ PanelWindow {
                                 }
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Up
-                                    || (event.key === Qt.Key_K && (event.modifiers & Qt.ControlModifier))) {
+                                    || (event.key === Qt.Key_K && ctrl)) {
                                 root.moveSel(-1);
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 const vals = filteredModel.values;
-                                const idx = resultsList.currentIndex;
+                                const idx = root.showGrid ? appGrid.currentIndex : resultsList.currentIndex;
                                 if (idx >= 0 && idx < vals.length && typeof vals[idx].run === "function") {
                                     vals[idx].run();
                                     LauncherState.close();
@@ -215,6 +297,7 @@ PanelWindow {
                 Layout.fillHeight: false          // take content height, don't fight the ListView
                 spacing: 4
                 visible: searchInput.text === ""
+                         && !root.gridMode
                          && LauncherConfig.recentsLayout === "chips"
                          && root.recentApps.length > 0
 
@@ -288,10 +371,11 @@ PanelWindow {
                 font.pixelSize: 12
             }
 
-            // Results list
+            // Results list (row layouts, and grid's prefix/no-match fallback)
             ListView {
                 id: resultsList
 
+                visible: !root.showGrid
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
@@ -342,6 +426,11 @@ PanelWindow {
                         if (!query) {
                             filteredModel.noMatches = false;
                             const all = [...apps].sort((a, b) => a.name.localeCompare(b.name));
+
+                            // Grid layout: flat all-apps list, no headers/recents sections.
+                            if (root.gridMode) {
+                                return all.map(a => root.wrapApp(a));
+                            }
 
                             // Chips layout: recents shown in the strip above; list is all apps.
                             if (LauncherConfig.recentsLayout === "chips") {
@@ -424,6 +513,27 @@ PanelWindow {
                 }
             }
 
+            // Results grid (grid layout, plain app queries — shares filteredModel)
+            LauncherGrid {
+                id: appGrid
+
+                visible: root.showGrid
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                entries: filteredModel.values
+                columns: LauncherConfig.gridColumns
+                iconSize: root.gridIconPx
+                showLabels: LauncherConfig.gridLabels
+
+                onLaunch: (i) => {
+                    const vals = filteredModel.values;
+                    if (i >= 0 && i < vals.length && typeof vals[i].run === "function") {
+                        vals[i].run();
+                        LauncherState.close();
+                    }
+                }
+            }
+
             // ── Hint footer: available modes + key actions ──────────────
             // Always-on discoverability strip for the prefix modes (which are
             // otherwise invisible until you know them) and the key actions. The
@@ -433,6 +543,7 @@ PanelWindow {
             // total clearance = launcherMargin (container) + this = launcherRadius,
             // keeping the text inside the straight-edge region, not the corner arc.
             ColumnLayout {
+                visible: !root.gridMode
                 Layout.fillWidth: true
                 Layout.bottomMargin: Theme.launcherRadius - Theme.launcherMargin
                 spacing: 6

@@ -93,12 +93,18 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   (CPU / RAM), **Media** (MPRIS transport with a scrolling title), and **App
   Name** (focused window). Persists to `~/.config/quickshell/bar-config.json`.
 - **Launcher** — Search panel (`Super + Space`) with **fuzzy** app search ranked
-  by **frecency** (your most-used float up). Empty query shows a **Recent**
-  section/strip then all apps. Modes: `/` commands, `!` shell, `=` calculator
-  (Enter copies the result), and a **web-search** fallback when nothing matches.
-  Configurable from **Settings → Launcher**: position (bottom or centered),
-  recents layout (list rows or chip strip), and web-search engine (Google /
-  DuckDuckGo / Bing / Brave). Persists to `~/.config/quickshell/launcher-*.json`.
+  by **frecency** (your most-used float up). Modes: `/` commands, `!` shell, `=`
+  calculator (Enter copies the result), and a **web-search** fallback when nothing
+  matches. **Four selectable layouts**, chosen live in Settings → **Launcher**:
+  **Compact bar** (small, bottom or centered), **Spotlight** (centered card, S/M/L
+  size), **Edge sidebar** (full-height, left/right, narrow/medium/wide), and **App
+  grid** — a full-screen macOS-Launchpad-style grid that shows every app paged
+  (fixed 5 rows × 5–8 columns) with **swipe / wheel / arrow-or-`Ctrl+HJKL`** paging
+  and page dots. The three list layouts share a **Recent** section/strip on the
+  empty query; the grid shows all apps. Per-layout options (position, size, edge,
+  columns, icon size, labels), plus shared recents count and web-search engine
+  (Google / DuckDuckGo / Bing / Brave). Persists to
+  `~/.config/quickshell/launcher-*.json`.
 - **Overview / Window Switcher** — Full-screen window overview (`Super + Tab`)
   with **five swappable layouts**, chosen live in Settings → **Window Switcher**:
   **Grid** (workspace mini-monitors; configurable size + a 9-preset position),
@@ -180,8 +186,9 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   live-preview editor that tunes the
   lockscreen config and persists it (lazy-loaded wallpaper grid). **Connection
   Hub** lets you drag to reorder the hub tabs and toggle each on/off, with a live
-  glyph preview. **Launcher** sets the launcher position, recents layout, and
-  web-search engine. **Window Switcher** picks the overview layout (with a mini
+  glyph preview. **Launcher** picks the launcher layout (compact bar / spotlight /
+  edge sidebar / app grid, with a mockup of each) and its per-layout options,
+  recents layout, and web-search engine. **Window Switcher** picks the overview layout (with a mini
   wireframe of each) and its per-layout options — Grid size/position, Side panel
   edge and drag auto-scroll speed. **About** (pinned to the bottom of the sidebar) shows a
   read-only system/hardware snapshot — OS, kernel, host, compositor, uptime,
