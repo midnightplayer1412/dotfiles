@@ -5,12 +5,14 @@ import "../../launcher" as Launcher
 import "../../ui" as Ui
 import "../.."
 
-// Launcher settings. Currently: pick how the empty-query "Recent" apps render —
-// vertical list rows or a horizontal chip strip. Two selectable cards with small
-// static mockups, mirroring the Appearance tab's card pattern. The choice
-// persists to LauncherConfig and applies to the launcher live.
+// Launcher settings. Top: pick the overall layout (compact bar / spotlight / sidebar /
+// app grid) from mockup cards. Below: controls specific to the chosen layout, then the
+// shared controls (recents, max recents, web engine). All choices persist to
+// LauncherConfig and apply to the launcher live.
 Item {
     id: pane
+
+    readonly property string layout: Launcher.LauncherConfig.layout
 
     Ui.ScrollView {
         anchors.fill: parent
@@ -25,34 +27,38 @@ Item {
             }
             Text {
                 Layout.fillWidth: true
-                text: "Choose how recent apps appear when the search box is empty."
+                text: "Choose the launcher's layout, then tune it."
                 color: Theme.outline
                 font.family: Theme.fontFamily
                 font.pixelSize: 12
                 wrapMode: Text.WordWrap
             }
 
-            // ── Position ──────────────────────────────────────────────
+            // ── Layout ────────────────────────────────────────────────
             Text {
-                text: "Position"
+                text: "Layout"
                 color: Theme.primary
                 font.family: Theme.fontFamily
                 font.pixelSize: 14
                 font.bold: true
                 Layout.topMargin: 6
             }
-            RowLayout {
+            GridLayout {
                 Layout.fillWidth: true
-                spacing: 12
+                columns: 2
+                rowSpacing: 12
+                columnSpacing: 12
                 Repeater {
                     model: [
-                        { key: "bottom", label: "Bottom" },
-                        { key: "center", label: "Center" }
+                        { key: "bar",       label: "Compact bar" },
+                        { key: "spotlight", label: "Spotlight" },
+                        { key: "sidebar",   label: "Edge sidebar" },
+                        { key: "grid",      label: "App grid" }
                     ]
                     delegate: Rectangle {
-                        id: posCard
+                        id: layCard
                         required property var modelData
-                        readonly property bool selected: Launcher.LauncherConfig.position === modelData.key
+                        readonly property bool selected: pane.layout === modelData.key
                         Layout.fillWidth: true
                         Layout.preferredHeight: 130
                         radius: 10
@@ -67,12 +73,15 @@ Item {
                             Loader {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                                sourceComponent: posCard.modelData.key === "center" ? mockPosCenter : mockPosBottom
+                                sourceComponent: layCard.modelData.key === "bar" ? mockLayBar
+                                               : layCard.modelData.key === "spotlight" ? mockLaySpotlight
+                                               : layCard.modelData.key === "sidebar" ? mockLaySidebar
+                                               : mockLayGrid
                             }
                             Text {
                                 Layout.alignment: Qt.AlignHCenter
-                                text: posCard.modelData.label
-                                color: posCard.selected ? Theme.primary : Theme.surfaceText
+                                text: layCard.modelData.label
+                                color: layCard.selected ? Theme.primary : Theme.surfaceText
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 12
                             }
@@ -81,7 +90,7 @@ Item {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                Launcher.LauncherConfig.position = posCard.modelData.key;
+                                Launcher.LauncherConfig.layout = layCard.modelData.key;
                                 Launcher.LauncherConfig.save();
                             }
                         }
@@ -89,8 +98,66 @@ Item {
                 }
             }
 
-            // ── Recent apps layout ────────────────────────────────────
+            // ── Bar: position ─────────────────────────────────────────
+            SegChoice {
+                visible: pane.layout === "bar"
+                title: "Position"
+                current: Launcher.LauncherConfig.position
+                options: [ { key: "bottom", label: "Bottom" }, { key: "center", label: "Center" } ]
+                onPicked: (k) => { Launcher.LauncherConfig.position = k; Launcher.LauncherConfig.save(); }
+            }
+
+            // ── Spotlight: size ───────────────────────────────────────
+            SegChoice {
+                visible: pane.layout === "spotlight"
+                title: "Size"
+                current: Launcher.LauncherConfig.spotlightSize
+                options: [ { key: "small", label: "Small" }, { key: "medium", label: "Medium" }, { key: "large", label: "Large" } ]
+                onPicked: (k) => { Launcher.LauncherConfig.spotlightSize = k; Launcher.LauncherConfig.save(); }
+            }
+
+            // ── Sidebar: edge + width ─────────────────────────────────
+            SegChoice {
+                visible: pane.layout === "sidebar"
+                title: "Edge"
+                current: Launcher.LauncherConfig.sidebarEdge
+                options: [ { key: "left", label: "Left" }, { key: "right", label: "Right" } ]
+                onPicked: (k) => { Launcher.LauncherConfig.sidebarEdge = k; Launcher.LauncherConfig.save(); }
+            }
+            SegChoice {
+                visible: pane.layout === "sidebar"
+                title: "Width"
+                current: Launcher.LauncherConfig.sidebarWidth
+                options: [ { key: "narrow", label: "Narrow" }, { key: "medium", label: "Medium" }, { key: "wide", label: "Wide" } ]
+                onPicked: (k) => { Launcher.LauncherConfig.sidebarWidth = k; Launcher.LauncherConfig.save(); }
+            }
+
+            // ── Grid: columns + icon size + labels ────────────────────
+            SegChoice {
+                visible: pane.layout === "grid"
+                title: "Columns"
+                current: Launcher.LauncherConfig.gridColumns
+                options: [ { key: 5, label: "5" }, { key: 6, label: "6" }, { key: 7, label: "7" }, { key: 8, label: "8" } ]
+                onPicked: (k) => { Launcher.LauncherConfig.gridColumns = k; Launcher.LauncherConfig.save(); }
+            }
+            SegChoice {
+                visible: pane.layout === "grid"
+                title: "Icon size"
+                current: Launcher.LauncherConfig.gridIconSize
+                options: [ { key: "small", label: "Small" }, { key: "medium", label: "Medium" }, { key: "large", label: "Large" } ]
+                onPicked: (k) => { Launcher.LauncherConfig.gridIconSize = k; Launcher.LauncherConfig.save(); }
+            }
+            SegChoice {
+                visible: pane.layout === "grid"
+                title: "Labels"
+                current: Launcher.LauncherConfig.gridLabels ? "on" : "off"
+                options: [ { key: "on", label: "Show" }, { key: "off", label: "Hide" } ]
+                onPicked: (k) => { Launcher.LauncherConfig.gridLabels = (k === "on"); Launcher.LauncherConfig.save(); }
+            }
+
+            // ── Recent apps layout (list layouts only) ────────────────
             Text {
+                visible: pane.layout !== "grid"
                 text: "Recent apps layout"
                 color: Theme.primary
                 font.family: Theme.fontFamily
@@ -98,8 +165,8 @@ Item {
                 font.bold: true
                 Layout.topMargin: 10
             }
-
             RowLayout {
+                visible: pane.layout !== "grid"
                 Layout.fillWidth: true
                 spacing: 12
                 Repeater {
@@ -160,7 +227,9 @@ Item {
             }
             Text {
                 Layout.fillWidth: true
-                text: "How many recent apps appear when the search box is empty."
+                text: pane.layout === "grid"
+                      ? "Used for search ranking (grid shows all apps on open)."
+                      : "How many recent apps appear when the search box is empty."
                 color: Theme.outline
                 font.family: Theme.fontFamily
                 font.pixelSize: 12
@@ -241,6 +310,54 @@ Item {
             Item { Layout.fillHeight: true }
     }
 
+    // ── Reusable segmented choice: a labelled row of equal-width pills ──
+    component SegChoice: RowLayout {
+        id: seg
+        property string title
+        property var options            // [{ key, label }]
+        property var current            // matches option.key (string or int)
+        signal picked(var key)
+
+        Layout.fillWidth: true
+        spacing: 10
+
+        Text {
+            text: seg.title
+            color: Theme.surfaceText
+            font.family: Theme.fontFamily
+            font.pixelSize: 13
+            Layout.preferredWidth: 78
+        }
+        Repeater {
+            model: seg.options
+            delegate: Rectangle {
+                id: pill
+                required property var modelData
+                readonly property bool sel: seg.current === modelData.key
+                Layout.fillWidth: true
+                Layout.preferredHeight: 34
+                radius: 8
+                color: sel ? Theme.primaryContainer : Theme.surfaceContainer
+                border.width: sel ? 2 : 1
+                border.color: sel ? Theme.primary : Theme.outline
+
+                Text {
+                    anchors.centerIn: parent
+                    text: pill.modelData.label
+                    color: pill.sel ? Theme.primary : Theme.surfaceText
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 12
+                    font.bold: pill.sel
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: seg.picked(pill.modelData.key)
+                }
+            }
+        }
+    }
+
     // ── Static layout mockups shown inside the cards ──────────────────
     component MockLabel: Rectangle {
         Layout.preferredHeight: 6
@@ -254,8 +371,6 @@ Item {
         radius: 4
         color: Theme.surface
     }
-
-    // Position mockups: a screen frame with the launcher box placed bottom/center.
     component MockScreen: Rectangle {
         radius: 6
         color: Theme.surface
@@ -263,27 +378,51 @@ Item {
         border.width: 1
     }
 
+    // Layout mockups: a screen frame with the launcher shape in place.
     Component {
-        id: mockPosBottom
+        id: mockLayBar
         MockScreen {
             Rectangle {
-                width: parent.width * 0.6; height: 12; radius: 3; color: Theme.primary
+                width: parent.width * 0.5; height: parent.height * 0.32; radius: 3; color: Theme.primary
                 anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: 8
+                anchors.bottom: parent.bottom; anchors.bottomMargin: 6
             }
         }
     }
     Component {
-        id: mockPosCenter
+        id: mockLaySpotlight
         MockScreen {
             Rectangle {
-                width: parent.width * 0.6; height: 12; radius: 3; color: Theme.primary
+                width: parent.width * 0.55; height: parent.height * 0.42; radius: 3; color: Theme.primary
                 anchors.centerIn: parent
             }
         }
     }
+    Component {
+        id: mockLaySidebar
+        MockScreen {
+            Rectangle {
+                width: parent.width * 0.26; height: parent.height * 0.82; radius: 3; color: Theme.primary
+                anchors.left: parent.left; anchors.leftMargin: 6
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+    Component {
+        id: mockLayGrid
+        MockScreen {
+            Grid {
+                anchors.centerIn: parent
+                columns: 4; rowSpacing: 5; columnSpacing: 5
+                Repeater {
+                    model: 12
+                    delegate: Rectangle { width: 9; height: 9; radius: 2; color: Theme.primary }
+                }
+            }
+        }
+    }
 
+    // Recents-layout mockups.
     Component {
         id: mockRows
         ColumnLayout {
@@ -302,7 +441,6 @@ Item {
             MockRow {}
         }
     }
-
     Component {
         id: mockChips
         ColumnLayout {

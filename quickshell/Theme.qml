@@ -45,6 +45,21 @@ Singleton {
     readonly property int launcherHoverHeight: 12
     readonly property int launcherHoverWidth: 700
 
+    // Launcher layout presets (named sizes resolved in Launcher.qml)
+    readonly property int launcherSpotlightWidthSmall: 600
+    readonly property int launcherSpotlightHeightSmall: 440
+    readonly property int launcherSpotlightWidthMedium: 720
+    readonly property int launcherSpotlightHeightMedium: 520
+    readonly property int launcherSpotlightWidthLarge: 860
+    readonly property int launcherSpotlightHeightLarge: 620
+    readonly property int launcherSidebarWidthNarrow: 360
+    readonly property int launcherSidebarWidthMedium: 420
+    readonly property int launcherSidebarWidthWide: 500
+    readonly property int launcherSidebarGap: 12
+    readonly property int launcherGridIconSmall: 56
+    readonly property int launcherGridIconMedium: 72
+    readonly property int launcherGridIconLarge: 92
+
     // HUD geometry
     readonly property int hudWidth: 300
     readonly property int hudHeight: 50

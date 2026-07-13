@@ -6,6 +6,31 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-13
+
+#### Added
+- **launcher layouts** (quickshell) — the launcher grew from one fixed bottom-center
+  card into **four selectable layouts**, chosen live in **Settings → Launcher** (a
+  card picker with a mockup of each). One `Launcher.qml` still owns the shared search
+  engine, app inventory, and keyboard handling; the selected layout only drives the
+  inner surface's size/anchors and whether results render as the row list or the new
+  icon grid.
+  - **Compact bar** — the original small card, bottom or centered.
+  - **Spotlight** — a centered card, **Small / Medium / Large**.
+  - **Edge sidebar** — a full-height column pinned **left or right**, **narrow /
+    medium / wide**.
+  - **App grid** — a full-screen, blurred **macOS-Launchpad-style** grid of all apps,
+    **paged** (fixed **5 rows** × **5–8 columns**); overflow spills onto further pages
+    you move between by **drag-swipe, mouse wheel, page dots, or `Ctrl+H/J/K/L`** (arrow
+    keys too where the input field doesn't eat them). Tiles align top-left so a short
+    page/filtered result doesn't float in the middle. Grid falls back to the row list
+    for `/` `!` `=` and web-search results (which can't be tiled). Configurable
+    **columns**, **icon size**, and **labels** on/off.
+  - Per-layout controls appear contextually; shared controls (recents layout + count,
+    web-search engine) stay. New keys persist to
+    `~/.config/quickshell/launcher-config.json` with backward-compatible defaults
+    (existing configs keep the compact bar).
+
 ### 2026-07-10
 
 #### Added
