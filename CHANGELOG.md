@@ -6,6 +6,18 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-14
+
+#### Fixed
+- **Thunar closing during wallpaper auto-cycle** — `apply-theme.sh` ended with
+  `thunar -q`, meant to make the *next* Thunar window pick up the freshly-generated
+  GTK palette (GTK reads `gtk.css` only at startup). But `-q` quits the whole Thunar
+  daemon, closing **every open window** — and with wallpaper auto-cycle on
+  (`intervalSeconds: 60`) this fired ~once a minute, so an open Thunar window
+  vanished periodically and read as a crash (no coredumps, no OOM — it was being
+  quit). Removed the `thunar -q` block; theme/wallpaper changes no longer touch
+  Thunar. Tradeoff: an already-open window keeps its old colors until reopened.
+
 ### 2026-07-13
 
 #### Added
