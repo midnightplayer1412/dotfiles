@@ -46,9 +46,8 @@ pkill -SIGUSR1 -x kitty 2>/dev/null || true
 # keyboard hiccup never fails the theme apply.
 "$HOME/.config/hypr/scripts/apply-keyboard.sh" || true
 
-# GTK apps read gtk.css only at startup, and Thunar daemonizes — quit the daemon
-# so the next window picks up the freshly-generated palette. No-ops if Thunar
-# isn't installed or isn't running.
-if command -v thunar >/dev/null && pgrep -x thunar >/dev/null; then
-  thunar -q 2>/dev/null || true
-fi
+# NOTE: We deliberately do NOT quit the Thunar daemon here. GTK reads gtk.css
+# only at startup, so a running Thunar window keeps its old palette until it is
+# reopened — but quitting the daemon closed every open window (once per wallpaper
+# auto-cycle tick), which read as Thunar "crashing" after a period of time.
+# Leaving windows alive is the better tradeoff; reopen Thunar to pick up new colors.
