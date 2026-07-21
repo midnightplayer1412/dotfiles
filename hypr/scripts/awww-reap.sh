@@ -34,7 +34,7 @@ total=0
 declare -a rows=()
 while IFS= read -r f; do
     [[ -f "$f" ]] || continue
-    sz=$(stat -c %s "$f")
+    sz=$(stat -c %s "$f" 2>/dev/null) || continue
     total=$((total + sz))
     base="$(basename "$f")"
     rows+=("$(awww_journal_age "$base")	$sz	$f")
@@ -57,5 +57,11 @@ done < <(printf '%s\n' "${rows[@]}" | sort -t$'\t' -k1,1n -k2,2nr)
 printf 'awww-reap: removed %d entries, freed %d bytes, %d protected, now %d (cap %d)\n' \
     "$removed" "$freed" "$skipped" "$total" "$cap" >&2
 
-(( total > cap )) && printf 'awww-reap: WARNING still over cap — protected entries exceed it\n' >&2
+if (( total > cap )); then
+    if (( skipped > 0 )); then
+        printf 'awww-reap: WARNING still over cap — protected entries exceed it\n' >&2
+    else
+        printf 'awww-reap: WARNING still over cap — no protected entries; deletions may have failed\n' >&2
+    fi
+fi
 exit 0
