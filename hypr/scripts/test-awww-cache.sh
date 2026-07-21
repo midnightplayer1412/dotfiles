@@ -56,4 +56,47 @@ if grep -q "eDP-2" <<<"$entries"; then
 fi
 assert_eq "$(wc -l <<<"$entries" | tr -d ' ')" "1"
 
+
+# --- active_resolutions must never abort a set -e caller, even when the
+# pipeline's intermediate `grep -v` stage matches nothing (all-HEADLESS
+# output, or awww query producing nothing at all) ---
+stub_dir="$tmp/stubbin"
+mkdir -p "$stub_dir"
+stub_awww="$stub_dir/awww"
+
+write_stub() {
+  # $1: exact stdout for the stub to produce. Uses printf '%s' (no forced
+  # trailing newline) so an empty argument yields truly zero bytes of
+  # output, not a single blank line — the two are different pipeline cases.
+  {
+    printf '#!/usr/bin/env bash\n'
+    printf 'printf %%s %q\n' "$1"
+  } > "$stub_awww"
+  chmod +x "$stub_awww"
+}
+
+# normal multi-output text: expect distinct WxH values, HEADLESS excluded
+write_stub 'eDP-2: 1920x1080, scale: 1
+HDMI-A-1: 2560x1440, scale: 1
+HEADLESS-1: 1920x1080, scale: 1'
+resolutions="$(PATH="$stub_dir:$PATH" awww_active_resolutions)"
+after_call_1="reached"
+assert_eq "$resolutions" "$(printf '1920x1080\n2560x1440')"
+assert_eq "$after_call_1" "reached"
+
+# only HEADLESS lines: grep -v matches zero lines -> must still exit 0, empty output
+write_stub 'HEADLESS-1: 1920x1080, scale: 1
+HEADLESS-2: 2560x1440, scale: 1'
+resolutions="$(PATH="$stub_dir:$PATH" awww_active_resolutions)"
+after_call_2="reached"
+assert_eq "$resolutions" ""
+assert_eq "$after_call_2" "reached"
+
+# awww query emits nothing at all -> must still exit 0, empty output
+write_stub ''
+resolutions="$(PATH="$stub_dir:$PATH" awww_active_resolutions)"
+after_call_3="reached"
+assert_eq "$resolutions" ""
+assert_eq "$after_call_3" "reached"
+
 if [[ $fail -eq 0 ]]; then echo "PASS: awww-cache-lib.sh"; else echo "TESTS FAILED" >&2; exit 1; fi

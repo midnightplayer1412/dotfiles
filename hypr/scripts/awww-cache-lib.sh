@@ -37,7 +37,7 @@ awww_is_cached() {
     local dir key
     dir="$(awww_cache_dir)" || return 1
     key="$(awww_cache_key "$1" "$2" "${3:-crop}")"
-    compgen -G "${dir}/${key}_*" > /dev/null || return 1
+    compgen -G "${dir}/${key}_*" > /dev/null
 }
 
 # Every frame-cache entry, absolute paths, one per line.
@@ -51,9 +51,14 @@ awww_frame_entries() {
 
 # Distinct resolutions of the REAL outputs, one WxH per line.
 # Headless outputs are excluded — they are our own scratch surfaces.
+# No active (non-headless) output, or awww query failing/producing nothing
+# (daemon down, transient), is a legitimate empty result: this must always
+# exit 0 with empty output, never abort a `set -e` caller. `grep -v` exits 1
+# when it selects zero lines, so both the query and the grep stage are
+# wrapped to neutralize that under `pipefail`.
 awww_active_resolutions() {
-    awww query 2>/dev/null \
-        | grep -v 'HEADLESS' \
+    { awww query 2>/dev/null || true; } \
+        | { grep -v 'HEADLESS' || true; } \
         | sed -n 's/.*: \([0-9]\+x[0-9]\+\), scale.*/\1/p' \
         | sort -u
 }
