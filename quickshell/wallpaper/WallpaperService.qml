@@ -14,6 +14,11 @@ Singleton {
     property int intervalSeconds: 300
     property string cycleOrder: "random"   // "random" | "sequential"
 
+    // Bound on ~/.cache/awww. 25 GB is chosen so the reaper NEVER fires at
+    // the office (1080p set = 22 GB) yet engages at home, where the 1080p and
+    // 1440p sets are both live (22 + 56 = 78 GB).
+    property int cacheCapGb: 25
+
     // Picker visibility (used by PickerWindow in later tasks)
     property bool pickerVisible: false
     property var targetScreen: null
@@ -73,6 +78,10 @@ Singleton {
                 // instead of lexical order ("100" before "57").
                 out.sort((a, b) => a.basename.localeCompare(b.basename, undefined, { numeric: true }));
                 svc.wallpapers = out;
+
+                // Drop queued picks whose files no longer exist, then top up.
+                svc._queue = svc._queue.filter(p => out.some(w => w.path === p));
+                svc._refillQueue();
 
                 // Refresh the on-disk thumbnail cache (incremental — only
                 // missing/stale thumbs are regenerated). Runs in the
@@ -143,6 +152,113 @@ Singleton {
         }
     }
 
+    // ─── Cache management ─────────────────────────────────────────
+    readonly property string prefetchScript:
+        Quickshell.env("HOME") + "/.config/hypr/scripts/awww-prefetch.sh"
+    readonly property string reapScript:
+        Quickshell.env("HOME") + "/.config/hypr/scripts/awww-reap.sh"
+
+    // Decoding is CPU-bound (~16 fps; a 4800-frame GIF takes ~300s), so only
+    // ever one prefetch at a time. Remaining queue members are chained from
+    // prefetchProc.onExited rather than waiting for the next advance.
+    // How far through _queue this cycle's prefetch chain has advanced. Reset
+    // in applyWallpaper, i.e. once per displayed wallpaper.
+    property int _prefetchCursor: 0
+
+    Process {
+        id: prefetchProc
+        command: ["true"]
+        onExited: (code) => {
+            if (code !== 0)
+                console.warn("WallpaperService: awww-prefetch.sh exited with", code);
+            // Chain to the next queue member. Previously _prefetchNext ran
+            // only the FIRST GIF in the queue and returned; if that one was
+            // already cached the script exited in milliseconds and nothing
+            // re-invoked for _queue[1..3], so the next attempt was a whole
+            // interval later — by which time _queue[1] had become the head.
+            // Real lead was therefore one interval, not the ~180s the
+            // _queueDepth comment claims. Chaining from onExited is what
+            // makes a depth-4 queue actually yield four intervals of lead,
+            // while keeping the never-two-decodes-at-once guarantee: the
+            // only place running is set true is below, guarded by !running.
+            svc._prefetchNext();
+        }
+    }
+
+    function _prefetchNext() {
+        if (prefetchProc.running) return;   // serialize
+        const q = svc._queue;
+        while (svc._prefetchCursor < q.length) {
+            const p = q[svc._prefetchCursor];
+            svc._prefetchCursor += 1;
+            // Use the precomputed flag from the scan rather than re-deriving
+            // GIF-ness from the string suffix.
+            const w = svc.wallpapers.find(x => x.path === p);
+            if (!w || !w.isGif) continue;
+            prefetchProc.command = [svc.prefetchScript, p];
+            prefetchProc.running = true;
+            return;
+        }
+    }
+
+    Process {
+        id: reapProc
+        command: ["true"]
+        onExited: (code) => {
+            if (code !== 0)
+                console.warn("WallpaperService: awww-reap.sh exited with", code);
+        }
+    }
+
+    function _reapCache() {
+        if (reapProc.running) return;
+        const capBytes = String(svc.cacheCapGb * 1024 * 1024 * 1024);
+        // Never evict what we are about to need: current + whole queue.
+        const protect = [svc.currentPath].concat(svc._queue).filter(p => !!p);
+        reapProc.command = [svc.reapScript, capBytes].concat(protect);
+        reapProc.running = true;
+    }
+
+    // Record that this wallpaper's cache entries were just used, so the
+    // reaper's LRU ordering is meaningful (atime is unusable — root is
+    // relatime). The lib resolves the real on-disk filenames itself, so the
+    // pixel-format token is never constructed here.
+    Process {
+        id: journalProc
+        command: ["true"]
+        onExited: (code) => {
+            if (code !== 0)
+                console.warn("WallpaperService: awww journal touch exited with", code);
+        }
+    }
+
+    function _journalTouch(path) {
+        if (!path || journalProc.running) return;
+        journalProc.command = [
+            // bash, not sh: the sourced library uses bash-only semantics
+            // (mapfile, [[ ]], ${x,,}, arrays). /bin/sh happens to be bash on
+            // this machine so sh works today, but anywhere it is dash the
+            // journal would silently never populate and LRU would degrade to
+            // "evict arbitrarily".
+            "bash", "-c",
+            'source "$1" && awww_journal_touch_wallpaper "$2"',
+            "_",
+            Quickshell.env("HOME") + "/.config/hypr/scripts/awww-cache-lib.sh",
+            path
+        ];
+        journalProc.running = true;
+    }
+
+    Process {
+        id: orphanProc
+        command: [Quickshell.env("HOME") + "/.config/hypr/scripts/awww-prefetch.sh",
+                  "--reap-orphans"]
+        onExited: (code) => {
+            if (code !== 0)
+                console.warn("WallpaperService: awww-prefetch.sh --reap-orphans exited with", code);
+        }
+    }
+
     function applyWallpaper(path) {
         if (!path) return;
         if (applyProc.running) {
@@ -157,6 +273,10 @@ Singleton {
         applyProc.command = [svc.applyScript, path];
         applyProc.running = true;
         svc.currentPath = path;
+        svc._journalTouch(path);
+        svc._prefetchCursor = 0;   // new cycle: walk the queue from the top
+        svc._prefetchNext();
+        svc._reapCache();
     }
 
     function pinWallpaper(path) {
@@ -164,36 +284,67 @@ Singleton {
         svc.applyWallpaper(path);
     }
 
-    // Manually advance to a random wallpaper without changing cycle state —
-    // lets the user "shuffle now" instead of waiting for the cycle timer.
-    function shuffleNow() {
-        const next = svc._pickRandom();
-        if (next) svc.applyWallpaper(next);
+    // ─── Lookahead queue ──────────────────────────────────────────
+    // The cycle used to pick at tick time, which made prefetching impossible:
+    // the next wallpaper didn't exist until the moment it was needed. We now
+    // commit to the next N picks so the prefetch worker can warm them.
+    // Depth 4 gives ~180s of lead at a 60s interval; the largest GIF needs
+    // ~300s to decode, so a worst-case run of consecutive large GIFs still
+    // degrades to a stall — the old behaviour, never anything worse.
+    readonly property int _queueDepth: 4
+    property var _queue: []
+
+    function _refillQueue() {
+        const q = svc._queue.slice();
+        let guard = 0;
+        while (q.length < svc._queueDepth && guard < 200) {
+            guard += 1;
+            const pick = svc.cycleOrder === "sequential"
+                ? svc._pickSequentialAfter(q.length > 0 ? q[q.length - 1] : svc.currentPath)
+                : svc._pickRandom();
+            if (!pick) break;
+            // Avoid duplicates within the queue; with few wallpapers this can
+            // legitimately fail, hence the guard.
+            if (q.indexOf(pick) === -1) q.push(pick);
+        }
+        svc._queue = q;
     }
 
-    // ─── Cycle Timer ──────────────────────────────────────────────
+    // Sequential successor of an arbitrary path (not just currentPath), so the
+    // queue can be built several steps ahead.
+    function _pickSequentialAfter(path) {
+        const n = svc.wallpapers.length;
+        if (n === 0) return null;
+        const idx = svc.wallpapers.findIndex(w => w.path === path);
+        return svc.wallpapers[(idx < 0 ? 0 : (idx + 1) % n)].path;
+    }
+
     function _pickRandom() {
         const n = svc.wallpapers.length;
         if (n === 0) return null;
         if (n === 1) return svc.wallpapers[0].path;
-        // Avoid immediately repeating the current wallpaper.
         let i;
         do { i = Math.floor(Math.random() * n); }
         while (svc.wallpapers[i].path === svc.currentPath);
         return svc.wallpapers[i].path;
     }
 
-    function _pickSequential() {
-        const n = svc.wallpapers.length;
-        if (n === 0) return null;
-        const idx = svc.wallpapers.findIndex(w => w.path === svc.currentPath);
-        return svc.wallpapers[(idx < 0 ? 0 : (idx + 1) % n)].path;
+    // Take the head of the queue, refill behind it.
+    function _takeNext() {
+        if (svc._queue.length === 0) svc._refillQueue();
+        const q = svc._queue.slice();
+        const next = q.shift();
+        svc._queue = q;
+        svc._refillQueue();
+        return next ?? null;
     }
 
-    // Cycle advance honours the user's order preference; shuffleNow() always
-    // picks randomly (that's what "shuffle" means).
-    function _pickNext() {
-        return svc.cycleOrder === "sequential" ? svc._pickSequential() : svc._pickRandom();
+    // Shuffle now pops the QUEUE HEAD rather than picking fresh at random.
+    // The head is already warm, so shuffle is instant instead of a guaranteed
+    // 30-60s stall. Deliberate behaviour change.
+    function shuffleNow() {
+        const next = svc._takeNext();
+        if (next) svc.applyWallpaper(next);
     }
 
     Timer {
@@ -202,12 +353,17 @@ Singleton {
         running: svc.cycleEnabled && svc.wallpapers.length > 0
         repeat: true
         onTriggered: {
-            const next = svc._pickNext();
+            const next = svc._takeNext();
             if (next) svc.applyWallpaper(next);
         }
     }
 
-    Component.onCompleted: svc.rescan()
+    Component.onCompleted: {
+        console.log("BUILD: wallpaper prefetch v1");
+        svc.rescan();
+        // A crash mid-prefetch can leave a headless output attached.
+        orphanProc.running = true;
+    }
 
     // ─── Read ──────────────────────────────────────────────────────
     FileView {
@@ -237,6 +393,16 @@ Singleton {
                               ? obj.intervalSeconds : 300;
         svc.cycleOrder      = (obj.order === "sequential" || obj.order === "random")
                               ? obj.order : "random";
+        // Must be a whole number of GB and at least 1: cacheCapGb is a
+        // `property int`, so a fractional 0.5 passes a bare `> 0` test and
+        // then TRUNCATES to 0, which reaches the reaper as a valid "cap of
+        // zero bytes". The reaper now refuses such a cap outright; this is
+        // the matching front-line check so a bad state file never even gets
+        // that far. Defence in depth — the reaper's is the one that counts.
+        const cap = obj.cacheCapGb;
+        svc.cacheCapGb      = (typeof cap === "number" && Number.isFinite(cap)
+                               && Math.floor(cap) >= 1)
+                              ? Math.floor(cap) : 25;
         svc._loading = false;
     }
 
@@ -263,7 +429,8 @@ Singleton {
             cycle: svc.cycleEnabled,
             current: svc.currentPath,
             intervalSeconds: svc.intervalSeconds,
-            order: svc.cycleOrder
+            order: svc.cycleOrder,
+            cacheCapGb: svc.cacheCapGb
         }, null, 2);
         writeProc.command = [
             "sh", "-c",
@@ -279,6 +446,7 @@ Singleton {
     onCurrentPathChanged:  persistState()
     onIntervalSecondsChanged: persistState()
     onCycleOrderChanged: persistState()
+    onCacheCapGbChanged: persistState()
 
     // ─── IPC handler ──────────────────────────────────────────────
     IpcHandler {
@@ -296,7 +464,13 @@ Singleton {
     // ─── Public setters (used by picker in later tasks) ────────────
     function setCycle(enabled) { svc.cycleEnabled = enabled; }
     function setInterval(seconds) { svc.intervalSeconds = seconds; }
-    function setCycleOrder(order) { svc.cycleOrder = order; }
+    function setCycleOrder(order) {
+        svc.cycleOrder = order;
+        // A sequential queue is meaningless after switching to random (and
+        // vice versa) — discard and rebuild.
+        svc._queue = [];
+        svc._refillQueue();
+    }
 
     function togglePicker(screen) {
         if (svc.pickerVisible && svc.targetScreen === screen) {
