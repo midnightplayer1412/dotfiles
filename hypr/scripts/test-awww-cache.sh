@@ -99,4 +99,33 @@ after_call_3="reached"
 assert_eq "$resolutions" ""
 assert_eq "$after_call_3" "reached"
 
+# --- journal: touch records a timestamp, age reads it back ---
+export AWWW_JOURNAL="$tmp/usage.tsv"
+awww_journal_touch "key-one"
+ts="$(awww_journal_age "key-one")"
+if [[ ! "$ts" =~ ^[0-9]+$ ]] || (( ts <= 0 )); then
+  echo "FAIL: journal_age should return a positive epoch, got [$ts]" >&2; fail=1
+fi
+
+# --- unknown key reports 0 (sorts oldest → evicted first) ---
+assert_eq "$(awww_journal_age "never-seen")" "0"
+
+# --- re-touch updates in place, never duplicates the key ---
+awww_journal_touch "key-one"
+assert_eq "$(grep -c 'key-one' "$AWWW_JOURNAL")" "1"
+
+# --- distinct keys coexist ---
+awww_journal_touch "key-two"
+assert_eq "$(wc -l < "$AWWW_JOURNAL" | tr -d ' ')" "2"
+
+# --- touch_wallpaper records the REAL on-disk filenames, across resolutions
+#     and whatever pixel-format token happens to be in use ---
+: > "$AWWW_JOURNAL"
+: > "$cd_dir/_w_x.gif__1920x1080_crop_Bgr"
+: > "$cd_dir/_w_x.gif__2560x1440_crop_Bgr"
+: > "$cd_dir/_w_other.gif__1920x1080_crop_Bgr"
+awww_journal_touch_wallpaper "/w/x.gif"
+assert_eq "$(grep -c '_w_x.gif__' "$AWWW_JOURNAL")" "2"
+assert_eq "$(grep -c '_w_other.gif__' "$AWWW_JOURNAL")" "0"
+
 if [[ $fail -eq 0 ]]; then echo "PASS: awww-cache-lib.sh"; else echo "TESTS FAILED" >&2; exit 1; fi
