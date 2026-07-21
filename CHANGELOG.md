@@ -6,6 +6,50 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-21
+
+#### Added
+- **bounded awww GIF cache with prefetch** (quickshell + hypr/scripts) — `~/.cache/awww/`
+  had grown to **77 GB on a 93%-full root**. awww caches whole *pre-decoded* animations
+  (every frame, scaled and cropped to a specific output resolution, LZ4-compressed), and
+  with 34 GIFs in a 60-second rotation across two monitor resolutions it had simply never
+  been bounded. It now holds at a configurable cap — **`cacheCapGb` in
+  `wallpaper-state.json`**, default 25 — without reintroducing the decode stalls that
+  simply deleting the cache would cause (decode runs ~16 frames/sec: 74s for a
+  1201-frame GIF, ~300s for the largest).
+  - **Lookahead queue** — `WallpaperService.qml` used to pick the next wallpaper at
+    tick time, so it did not exist until the instant it was needed and nothing could be
+    prefetched. It now commits to the next **4** picks in a `_queue`. `shuffleNow()`
+    pops the queue head instead of picking fresh, so shuffle hits an already-warm entry
+    and is instant rather than a guaranteed stall.
+  - **Prefetch worker** (`awww-prefetch.sh`) — warms a GIF's cache **without displaying
+    it**. awww has no `precache` command and applying to a nonexistent output fails
+    *before* decoding, so the only route is decoding against a **transient Hyprland
+    headless output**. A headless output's resolution is *declared*, not detected, which
+    means the 1440p set can be warmed while only 1080p monitors are attached. Cleans up
+    via a trap on every path including SIGINT/SIGTERM, and sweeps orphans at startup.
+  - **LRU reaper** (`awww-reap.sh`) — evicts oldest-first until under cap, never
+    touching the currently-displayed wallpaper or anything queued. Ties break
+    largest-first. Refuses to run below a 1 GB floor.
+  - **Usage journal** (`~/.cache/awww-usage.tsv`) — root is mounted `relatime` and reads
+    do **not** bump atime, so atime-based LRU is impossible; usage is tracked explicitly.
+  - Tests: `test-awww-cache.sh`, `test-awww-reap.sh`.
+
+#### Fixed
+- **`awww-daemon --format bgr` core-dumps on startup** — briefly configured in
+  `autostart.conf` to chase the 3-channel format's advertised 3/4 memory use. The saving
+  is real (measured **6075 Kb vs 8100 Kb** buffers) but unusable here: wlroots rejects
+  the 3-channel `wl_shm` buffer with `WAYLAND PROTOCOL ERROR: Format invalid`, and the
+  daemon then panics with `BrokenPipe` at `daemon/src/main.rs:712`. The result was **no
+  wallpaper daemon at all** and a black desktop. Reverted to plain `awww-daemon`; both
+  4-channel formats (`argb`, `abgr`) start cleanly, both 3-channel (`bgr`, `rgb`) abort.
+  `awww-daemon --help` hints at it — argb is the default *"because it is most widely
+  supported"*. Needed no code change: `awww_current_format()` derives the cache-key
+  format token from the running daemon's argv at runtime.
+
+  Debugging note: `hyprctl dispatch exec` prints `ok` when the *dispatch* is accepted,
+  not when the process survives — a daemon that dies immediately still reports `ok`.
+
 ### 2026-07-14
 
 #### Fixed

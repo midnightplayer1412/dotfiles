@@ -290,14 +290,28 @@ The deploy script compiles the Monaspace Neon font (size 24) to GRUB's `.pf2` fo
 
 ## Wallpaper
 
-`wallpapers/main.jpg` is used by Hyprland and Matugen. GRUB uses its own `grub/main.png`.
+`wallpapers/` holds the rotation (static images plus animated GIFs). GRUB uses its own `grub/main.png`.
 
-- **Hyprland** — desktop background (both monitors via hyprpaper)
-- **Matugen** — color scheme source
+- **awww** — desktop background on all outputs, animated GIFs included (`awww-daemon`, started from `hypr/components/autostart.conf`)
+- **Quickshell** — the picker (`Super+W`) and the auto-cycle, state in `quickshell/wallpaper-state.json`
+- **Matugen** — color scheme source, re-derived from whichever wallpaper is applied
 - **GRUB** — `grub/main.png` (separate file, deployed to `/boot/grub/themes/custom/`)
 
-To change the desktop wallpaper, replace `wallpapers/main.jpg` and run `matugen image ~/dotfiles/wallpapers/main.jpg`.
+To change the desktop wallpaper, use the picker or drop a file into `wallpapers/`; `apply-wallpaper.sh` sets it via awww and regenerates the Matugen-driven themes.
 To change the GRUB background, replace `grub/main.png` and run `bash ~/dotfiles/grub/deploy.sh`.
+
+### GIF frame cache
+
+awww caches whole *pre-decoded* animations under `~/.cache/awww/<version>/` — every frame, scaled and cropped to a specific output resolution. That makes re-displaying a GIF instant but is expensive: this cache once reached **77 GB**. It is now bounded.
+
+- **Cap:** `cacheCapGb` in `quickshell/wallpaper-state.json` (default **25**). That is the only knob.
+- **`hypr/scripts/awww-reap.sh`** — LRU eviction, oldest-first, never evicting the current wallpaper or anything queued.
+- **`hypr/scripts/awww-prefetch.sh`** — decodes upcoming GIFs *invisibly* against a transient headless output, so bounding the cache does not reintroduce stalls.
+- **`hypr/scripts/awww-cache-lib.sh`** — shared library (cache keys, usage journal). Tests: `test-awww-cache.sh`, `test-awww-reap.sh`.
+
+Only GIFs are cached; static wallpapers cost nothing. Cache size tracks **frame count**, not source resolution — awww scales before caching, so trimming a long GIF's frames is the only per-file lever.
+
+> **Do not add `--format bgr`/`rgb` to `awww-daemon`.** The 3-channel formats really are 3/4 the memory, but this compositor rejects them and the daemon core-dumps on startup, leaving no wallpaper at all. See `hypr/components/autostart.conf`.
 
 ---
 
