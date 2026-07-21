@@ -74,6 +74,10 @@ Singleton {
                 out.sort((a, b) => a.basename.localeCompare(b.basename, undefined, { numeric: true }));
                 svc.wallpapers = out;
 
+                // Drop queued picks whose files no longer exist, then top up.
+                svc._queue = svc._queue.filter(p => out.some(w => w.path === p));
+                svc._refillQueue();
+
                 // Refresh the on-disk thumbnail cache (incremental — only
                 // missing/stale thumbs are regenerated). Runs in the
                 // background; thumbRev bumps when it finishes so the grid
@@ -164,19 +168,45 @@ Singleton {
         svc.applyWallpaper(path);
     }
 
-    // Manually advance to a random wallpaper without changing cycle state —
-    // lets the user "shuffle now" instead of waiting for the cycle timer.
-    function shuffleNow() {
-        const next = svc._pickRandom();
-        if (next) svc.applyWallpaper(next);
+    // ─── Lookahead queue ──────────────────────────────────────────
+    // The cycle used to pick at tick time, which made prefetching impossible:
+    // the next wallpaper didn't exist until the moment it was needed. We now
+    // commit to the next N picks so the prefetch worker can warm them.
+    // Depth 4 gives ~180s of lead at a 60s interval; the largest GIF needs
+    // ~300s to decode, so a worst-case run of consecutive large GIFs still
+    // degrades to a stall — the old behaviour, never anything worse.
+    readonly property int _queueDepth: 4
+    property var _queue: []
+
+    function _refillQueue() {
+        const q = svc._queue.slice();
+        let guard = 0;
+        while (q.length < svc._queueDepth && guard < 200) {
+            guard += 1;
+            const pick = svc.cycleOrder === "sequential"
+                ? svc._pickSequentialAfter(q.length > 0 ? q[q.length - 1] : svc.currentPath)
+                : svc._pickRandom();
+            if (!pick) break;
+            // Avoid duplicates within the queue; with few wallpapers this can
+            // legitimately fail, hence the guard.
+            if (q.indexOf(pick) === -1) q.push(pick);
+        }
+        svc._queue = q;
     }
 
-    // ─── Cycle Timer ──────────────────────────────────────────────
+    // Sequential successor of an arbitrary path (not just currentPath), so the
+    // queue can be built several steps ahead.
+    function _pickSequentialAfter(path) {
+        const n = svc.wallpapers.length;
+        if (n === 0) return null;
+        const idx = svc.wallpapers.findIndex(w => w.path === path);
+        return svc.wallpapers[(idx < 0 ? 0 : (idx + 1) % n)].path;
+    }
+
     function _pickRandom() {
         const n = svc.wallpapers.length;
         if (n === 0) return null;
         if (n === 1) return svc.wallpapers[0].path;
-        // Avoid immediately repeating the current wallpaper.
         let i;
         do { i = Math.floor(Math.random() * n); }
         while (svc.wallpapers[i].path === svc.currentPath);
@@ -184,16 +214,25 @@ Singleton {
     }
 
     function _pickSequential() {
-        const n = svc.wallpapers.length;
-        if (n === 0) return null;
-        const idx = svc.wallpapers.findIndex(w => w.path === svc.currentPath);
-        return svc.wallpapers[(idx < 0 ? 0 : (idx + 1) % n)].path;
+        return svc._pickSequentialAfter(svc.currentPath);
     }
 
-    // Cycle advance honours the user's order preference; shuffleNow() always
-    // picks randomly (that's what "shuffle" means).
-    function _pickNext() {
-        return svc.cycleOrder === "sequential" ? svc._pickSequential() : svc._pickRandom();
+    // Take the head of the queue, refill behind it.
+    function _takeNext() {
+        if (svc._queue.length === 0) svc._refillQueue();
+        const q = svc._queue.slice();
+        const next = q.shift();
+        svc._queue = q;
+        svc._refillQueue();
+        return next ?? null;
+    }
+
+    // Shuffle now pops the QUEUE HEAD rather than picking fresh at random.
+    // The head is already warm, so shuffle is instant instead of a guaranteed
+    // 30-60s stall. Deliberate behaviour change.
+    function shuffleNow() {
+        const next = svc._takeNext();
+        if (next) svc.applyWallpaper(next);
     }
 
     Timer {
@@ -202,12 +241,15 @@ Singleton {
         running: svc.cycleEnabled && svc.wallpapers.length > 0
         repeat: true
         onTriggered: {
-            const next = svc._pickNext();
+            const next = svc._takeNext();
             if (next) svc.applyWallpaper(next);
         }
     }
 
-    Component.onCompleted: svc.rescan()
+    Component.onCompleted: {
+        console.log("BUILD: wallpaper queue v1");
+        svc.rescan();
+    }
 
     // ─── Read ──────────────────────────────────────────────────────
     FileView {
@@ -296,7 +338,13 @@ Singleton {
     // ─── Public setters (used by picker in later tasks) ────────────
     function setCycle(enabled) { svc.cycleEnabled = enabled; }
     function setInterval(seconds) { svc.intervalSeconds = seconds; }
-    function setCycleOrder(order) { svc.cycleOrder = order; }
+    function setCycleOrder(order) {
+        svc.cycleOrder = order;
+        // A sequential queue is meaningless after switching to random (and
+        // vice versa) — discard and rebuild.
+        svc._queue = [];
+        svc._refillQueue();
+    }
 
     function togglePicker(screen) {
         if (svc.pickerVisible && svc.targetScreen === screen) {
