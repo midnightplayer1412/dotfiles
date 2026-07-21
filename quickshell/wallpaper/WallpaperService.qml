@@ -161,19 +161,40 @@ Singleton {
     // Decoding is CPU-bound (~16 fps; a 4800-frame GIF takes ~300s), so only
     // ever one prefetch at a time. Remaining queue members are picked up on
     // the next advance.
+    // How far through _queue this cycle's prefetch chain has advanced. Reset
+    // in applyWallpaper, i.e. once per displayed wallpaper.
+    property int _prefetchCursor: 0
+
     Process {
         id: prefetchProc
         command: ["true"]
         onExited: (code) => {
             if (code !== 0)
                 console.warn("WallpaperService: awww-prefetch.sh exited with", code);
+            // Chain to the next queue member. Previously _prefetchNext ran
+            // only the FIRST GIF in the queue and returned; if that one was
+            // already cached the script exited in milliseconds and nothing
+            // re-invoked for _queue[1..3], so the next attempt was a whole
+            // interval later — by which time _queue[1] had become the head.
+            // Real lead was therefore one interval, not the ~180s the
+            // _queueDepth comment claims. Chaining from onExited is what
+            // makes a depth-4 queue actually yield four intervals of lead,
+            // while keeping the never-two-decodes-at-once guarantee: the
+            // only place running is set true is below, guarded by !running.
+            svc._prefetchNext();
         }
     }
 
     function _prefetchNext() {
         if (prefetchProc.running) return;   // serialize
-        for (const p of svc._queue) {
-            if (!p.toLowerCase().endsWith(".gif")) continue;
+        const q = svc._queue;
+        while (svc._prefetchCursor < q.length) {
+            const p = q[svc._prefetchCursor];
+            svc._prefetchCursor += 1;
+            // Use the precomputed flag from the scan rather than re-deriving
+            // GIF-ness from the string suffix.
+            const w = svc.wallpapers.find(x => x.path === p);
+            if (!w || !w.isGif) continue;
             prefetchProc.command = [svc.prefetchScript, p];
             prefetchProc.running = true;
             return;
@@ -183,6 +204,10 @@ Singleton {
     Process {
         id: reapProc
         command: ["true"]
+        onExited: (code) => {
+            if (code !== 0)
+                console.warn("WallpaperService: awww-reap.sh exited with", code);
+        }
     }
 
     function _reapCache() {
@@ -198,12 +223,24 @@ Singleton {
     // reaper's LRU ordering is meaningful (atime is unusable — root is
     // relatime). The lib resolves the real on-disk filenames itself, so the
     // pixel-format token is never constructed here.
-    Process { id: journalProc; command: ["true"] }
+    Process {
+        id: journalProc
+        command: ["true"]
+        onExited: (code) => {
+            if (code !== 0)
+                console.warn("WallpaperService: awww journal touch exited with", code);
+        }
+    }
 
     function _journalTouch(path) {
         if (!path || journalProc.running) return;
         journalProc.command = [
-            "sh", "-c",
+            // bash, not sh: the sourced library uses bash-only semantics
+            // (mapfile, [[ ]], ${x,,}, arrays). /bin/sh happens to be bash on
+            // this machine so sh works today, but anywhere it is dash the
+            // journal would silently never populate and LRU would degrade to
+            // "evict arbitrarily".
+            "bash", "-c",
             'source "$1" && awww_journal_touch_wallpaper "$2"',
             "_",
             Quickshell.env("HOME") + "/.config/hypr/scripts/awww-cache-lib.sh",
@@ -216,6 +253,10 @@ Singleton {
         id: orphanProc
         command: [Quickshell.env("HOME") + "/.config/hypr/scripts/awww-prefetch.sh",
                   "--reap-orphans"]
+        onExited: (code) => {
+            if (code !== 0)
+                console.warn("WallpaperService: awww-prefetch.sh --reap-orphans exited with", code);
+        }
     }
 
     function applyWallpaper(path) {
@@ -233,6 +274,7 @@ Singleton {
         applyProc.running = true;
         svc.currentPath = path;
         svc._journalTouch(path);
+        svc._prefetchCursor = 0;   // new cycle: walk the queue from the top
         svc._prefetchNext();
         svc._reapCache();
     }
@@ -355,8 +397,16 @@ Singleton {
                               ? obj.intervalSeconds : 300;
         svc.cycleOrder      = (obj.order === "sequential" || obj.order === "random")
                               ? obj.order : "random";
-        svc.cacheCapGb      = (typeof obj.cacheCapGb === "number" && obj.cacheCapGb > 0)
-                              ? obj.cacheCapGb : 25;
+        // Must be a whole number of GB and at least 1: cacheCapGb is a
+        // `property int`, so a fractional 0.5 passes a bare `> 0` test and
+        // then TRUNCATES to 0, which reaches the reaper as a valid "cap of
+        // zero bytes". The reaper now refuses such a cap outright; this is
+        // the matching front-line check so a bad state file never even gets
+        // that far. Defence in depth — the reaper's is the one that counts.
+        const cap = obj.cacheCapGb;
+        svc.cacheCapGb      = (typeof cap === "number" && Number.isFinite(cap)
+                               && Math.floor(cap) >= 1)
+                              ? Math.floor(cap) : 25;
         svc._loading = false;
     }
 
