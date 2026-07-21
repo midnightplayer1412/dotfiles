@@ -159,8 +159,8 @@ Singleton {
         Quickshell.env("HOME") + "/.config/hypr/scripts/awww-reap.sh"
 
     // Decoding is CPU-bound (~16 fps; a 4800-frame GIF takes ~300s), so only
-    // ever one prefetch at a time. Remaining queue members are picked up on
-    // the next advance.
+    // ever one prefetch at a time. Remaining queue members are chained from
+    // prefetchProc.onExited rather than waiting for the next advance.
     // How far through _queue this cycle's prefetch chain has advanced. Reset
     // in applyWallpaper, i.e. once per displayed wallpaper.
     property int _prefetchCursor: 0
@@ -327,10 +327,6 @@ Singleton {
         do { i = Math.floor(Math.random() * n); }
         while (svc.wallpapers[i].path === svc.currentPath);
         return svc.wallpapers[i].path;
-    }
-
-    function _pickSequential() {
-        return svc._pickSequentialAfter(svc.currentPath);
     }
 
     // Take the head of the queue, refill behind it.
