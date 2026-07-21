@@ -14,6 +14,11 @@ Singleton {
     property int intervalSeconds: 300
     property string cycleOrder: "random"   // "random" | "sequential"
 
+    // Bound on ~/.cache/awww. 25 GB is chosen so the reaper NEVER fires at
+    // the office (1080p set = 22 GB) yet engages at home, where the 1080p and
+    // 1440p sets are both live (22 + 56 = 78 GB).
+    property int cacheCapGb: 25
+
     // Picker visibility (used by PickerWindow in later tasks)
     property bool pickerVisible: false
     property var targetScreen: null
@@ -147,6 +152,72 @@ Singleton {
         }
     }
 
+    // ─── Cache management ─────────────────────────────────────────
+    readonly property string prefetchScript:
+        Quickshell.env("HOME") + "/.config/hypr/scripts/awww-prefetch.sh"
+    readonly property string reapScript:
+        Quickshell.env("HOME") + "/.config/hypr/scripts/awww-reap.sh"
+
+    // Decoding is CPU-bound (~16 fps; a 4800-frame GIF takes ~300s), so only
+    // ever one prefetch at a time. Remaining queue members are picked up on
+    // the next advance.
+    Process {
+        id: prefetchProc
+        command: ["true"]
+        onExited: (code) => {
+            if (code !== 0)
+                console.warn("WallpaperService: awww-prefetch.sh exited with", code);
+        }
+    }
+
+    function _prefetchNext() {
+        if (prefetchProc.running) return;   // serialize
+        for (const p of svc._queue) {
+            if (!p.toLowerCase().endsWith(".gif")) continue;
+            prefetchProc.command = [svc.prefetchScript, p];
+            prefetchProc.running = true;
+            return;
+        }
+    }
+
+    Process {
+        id: reapProc
+        command: ["true"]
+    }
+
+    function _reapCache() {
+        if (reapProc.running) return;
+        const capBytes = String(svc.cacheCapGb * 1024 * 1024 * 1024);
+        // Never evict what we are about to need: current + whole queue.
+        const protect = [svc.currentPath].concat(svc._queue).filter(p => !!p);
+        reapProc.command = [svc.reapScript, capBytes].concat(protect);
+        reapProc.running = true;
+    }
+
+    // Record that this wallpaper's cache entries were just used, so the
+    // reaper's LRU ordering is meaningful (atime is unusable — root is
+    // relatime). The lib resolves the real on-disk filenames itself, so the
+    // pixel-format token is never constructed here.
+    Process { id: journalProc; command: ["true"] }
+
+    function _journalTouch(path) {
+        if (!path || journalProc.running) return;
+        journalProc.command = [
+            "sh", "-c",
+            'source "$1" && awww_journal_touch_wallpaper "$2"',
+            "_",
+            Quickshell.env("HOME") + "/.config/hypr/scripts/awww-cache-lib.sh",
+            path
+        ];
+        journalProc.running = true;
+    }
+
+    Process {
+        id: orphanProc
+        command: [Quickshell.env("HOME") + "/.config/hypr/scripts/awww-prefetch.sh",
+                  "--reap-orphans"]
+    }
+
     function applyWallpaper(path) {
         if (!path) return;
         if (applyProc.running) {
@@ -161,6 +232,9 @@ Singleton {
         applyProc.command = [svc.applyScript, path];
         applyProc.running = true;
         svc.currentPath = path;
+        svc._journalTouch(path);
+        svc._prefetchNext();
+        svc._reapCache();
     }
 
     function pinWallpaper(path) {
@@ -247,8 +321,10 @@ Singleton {
     }
 
     Component.onCompleted: {
-        console.log("BUILD: wallpaper queue v1");
+        console.log("BUILD: wallpaper prefetch v1");
         svc.rescan();
+        // A crash mid-prefetch can leave a headless output attached.
+        orphanProc.running = true;
     }
 
     // ─── Read ──────────────────────────────────────────────────────
@@ -279,6 +355,8 @@ Singleton {
                               ? obj.intervalSeconds : 300;
         svc.cycleOrder      = (obj.order === "sequential" || obj.order === "random")
                               ? obj.order : "random";
+        svc.cacheCapGb      = (typeof obj.cacheCapGb === "number" && obj.cacheCapGb > 0)
+                              ? obj.cacheCapGb : 25;
         svc._loading = false;
     }
 
@@ -305,7 +383,8 @@ Singleton {
             cycle: svc.cycleEnabled,
             current: svc.currentPath,
             intervalSeconds: svc.intervalSeconds,
-            order: svc.cycleOrder
+            order: svc.cycleOrder,
+            cacheCapGb: svc.cacheCapGb
         }, null, 2);
         writeProc.command = [
             "sh", "-c",
@@ -321,6 +400,7 @@ Singleton {
     onCurrentPathChanged:  persistState()
     onIntervalSecondsChanged: persistState()
     onCycleOrderChanged: persistState()
+    onCacheCapGbChanged: persistState()
 
     // ─── IPC handler ──────────────────────────────────────────────
     IpcHandler {
