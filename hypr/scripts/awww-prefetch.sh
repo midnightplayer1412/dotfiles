@@ -36,8 +36,13 @@ headless_names() {
         | sort -u || true
 }
 
-# A crash mid-prefetch leaves a headless output attached. Remove any that
-# exist at startup — we never keep one across invocations.
+# A crash, an interrupted signal, or any error mid-prefetch can leave a
+# headless output attached. Called automatically at the start of every
+# invocation (below) and again via the EXIT/INT/TERM trap (below), so a
+# leaked output is removed within the run that leaked it — or, in the
+# SIGKILL case that no trap can catch, self-heals on the very next
+# invocation — instead of persisting until someone manually runs
+# --reap-orphans.
 reap_orphans() {
     local n
     for n in $(headless_names); do
@@ -46,7 +51,34 @@ reap_orphans() {
     done
 }
 
+# Unconditional sweep of every attached headless output, regardless of why
+# we're exiting: normal completion, an uncaught error under `set -e`,
+# Ctrl-C (INT), or a caller's timeout/logout (TERM). This is what actually
+# closes the create->remove window described in the file header, including
+# the narrow gap before we've even determined the new output's name.
+#
+# Safe to sweep ALL headless outputs (not just "ours"): this script's own
+# contract is "callers must serialize: never run two of these at once" (see
+# header), so nothing else can legitimately have a headless output attached
+# while this process is alive. A concurrent second instance is excluded by
+# contract, not merely assumed — if it happened, the before/after name
+# diffing below would already be broken by the race, independent of this
+# trap.
+cleanup() {
+    reap_orphans
+}
+trap cleanup EXIT
+# EXIT trap above still fires when a trapped signal calls `exit` — that's
+# the whole point, so cleanup runs exactly once no matter which path out.
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
 if [[ "${1:-}" == "--reap-orphans" ]]; then reap_orphans; exit 0; fi
+
+# Self-heal: sweep any output left by a previous run that couldn't clean up
+# after itself (e.g. SIGKILL, which no trap can catch). Safe under the same
+# serialization contract as the trap above.
+reap_orphans
 
 path="${1:-}"
 [[ -n "$path" && -f "$path" ]] || { log "usage: awww-prefetch.sh <abs-path> [WxH ...]"; exit 2; }
@@ -68,7 +100,11 @@ for wxh in "${resolutions[@]}"; do
     fi
 
     before="$(headless_names)"
-    hyprctl output create headless >/dev/null 2>&1 || { log "output create failed"; continue; }
+    create_err=""
+    if ! create_err="$(hyprctl output create headless 2>&1 >/dev/null)"; then
+        log "output create failed for $wxh (${create_err:-no output})"
+        continue
+    fi
     sleep 1
     after="$(headless_names)"
     # hyprctl output create prints only "ok" — recover the name by diffing
@@ -99,5 +135,12 @@ for wxh in "${resolutions[@]}"; do
         log "WARN: awww img failed for $(basename "$path") @ $wxh"
     fi
 
-    hyprctl output remove "$name" >/dev/null 2>&1 || log "WARN: failed to remove $name"
+    remove_err=""
+    if ! remove_err="$(hyprctl output remove "$name" 2>&1 >/dev/null)"; then
+        # Not retried here: the EXIT/INT/TERM trap unconditionally sweeps
+        # every attached headless output, so this one gets removed when the
+        # script exits regardless of how this call failed. Logged so a
+        # transient hyprctl error is still visible.
+        log "WARN: failed to remove $name for $wxh (${remove_err:-no output}); will be swept at exit"
+    fi
 done
