@@ -9,8 +9,79 @@
 # File body is [u32 LE frame_count][LZ4 frames].
 #
 # The <Format> token depends on awww-daemon --format and must never be
-# hard-coded — always glob it.
+# hard-coded — always derive it from the RUNNING daemon (awww_current_format)
+# or glob it.
 set -euo pipefail
+
+# Pixel-format token used by the RUNNING awww-daemon, e.g. Argb / Bgr.
+#
+# Why this must be derived and not globbed: the question callers actually ask
+# is "will the running daemon HIT this cache entry?", and the daemon only ever
+# reads the entry whose token matches its own --format. A leftover _Argb entry
+# is dead weight to a --format bgr daemon, so a permissive glob answers
+# false-yes and the prefetcher silently no-ops across the whole rotation.
+#
+# Derived from the daemon's own argv (/proc/<pid>/cmdline) rather than from a
+# literal here or from autostart.conf, both of which can disagree with what is
+# actually running (e.g. autostart edited but the session not yet restarted).
+#
+# Exit status is the contract: 0 + token on stdout when the daemon was probed
+# successfully; NONZERO when it could not be probed (daemon down, /proc
+# unreadable, unrecognized --format value). Callers must fall back to the
+# permissive glob on nonzero — fail open, never fail closed, so a missing
+# daemon can never make us delete or re-decode a cache that is in fact fine.
+#
+# A daemon running with NO --format flag maps to Argb: awww's documented
+# default ("By default, awww-daemon will use argb" — awww-daemon --help).
+#
+# AWWW_FORMAT overrides the probe; it exists so the test-suite can pin a
+# format deterministically without a daemon. Nothing in the real config sets it.
+awww_current_format() {
+    local fmt="" found=0
+
+    if [[ -n "${AWWW_FORMAT:-}" ]]; then
+        fmt="$AWWW_FORMAT"
+        found=1
+    else
+        local pd argv0
+        local -a argv=()
+        for pd in /proc/[0-9]*; do
+            [[ -r "$pd/cmdline" ]] || continue
+            argv=()
+            # `mapfile -d ''` splits the NUL-separated cmdline into argv.
+            # A process exiting between the glob and the read makes this fail;
+            # that is routine, not an error, hence the guard (this file is
+            # sourced into `set -euo pipefail` scripts).
+            mapfile -d '' -t argv < "$pd/cmdline" 2>/dev/null || continue
+            (( ${#argv[@]} > 0 )) || continue
+            argv0="${argv[0]##*/}"
+            [[ "$argv0" == "awww-daemon" ]] || continue
+            found=1
+            local i
+            for ((i = 1; i < ${#argv[@]}; i++)); do
+                case "${argv[i]}" in
+                    -f|--format) fmt="${argv[i+1]:-}"; break ;;
+                    --format=*)  fmt="${argv[i]#--format=}"; break ;;
+                    -f=*)        fmt="${argv[i]#-f=}"; break ;;
+                esac
+            done
+            break
+        done
+    fi
+
+    (( found )) || return 1
+
+    case "${fmt,,}" in
+        bgr)     printf 'Bgr'  ;;
+        abgr)    printf 'Abgr' ;;
+        rgb)     printf 'Rgb'  ;;
+        argb|'') printf 'Argb' ;;   # no flag == awww's documented default
+        # An unrecognized value means our mapping is out of date with awww.
+        # Report "cannot determine" so callers fall back to the permissive
+        # glob, rather than confidently asserting a token that is wrong.
+        *)       return 1 ;;
+    esac
+}
 
 # Absolute path of the versioned cache dir. Picks the newest if several
 # versions coexist (an awww upgrade leaves the old dir behind).
@@ -30,14 +101,23 @@ awww_cache_key() {
     printf '%s__%s_%s' "${path//\//_}" "$wxh" "$resize"
 }
 
-# Exit 0 if a cache entry exists for this wallpaper at this resolution,
-# regardless of pixel format.
+# Exit 0 if a cache entry exists that the RUNNING daemon will actually hit
+# for this wallpaper at this resolution.
+#
+# Format-exact by design: an entry in a foreign pixel format is unreadable to
+# the current daemon, so reporting it as "cached" would make the prefetcher
+# skip a wallpaper that still cold-decodes on display. When the daemon cannot
+# be probed at all we fall back to the old permissive glob — fail open.
 # Usage: awww_is_cached <abs-path> <WxH> [resize=crop]
 awww_is_cached() {
-    local dir key
+    local dir key fmt
     dir="$(awww_cache_dir)" || return 1
     key="$(awww_cache_key "$1" "$2" "${3:-crop}")"
-    compgen -G "${dir}/${key}_*" > /dev/null
+    if fmt="$(awww_current_format)"; then
+        [[ -f "${dir}/${key}_${fmt}" ]]
+    else
+        compgen -G "${dir}/${key}_*" > /dev/null
+    fi
 }
 
 # Every frame-cache entry, absolute paths, one per line.
@@ -124,14 +204,22 @@ awww_journal_age() {
     printf '%s' "${ts:-0}"
 }
 
-# Touch every existing cache entry belonging to one wallpaper, across all
-# resolutions. Keys are the entries' REAL on-disk basenames (which include the
-# pixel-format token), because that is exactly what awww-reap.sh looks up.
-# Never construct the format token by hand — glob it.
+# Touch every CURRENT-FORMAT cache entry belonging to one wallpaper, across
+# all resolutions. Keys are the entries' REAL on-disk basenames (which include
+# the pixel-format token), because that is exactly what awww-reap.sh looks up.
+# The token is derived from the running daemon, never constructed by hand.
+#
+# Restricted to the current format on purpose: an unrestricted glob stamps
+# `now` on foreign-format entries too, which are pure dead weight. That would
+# sort them MOST-recently-used and evict them LAST, so the reaper would drop
+# live entries of less-recently-shown wallpapers first and converge on a cache
+# that is roughly half unusable — a permanently halved effective cap. When the
+# daemon can't be probed we touch everything, as before (fail open).
 awww_journal_touch_wallpaper() {
-    local path="$1" dir f
+    local path="$1" dir f fmt suffix=""
     dir="$(awww_cache_dir)" || return 0
-    for f in "$dir/${path//\//_}__"*; do
+    if fmt="$(awww_current_format)"; then suffix="_$fmt"; fi
+    for f in "$dir/${path//\//_}__"*"$suffix"; do
         [[ -f "$f" ]] || continue
         awww_journal_touch "$(basename "$f")"
     done

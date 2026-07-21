@@ -17,6 +17,12 @@ source "$SCRIPT_DIR/awww-cache-lib.sh"
 cap="${1:-0}"
 shift || true
 
+# Pixel-format token the running daemon can actually read. Entries in any
+# OTHER format are unusable to it — see the age-forcing below. Empty when the
+# daemon can't be probed, in which case we make no format judgements at all.
+cur_fmt=""
+if probed_fmt="$(awww_current_format)"; then cur_fmt="$probed_fmt"; fi
+
 # Build the protected-key prefix list: an entry is protected if its filename
 # starts with the slash-mangled wallpaper path.
 protected=()
@@ -31,14 +37,31 @@ is_protected() {
 }
 
 total=0
+stale=0
 declare -a rows=()
 while IFS= read -r f; do
     [[ -f "$f" ]] || continue
     sz=$(stat -c %s "$f" 2>/dev/null) || continue
     total=$((total + sz))
     base="$(basename "$f")"
-    rows+=("$(awww_journal_age "$base")	$sz	$f")
+    age="$(awww_journal_age "$base")"
+    # Foreign-format entries are forced to age 0 (the oldest possible) so they
+    # are ALWAYS evicted before anything the daemon can actually read, no
+    # matter what the journal says about them. Without this a stale entry that
+    # was ever touched sorts most-recently-used and becomes effectively
+    # immortal. Forcing it here is what makes an Argb->Bgr daemon transition
+    # self-healing, with no `awww clear-cache` and no user intervention.
+    if [[ -n "$cur_fmt" && "${base##*_}" != "$cur_fmt" ]]; then
+        age=0
+        stale=$((stale + 1))
+    fi
+    rows+=("$age	$sz	$f")
 done < <(awww_frame_entries)
+
+if (( stale > 0 )); then
+    printf 'awww-reap: %d entries are not in the daemon format (%s) and will be evicted first\n' \
+        "$stale" "$cur_fmt" >&2
+fi
 
 if (( total <= cap )); then
     printf 'awww-reap: %d bytes ≤ cap %d, nothing to do\n' "$total" "$cap" >&2

@@ -37,15 +37,50 @@ rm -rf "$XDG_CACHE_HOME/awww"
 mkdir -p "$XDG_CACHE_HOME/awww"/{0.2.1,0.9.0,0.12.0}
 assert_eq "$(awww_cache_dir)" "$XDG_CACHE_HOME/awww/0.12.0"
 
-# --- is_cached matches ANY pixel format (format token must not be hard-coded) ---
+# --- current_format is DERIVED, never hard-coded ---
+# A daemon started with no --format flag uses awww's documented default.
+assert_eq "$(AWWW_FORMAT='' awww_current_format || echo UNPROBEABLE)" "Argb"
+assert_eq "$(AWWW_FORMAT=bgr  awww_current_format)" "Bgr"
+assert_eq "$(AWWW_FORMAT=abgr awww_current_format)" "Abgr"
+assert_eq "$(AWWW_FORMAT=rgb  awww_current_format)" "Rgb"
+assert_eq "$(AWWW_FORMAT=argb awww_current_format)" "Argb"
+# An unrecognized value must report "cannot determine" (nonzero), not guess.
+if AWWW_FORMAT=weirdfmt awww_current_format >/dev/null 2>&1; then
+  echo "FAIL: current_format must fail on an unrecognized format value" >&2; fail=1
+fi
+
+# --- is_cached is FORMAT-EXACT (Critical fix 1) ---
+# The question is "will the RUNNING daemon hit this entry?". A leftover entry
+# in a foreign pixel format is unreadable to it, so answering yes makes the
+# prefetcher skip a wallpaper that still cold-decodes on display — turning the
+# prefetcher into a no-op across the whole rotation after a format change.
 cd_dir="$(awww_cache_dir)"
 : > "$cd_dir/_x_y.gif__800x600_fit_Bgr"
-if awww_is_cached /x/y.gif 800x600 fit; then :; else
-  echo "FAIL: is_cached should match _Bgr suffix" >&2; fail=1
+
+if AWWW_FORMAT=bgr awww_is_cached /x/y.gif 800x600 fit; then :; else
+  echo "FAIL: is_cached must be TRUE for an entry in the daemon's own format" >&2; fail=1
 fi
+if AWWW_FORMAT=argb awww_is_cached /x/y.gif 800x600 fit; then
+  echo "FAIL: is_cached must be FALSE when only a foreign-format (_Bgr) entry exists for an argb daemon" >&2; fail=1
+fi
+# Symmetric case, so the test cannot pass by favouring one literal token.
+: > "$cd_dir/_x_z.gif__800x600_fit_Argb"
+if AWWW_FORMAT=argb awww_is_cached /x/z.gif 800x600 fit; then :; else
+  echo "FAIL: is_cached must be TRUE for an _Argb entry under an argb daemon" >&2; fail=1
+fi
+if AWWW_FORMAT=bgr awww_is_cached /x/z.gif 800x600 fit; then
+  echo "FAIL: is_cached must be FALSE when only an _Argb entry exists for a bgr daemon" >&2; fail=1
+fi
+# Unprobeable daemon: fall back to the permissive glob (fail OPEN). Failing
+# closed here would make a missing daemon trigger a full re-decode of the cache.
+if AWWW_FORMAT=weirdfmt awww_is_cached /x/y.gif 800x600 fit; then :; else
+  echo "FAIL: is_cached must fall back to the permissive glob when the daemon can't be probed" >&2; fail=1
+fi
+
 if awww_is_cached /x/nope.gif 800x600 fit; then
   echo "FAIL: is_cached should be false for absent entry" >&2; fail=1
 fi
+rm -f "$cd_dir/_x_z.gif__800x600_fit_Argb"
 
 # --- frame_entries includes __ entries and EXCLUDES per-output restore files ---
 : > "$cd_dir/eDP-2"
@@ -187,8 +222,44 @@ assert_eq "$(awww_journal_age "k")" "222"
 : > "$cd_dir/_w_x.gif__1920x1080_crop_Bgr"
 : > "$cd_dir/_w_x.gif__2560x1440_crop_Bgr"
 : > "$cd_dir/_w_other.gif__1920x1080_crop_Bgr"
-awww_journal_touch_wallpaper "/w/x.gif"
+AWWW_FORMAT=bgr awww_journal_touch_wallpaper "/w/x.gif"
 assert_eq "$(grep -c '_w_x.gif__' "$AWWW_JOURNAL")" "2"
 assert_eq "$(grep -c '_w_other.gif__' "$AWWW_JOURNAL")" "0"
+
+# --- Critical fix 2: touch_wallpaper must NOT stamp foreign-format entries.
+#     Stamping them makes dead weight sort most-recently-used, so the reaper
+#     evicts it LAST and the cache converges on ~half unusable entries — a
+#     permanently halved effective cap. _w_x now has entries in BOTH formats;
+#     an argb daemon must journal only the _Argb one. ---
+: > "$AWWW_JOURNAL"
+: > "$cd_dir/_w_x.gif__1920x1080_crop_Argb"
+AWWW_FORMAT=argb awww_journal_touch_wallpaper "/w/x.gif"
+assert_eq "$(grep -c '_Argb' "$AWWW_JOURNAL")" "1"
+if grep -q '_Bgr' "$AWWW_JOURNAL"; then
+  echo "FAIL: touch_wallpaper stamped foreign-format (_Bgr) entries under an argb daemon — they would become LRU-immortal" >&2
+  fail=1
+fi
+
+# Symmetric: a bgr daemon journals only the two _Bgr entries, not the _Argb one.
+: > "$AWWW_JOURNAL"
+AWWW_FORMAT=bgr awww_journal_touch_wallpaper "/w/x.gif"
+assert_eq "$(grep -c '_Bgr' "$AWWW_JOURNAL")" "2"
+if grep -q '_Argb' "$AWWW_JOURNAL"; then
+  echo "FAIL: touch_wallpaper stamped foreign-format (_Argb) entries under a bgr daemon" >&2
+  fail=1
+fi
+
+# Unprobeable daemon: touch everything, as before (fail open).
+: > "$AWWW_JOURNAL"
+AWWW_FORMAT=weirdfmt awww_journal_touch_wallpaper "/w/x.gif"
+assert_eq "$(wc -l < "$AWWW_JOURNAL" | tr -d ' ')" "3"
+
+# A wallpaper with no cache entries at all must be a silent no-op, not an
+# abort: the empty glob path runs on every prefetch of an uncached wallpaper.
+: > "$AWWW_JOURNAL"
+awww_journal_touch_wallpaper "/w/has-no-entries-at-all.gif"
+after_empty_touch="reached"
+assert_eq "$after_empty_touch" "reached"
+assert_eq "$(wc -c < "$AWWW_JOURNAL" | tr -d ' ')" "0"
 
 if [[ $fail -eq 0 ]]; then echo "PASS: awww-cache-lib.sh"; else echo "TESTS FAILED" >&2; exit 1; fi
