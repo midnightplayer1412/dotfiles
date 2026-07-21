@@ -73,25 +73,54 @@ awww_journal_path() {
 }
 
 # Record "key was used now", replacing any previous line for that key.
+#
+# The read-filter-append-rename cycle is serialized with `flock` on a
+# sidecar lock file: `mv -f` only makes the final swap atomic, not the
+# read+filter that precedes it, so two concurrent callers could otherwise
+# both read the same prior state and the second `mv -f` would silently
+# discard the first's update (lost-update race). The lock is scoped to a
+# subshell so it is released the instant that subshell exits, even on
+# error — nothing here can deadlock (single non-reentrant lock, never
+# taken recursively: awww_journal_touch_wallpaper calls this in a plain
+# sequential loop, one touch fully completing before the next begins) or
+# leak (no lock is held past the subshell's lifetime).
+#
+# Matching uses awk on the exact second TSV field, not `grep -F`, because
+# a substring match would also hit any OTHER key that contains this key as
+# a substring (e.g. touching "key-one" must never filter out or attribute
+# its timestamp to "key-one-two") — see awww_journal_age for the same
+# concern on the read side.
 awww_journal_touch() {
-    local key="$1" jp now tmpf
+    local key="$1" jp now tmpf lockf
     jp="$(awww_journal_path)"
     now="$(date +%s)"
     mkdir -p "$(dirname "$jp")"
     tmpf="$jp.tmp.$$"
-    { [[ -f "$jp" ]] && grep -vF -- "	$key" "$jp" || true; } > "$tmpf"
-    printf '%s\t%s\n' "$now" "$key" >> "$tmpf"
-    mv -f "$tmpf" "$jp"
+    lockf="$jp.lock"
+    (
+        flock -x 200
+        { [[ -f "$jp" ]] && awk -F'\t' -v k="$key" '$2 != k' "$jp" || true; } > "$tmpf"
+        printf '%s\t%s\n' "$now" "$key" >> "$tmpf"
+        mv -f "$tmpf" "$jp"
+    ) 200>"$lockf"
 }
 
 # Epoch seconds this key was last used, or 0 when unknown. Unknown entries
 # sort oldest, so pre-existing cache files are evicted before tracked ones.
+#
+# Matching uses awk on the exact second TSV field (see awww_journal_touch)
+# so a key that is a PREFIX of another key's line is never confused with
+# it via substring matching. The `awk | tail` pipeline always exits 0 even
+# when zero lines match (awk simply prints nothing; tail on empty input is
+# still success), so this is safe to call directly under `set -e` without
+# wrapping it in `$(...)` — unlike `grep -F`, which exits 1 on no match and
+# would abort the calling shell under `pipefail` on the unknown-key path.
 awww_journal_age() {
     local key="$1" jp
     jp="$(awww_journal_path)"
     [[ -f "$jp" ]] || { printf '0'; return; }
     local ts
-    ts="$(grep -F -- "	$key" "$jp" | tail -1 | cut -f1)"
+    ts="$(awk -F'\t' -v k="$key" '$2 == k { print $1 }' "$jp" | tail -1)"
     printf '%s' "${ts:-0}"
 }
 

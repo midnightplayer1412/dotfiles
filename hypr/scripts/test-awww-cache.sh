@@ -110,6 +110,17 @@ fi
 # --- unknown key reports 0 (sorts oldest → evicted first) ---
 assert_eq "$(awww_journal_age "never-seen")" "0"
 
+# --- journal file does not exist at all -> age still reports 0, exit 0 ---
+fresh_journal="$tmp/does-not-exist.tsv"
+assert_eq "$(AWWW_JOURNAL="$fresh_journal" awww_journal_age "whatever")" "0"
+
+# --- default journal path (no AWWW_JOURNAL override) resolves under
+#     XDG_CACHE_HOME, matching the documented fallback ---
+assert_eq "$(env -u AWWW_JOURNAL XDG_CACHE_HOME="$tmp/xdgcache" bash -c '
+  source "'"$SCRIPT_DIR"'/awww-cache-lib.sh"
+  awww_journal_path
+')" "$tmp/xdgcache/awww-usage.tsv"
+
 # --- re-touch updates in place, never duplicates the key ---
 awww_journal_touch "key-one"
 assert_eq "$(grep -c 'key-one' "$AWWW_JOURNAL")" "1"
@@ -117,6 +128,58 @@ assert_eq "$(grep -c 'key-one' "$AWWW_JOURNAL")" "1"
 # --- distinct keys coexist ---
 awww_journal_touch "key-two"
 assert_eq "$(wc -l < "$AWWW_JOURNAL" | tr -d ' ')" "2"
+
+# --- Finding 1 regression: awww_journal_age on an unknown key must NOT
+#     abort a `set -e` caller when called directly (not wrapped in
+#     $(...)). Bash disables errexit propagation inside command
+#     substitution (inherit_errexit is off), which is exactly why every
+#     other call in this suite going through $(...) would never catch
+#     this — so this check deliberately avoids that shape.
+#
+#     The whole probe runs in a NESTED bash -c so a regression here can't
+#     abort this test file's own `set -e` shell before later assertions
+#     run; `set +e`/`set -e` around the capture turns "nested shell died"
+#     into a normal FAIL rather than an uncaught abort of this suite. ---
+set +e
+finding1_out="$(bash -c '
+  set -euo pipefail
+  source "'"$SCRIPT_DIR"'/awww-cache-lib.sh"
+  export AWWW_JOURNAL="'"$tmp"'/finding1.tsv"
+  awww_journal_touch "some-key"
+  awww_journal_age "never-seen-key-f1"
+  echo "after"
+')"
+finding1_exit=$?
+set -e
+if [[ $finding1_exit -ne 0 ]]; then
+  echo "FAIL: awww_journal_age on an unknown key aborted its (unwrapped) caller under set -e (exit $finding1_exit) — 'after' never ran" >&2
+  fail=1
+else
+  assert_eq "$finding1_out" "0after"
+fi
+
+# --- Finding 2 regression (data loss): touching a key must never delete
+#     or blank the journal line of a DIFFERENT key that merely has this
+#     key as a text prefix. With substring matching, touching "k" wipes
+#     out "k-longer"'s line entirely, so its age wrongly reads back as 0
+#     (indistinguishable from "never journaled"). ---
+: > "$AWWW_JOURNAL"
+awww_journal_touch "k-longer"
+awww_journal_touch "k"
+if [[ "$(awww_journal_age "k-longer")" == "0" ]]; then
+  echo "FAIL: touching prefix key 'k' wiped out 'k-longer' (substring match data loss)" >&2
+  fail=1
+fi
+
+# --- Finding 2 regression (wrong attribution): with both a key and a
+#     longer key sharing it as a prefix present, looking up the SHORTER
+#     key must return its OWN timestamp, not the other's. Substring
+#     matching (grep -F) matches both lines; `tail -1` then returns
+#     whichever happens to sort last in the file, not the correct one. ---
+: > "$AWWW_JOURNAL"
+printf '222\tk\n' >> "$AWWW_JOURNAL"
+printf '111\tk-longer\n' >> "$AWWW_JOURNAL"
+assert_eq "$(awww_journal_age "k")" "222"
 
 # --- touch_wallpaper records the REAL on-disk filenames, across resolutions
 #     and whatever pixel-format token happens to be in use ---
