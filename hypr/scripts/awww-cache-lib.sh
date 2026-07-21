@@ -45,14 +45,22 @@ awww_current_format() {
     else
         local pd argv0
         local -a argv=()
-        for pd in /proc/[0-9]*; do
+        # AWWW_PROC_ROOT overrides the /proc root the scan globs under; it
+        # exists so the test-suite can fabricate cmdline fixtures under a temp
+        # dir and exercise this argv parser deterministically, without a real
+        # daemon. Nothing in the real config sets it.
+        for pd in "${AWWW_PROC_ROOT:-/proc}"/[0-9]*; do
             [[ -r "$pd/cmdline" ]] || continue
             argv=()
             # `mapfile -d ''` splits the NUL-separated cmdline into argv.
             # A process exiting between the glob and the read makes this fail;
             # that is routine, not an error, hence the guard (this file is
-            # sourced into `set -euo pipefail` scripts).
-            mapfile -d '' -t argv < "$pd/cmdline" 2>/dev/null || continue
+            # sourced into `set -euo pipefail` scripts). stderr is silenced
+            # BEFORE the input redirect is attempted (redirections apply
+            # left-to-right), so a process that exits in the TOCTOU window
+            # between the `-r` test and this read can't leak bash's
+            # "No such file or directory" onto the caller's stderr.
+            mapfile -d '' -t argv 2>/dev/null < "$pd/cmdline" || continue
             (( ${#argv[@]} > 0 )) || continue
             argv0="${argv[0]##*/}"
             [[ "$argv0" == "awww-daemon" ]] || continue

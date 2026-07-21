@@ -51,19 +51,6 @@ reap_orphans() {
     done
 }
 
-# Unconditional sweep of every attached headless output, regardless of why
-# we're exiting: normal completion, an uncaught error under `set -e`,
-# Ctrl-C (INT), or a caller's timeout/logout (TERM). This is what actually
-# closes the create->remove window described in the file header, including
-# the narrow gap before we've even determined the new output's name.
-#
-# Safe to sweep ALL headless outputs (not just "ours"): this script's own
-# contract is "callers must serialize: never run two of these at once" (see
-# header), so nothing else can legitimately have a headless output attached
-# while this process is alive. A concurrent second instance is excluded by
-# contract, not merely assumed — if it happened, the before/after name
-# diffing below would already be broken by the race, independent of this
-# trap.
 # Cache key of a decode that is in flight right now, or "" when none is.
 # awww writes its cache entry IN PLACE — there is no .tmp/.part convention —
 # so an interrupted decode leaves a truncated file that awww_is_cached happily
@@ -91,6 +78,19 @@ discard_partial() {
     done
 }
 
+# Unconditional sweep of every attached headless output, regardless of why
+# we're exiting: normal completion, an uncaught error under `set -e`,
+# Ctrl-C (INT), or a caller's timeout/logout (TERM). This is what actually
+# closes the create->remove window described in the file header, including
+# the narrow gap before we've even determined the new output's name.
+#
+# Safe to sweep ALL headless outputs (not just "ours"): this script's own
+# contract is "callers must serialize: never run two of these at once" (see
+# header), so nothing else can legitimately have a headless output attached
+# while this process is alive. A concurrent second instance is excluded by
+# contract, not merely assumed — if it happened, the before/after name
+# diffing below would already be broken by the race, independent of this
+# trap.
 cleanup() {
     # Ctrl-C / SIGTERM / an errexit abort mid-`awww img` all land here with a
     # half-written entry on disk. Reachable in normal use: quickshell being

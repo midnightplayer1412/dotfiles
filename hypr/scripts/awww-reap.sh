@@ -86,14 +86,14 @@ while IFS= read -r f; do
     rows+=("$age	$sz	$f")
 done < <(awww_frame_entries)
 
-if (( stale > 0 )); then
-    printf 'awww-reap: %d entries are not in the daemon format (%s) and will be evicted first\n' \
-        "$stale" "$cur_fmt" >&2
-fi
-
 if (( total <= cap )); then
     printf 'awww-reap: %d bytes ≤ cap %d, nothing to do\n' "$total" "$cap" >&2
     exit 0
+fi
+
+if (( stale > 0 )); then
+    printf 'awww-reap: %d entries are not in the daemon format (%s) and will be evicted first\n' \
+        "$stale" "$cur_fmt" >&2
 fi
 
 freed=0; removed=0; skipped=0

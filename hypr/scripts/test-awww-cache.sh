@@ -38,8 +38,6 @@ mkdir -p "$XDG_CACHE_HOME/awww"/{0.2.1,0.9.0,0.12.0}
 assert_eq "$(awww_cache_dir)" "$XDG_CACHE_HOME/awww/0.12.0"
 
 # --- current_format is DERIVED, never hard-coded ---
-# A daemon started with no --format flag uses awww's documented default.
-assert_eq "$(AWWW_FORMAT='' awww_current_format || echo UNPROBEABLE)" "Argb"
 assert_eq "$(AWWW_FORMAT=bgr  awww_current_format)" "Bgr"
 assert_eq "$(AWWW_FORMAT=abgr awww_current_format)" "Abgr"
 assert_eq "$(AWWW_FORMAT=rgb  awww_current_format)" "Rgb"
@@ -48,6 +46,90 @@ assert_eq "$(AWWW_FORMAT=argb awww_current_format)" "Argb"
 if AWWW_FORMAT=weirdfmt awww_current_format >/dev/null 2>&1; then
   echo "FAIL: current_format must fail on an unrecognized format value" >&2; fail=1
 fi
+
+# --- current_format's /proc argv parser, exercised via a fabricated proc
+#     root (AWWW_PROC_ROOT) instead of the live daemon ---
+#
+# Every assertion above short-circuits through AWWW_FORMAT and returns before
+# the /proc scan ever runs, so without this section the argv parser — the
+# most delicate part of the whole format fix — would have zero deterministic
+# coverage. Fixtures are real NUL-separated cmdline files (mapfile -d '' is
+# what the parser actually reads), one pid dir per case.
+proc_root="$tmp/procroot"
+
+# Writes a fabricated /proc/<pid>/cmdline: NUL-separated argv with a
+# trailing NUL, exactly like the kernel's real file.
+mk_proc() {
+  local pid="$1"; shift
+  mkdir -p "$proc_root/$pid"
+  local out="$proc_root/$pid/cmdline" arg
+  : > "$out"
+  for arg in "$@"; do
+    printf '%s\0' "$arg" >> "$out"
+  done
+}
+
+reset_proc_root() { rm -rf "$proc_root"; mkdir -p "$proc_root"; }
+
+# no --format flag at all -> awww's documented default
+reset_proc_root
+mk_proc 100 "awww-daemon"
+assert_eq "$(AWWW_PROC_ROOT="$proc_root" awww_current_format)" "Argb"
+
+# --format bgr
+reset_proc_root
+mk_proc 100 "awww-daemon" "--format" "bgr"
+assert_eq "$(AWWW_PROC_ROOT="$proc_root" awww_current_format)" "Bgr"
+
+# -f bgr
+reset_proc_root
+mk_proc 100 "awww-daemon" "-f" "bgr"
+assert_eq "$(AWWW_PROC_ROOT="$proc_root" awww_current_format)" "Bgr"
+
+# --format=bgr
+reset_proc_root
+mk_proc 100 "awww-daemon" "--format=bgr"
+assert_eq "$(AWWW_PROC_ROOT="$proc_root" awww_current_format)" "Bgr"
+
+# -f=bgr
+reset_proc_root
+mk_proc 100 "awww-daemon" "-f=bgr"
+assert_eq "$(AWWW_PROC_ROOT="$proc_root" awww_current_format)" "Bgr"
+
+# flags on either side of --format
+reset_proc_root
+mk_proc 100 "awww-daemon" "-q" "--format" "abgr" "-l" "bottom"
+assert_eq "$(AWWW_PROC_ROOT="$proc_root" awww_current_format)" "Abgr"
+
+# a non-awww-daemon argv0 must never be mistaken for the daemon
+reset_proc_root
+mk_proc 100 "not-awww-daemon" "--format" "bgr"
+if AWWW_PROC_ROOT="$proc_root" awww_current_format >/dev/null 2>&1; then
+  echo "FAIL: current_format matched a non-awww-daemon argv0" >&2; fail=1
+fi
+
+# no daemon present at all (empty proc root) -> unprobeable
+reset_proc_root
+if AWWW_PROC_ROOT="$proc_root" awww_current_format >/dev/null 2>&1; then
+  echo "FAIL: current_format must fail when no awww-daemon process exists" >&2; fail=1
+fi
+
+# --- Finding 1 regression: this is the exact scenario that broke at the
+#     user's next login. AWWW_FORMAT='' fails the `-n` guard in
+#     awww_current_format and falls through to the /proc probe — assert
+#     that fallback against a FABRICATED daemon (never the live one), so
+#     this assertion's result depends on this fixture, not on whatever
+#     --format flag production's autostart.conf happens to carry today. ---
+reset_proc_root
+mk_proc 100 "awww-daemon"
+assert_eq "$(AWWW_FORMAT='' AWWW_PROC_ROOT="$proc_root" awww_current_format || echo UNPROBEABLE)" "Argb"
+
+# Symmetric: a --format bgr daemon must resolve to Bgr through the same
+# AWWW_FORMAT='' fallthrough — this is what would have failed the moment
+# the format-transition logic started mattering (next login, per autostart.conf).
+reset_proc_root
+mk_proc 100 "awww-daemon" "--format" "bgr"
+assert_eq "$(AWWW_FORMAT='' AWWW_PROC_ROOT="$proc_root" awww_current_format || echo UNPROBEABLE)" "Bgr"
 
 # --- is_cached is FORMAT-EXACT (Critical fix 1) ---
 # The question is "will the RUNNING daemon hit this entry?". A leftover entry
