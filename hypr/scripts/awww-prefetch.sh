@@ -64,7 +64,39 @@ reap_orphans() {
 # contract, not merely assumed — if it happened, the before/after name
 # diffing below would already be broken by the race, independent of this
 # trap.
+# Cache key of a decode that is in flight right now, or "" when none is.
+# awww writes its cache entry IN PLACE — there is no .tmp/.part convention —
+# so an interrupted decode leaves a truncated file that awww_is_cached happily
+# reports as a hit forever after. That wallpaper would then stall on every
+# single display and prefetch would never re-warm it. Discarding the partial
+# entry is what keeps "cached" meaning "complete".
+inflight_key=""
+
+# Remove every cache entry for one key (all pixel formats — we are deleting
+# OUR OWN wreckage here, so the permissive glob is correct: whatever awww
+# managed to write under this key is suspect regardless of its format token).
+discard_partial() {
+    local key="$1" dir f
+    [[ -n "$key" ]] || return 0
+    dir="$(awww_cache_dir)" || return 0
+    for f in "$dir/${key}_"*; do
+        # Empty globs expand to the literal pattern; the -f test filters that.
+        # Written as a full `if` rather than `[[ ... ]] && rm`, because a
+        # trailing failed && list is the loop body's exit status and would
+        # abort this script under `set -e`.
+        if [[ -f "$f" ]]; then
+            log "discarding partial cache entry $(basename "$f")"
+            rm -f "$f" || true
+        fi
+    done
+}
+
 cleanup() {
+    # Ctrl-C / SIGTERM / an errexit abort mid-`awww img` all land here with a
+    # half-written entry on disk. Reachable in normal use: quickshell being
+    # reloaded mid-decode is routine on this machine, and a 300s decode is a
+    # wide window to be reloaded in.
+    discard_partial "$inflight_key"
     reap_orphans
 }
 trap cleanup EXIT
@@ -93,9 +125,15 @@ if (( ${#resolutions[@]} == 0 )); then
 fi
 (( ${#resolutions[@]} > 0 )) || { log "no active resolutions, nothing to warm"; exit 0; }
 
+# Set once any resolution ends up with a complete, usable entry — whether we
+# warmed it just now or found it already cached. Drives the journal touch at
+# the end; see there for why.
+have_usable=0
+
 for wxh in "${resolutions[@]}"; do
     if awww_is_cached "$path" "$wxh"; then
         log "already cached: $(basename "$path") @ $wxh"
+        have_usable=1
         continue
     fi
 
@@ -125,15 +163,35 @@ for wxh in "${resolutions[@]}"; do
 
     # Force the resolution — the headless default is 1920x1080. This keyword
     # is runtime-only and is not written to hyprland.conf.
-    hyprctl keyword monitor "$name,${wxh}@60,auto,1" >/dev/null 2>&1 || true
+    #
+    # NOT swallowed: if this fails, awww decodes at 1920x1080 while we log
+    # that we warmed at $wxh. That burns 74-300s of CPU producing an entry
+    # under the WRONG resolution key — which then also satisfies
+    # awww_is_cached for that wrong resolution, so we never revisit it.
+    # Skipping the resolution loudly is strictly better than caching a lie.
+    # hyprctl prints "ok" on success and a message on failure, and does not
+    # always signal failure through its exit status, so we check both.
+    kw_out=""
+    if ! kw_out="$(hyprctl keyword monitor "$name,${wxh}@60,auto,1" 2>&1)" \
+       || [[ "$kw_out" != *ok* ]]; then
+        log "WARN: could not force $name to $wxh (${kw_out:-no output}); skipping $wxh rather than caching a wrong-resolution entry"
+        hyprctl output remove "$name" >/dev/null 2>&1 || true
+        continue
+    fi
     sleep 1
 
     log "warming $(basename "$path") @ $wxh via $name"
+    # Publish the key BEFORE decoding starts, so an INT/TERM/errexit exit
+    # mid-decode finds it in the trap and discards the truncated entry.
+    inflight_key="$(awww_cache_key "$path" "$wxh")"
     if awww img "$path" -o "$name" >/dev/null 2>&1; then
         log "warmed $(basename "$path") @ $wxh"
+        have_usable=1
     else
         log "WARN: awww img failed for $(basename "$path") @ $wxh"
+        discard_partial "$inflight_key"
     fi
+    inflight_key=""
 
     remove_err=""
     if ! remove_err="$(hyprctl output remove "$name" 2>&1 >/dev/null)"; then
@@ -144,3 +202,16 @@ for wxh in "${resolutions[@]}"; do
         log "WARN: failed to remove $name for $wxh (${remove_err:-no output}); will be swept at exit"
     fi
 done
+
+# Journal the entries we just confirmed usable.
+#
+# Without this, an entry that cost up to 300s to decode carries journal age 0
+# — the OLDEST possible — and so is the reaper's very first victim. It used to
+# survive only by sitting in the QML _queue's protect list, but it leaves that
+# list on setCycleOrder() and on every quickshell restart (the queue is not
+# persisted), so each reload silently discarded up to four wallpapers of
+# prefetch work. Touching here makes "we just spent CPU on this" the LRU fact
+# it always should have been.
+if (( have_usable )); then
+    awww_journal_touch_wallpaper "$path"
+fi
