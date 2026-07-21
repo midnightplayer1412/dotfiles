@@ -30,6 +30,13 @@ export XDG_CACHE_HOME="$tmp/cache"
 mkdir -p "$XDG_CACHE_HOME/awww/0.12.0"
 assert_eq "$(awww_cache_dir)" "$XDG_CACHE_HOME/awww/0.12.0"
 
+# --- multi-version discovery: lexicographic vs semantic versioning ---
+# Create versions where sort -V differs from plain sort (0.9.0 sorts last
+# lexicographically, but 0.12.0 is the semantic newest)
+rm -rf "$XDG_CACHE_HOME/awww"
+mkdir -p "$XDG_CACHE_HOME/awww"/{0.2.1,0.9.0,0.12.0}
+assert_eq "$(awww_cache_dir)" "$XDG_CACHE_HOME/awww/0.12.0"
+
 # --- is_cached matches ANY pixel format (format token must not be hard-coded) ---
 cd_dir="$(awww_cache_dir)"
 : > "$cd_dir/_x_y.gif__800x600_fit_Bgr"

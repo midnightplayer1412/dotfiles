@@ -10,6 +10,7 @@
 #
 # The <Format> token depends on awww-daemon --format and must never be
 # hard-coded — always glob it.
+set -euo pipefail
 
 # Absolute path of the versioned cache dir. Picks the newest if several
 # versions coexist (an awww upgrade leaves the old dir behind).
@@ -36,7 +37,7 @@ awww_is_cached() {
     local dir key
     dir="$(awww_cache_dir)" || return 1
     key="$(awww_cache_key "$1" "$2" "${3:-crop}")"
-    compgen -G "$dir/$key"_* > /dev/null
+    compgen -G "${dir}/${key}_*" > /dev/null || return 1
 }
 
 # Every frame-cache entry, absolute paths, one per line.
