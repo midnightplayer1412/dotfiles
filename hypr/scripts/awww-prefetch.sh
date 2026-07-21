@@ -76,7 +76,14 @@ for wxh in "${resolutions[@]}"; do
     # so a stray already-attached HEADLESS-N is never mistaken for ours.
     name="$(comm -13 <(printf '%s\n' "$before") <(printf '%s\n' "$after") | head -1)"
     if [[ -z "$name" ]]; then
-        log "could not determine new headless output name; aborting this warm"
+        # The output WAS created (we passed the `output create` check above)
+        # but we failed to identify its name, so we cannot target a removal
+        # at it specifically. Sweep every attached headless output instead —
+        # under the caller's one-at-a-time serialization guarantee, nothing
+        # else should legitimately be using one right now — so we never
+        # leave the output we just created stranded.
+        log "could not determine new headless output name; sweeping headless outputs"
+        reap_orphans
         continue
     fi
 
