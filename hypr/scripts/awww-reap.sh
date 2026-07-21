@@ -17,6 +17,34 @@ source "$SCRIPT_DIR/awww-cache-lib.sh"
 cap="${1:-0}"
 shift || true
 
+# ─── Cap validation ───────────────────────────────────────────────────
+# Validated HERE, not only in the QML caller, because this is where the `rm`
+# is. A cap that survives the caller's `> 0` check but truncates to 0 in a
+# QML `property int` (e.g. cacheCapGb: 0.5) would otherwise reach us as a
+# perfectly well-formed "0 bytes" instruction and we would cheerfully delete
+# every unprotected entry — ~25 GB and hours of decode — with output
+# indistinguishable from normal operation. A non-numeric cap previously died
+# with `abc: unbound variable`: fail-safe, but silent and baffling.
+#
+# AWWW_REAP_MIN_CAP lowers the floor for the fixture tests, which operate on
+# kilobyte-scale temp caches. Nothing in the real config sets it, so every
+# production invocation gets the full 1 GiB floor.
+min_cap="${AWWW_REAP_MIN_CAP:-$((1024 * 1024 * 1024))}"
+
+if [[ ! "$cap" =~ ^[0-9]+$ ]]; then
+    printf 'awww-reap: FATAL: cap must be a whole number of bytes, got [%s]; refusing to delete anything\n' "$cap" >&2
+    exit 2
+fi
+if [[ ! "$min_cap" =~ ^[0-9]+$ ]]; then
+    printf 'awww-reap: FATAL: AWWW_REAP_MIN_CAP must be a whole number of bytes, got [%s]; refusing to delete anything\n' "$min_cap" >&2
+    exit 2
+fi
+if (( cap < min_cap )); then
+    printf 'awww-reap: FATAL: cap %s bytes is below the %s byte floor — a cap this small would evict essentially the whole cache (hours of re-decoding); refusing to delete anything\n' \
+        "$cap" "$min_cap" >&2
+    exit 2
+fi
+
 # Pixel-format token the running daemon can actually read. Entries in any
 # OTHER format are unusable to it — see the age-forcing below. Empty when the
 # daemon can't be probed, in which case we make no format judgements at all.

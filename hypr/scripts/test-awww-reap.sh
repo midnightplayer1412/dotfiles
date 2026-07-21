@@ -10,6 +10,9 @@ trap 'rm -rf "$tmp"' EXIT
 
 export XDG_CACHE_HOME="$tmp/cache"
 export AWWW_JOURNAL="$tmp/usage.tsv"
+# Fixtures are kilobyte-scale, so lower the reaper's 1 GiB sanity floor.
+# The floor itself is exercised deliberately further down, with this unset.
+export AWWW_REAP_MIN_CAP=1
 # Pin the daemon pixel format so these tests never depend on what is running
 # on the developer's machine.
 export AWWW_FORMAT=argb
@@ -130,5 +133,51 @@ mk "_w_older.gif__100x100_crop_Argb" 1000 1000
 AWWW_FORMAT=zzz-not-a-format "$REAP" 1000 >/dev/null 2>&1
 [[ -f "$cd_dir/_w_recent.gif__100x100_crop_Bgr" ]] || { echo "FAIL: unprobeable daemon must fall back to journal LRU and keep the most recent entry" >&2; fail=1; }
 [[ -f "$cd_dir/_w_older.gif__100x100_crop_Argb" ]] && { echo "FAIL: unprobeable daemon must evict the journal-oldest entry" >&2; fail=1; }
+
+# ── Fix 8 regression: an invalid cap must delete NOTHING and exit nonzero.
+#    Each of these previously either deleted the whole cache (0, from a
+#    truncated 0.5 GB) or died with a bare `unbound variable`. ──
+check_cap_rejected() {  # check_cap_rejected <label> <env-min-cap|-> <cap-arg>
+    local label="$1" minc="$2" capv="$3" rc out
+    rm -f "$cd_dir"/*__* ; : > "$AWWW_JOURNAL"
+    mk "_w_keepme.gif__100x100_crop_Argb" 1000 1000
+    set +e
+    if [[ "$minc" == "-" ]]; then
+        out="$(env -u AWWW_REAP_MIN_CAP "$REAP" "$capv" 2>&1 >/dev/null)"
+    else
+        out="$(AWWW_REAP_MIN_CAP="$minc" "$REAP" "$capv" 2>&1 >/dev/null)"
+    fi
+    rc=$?
+    set -e
+    (( rc != 0 )) || { echo "FAIL: $label cap [$capv] must exit nonzero, got 0" >&2; fail=1; }
+    [[ -f "$cd_dir/_w_keepme.gif__100x100_crop_Argb" ]] \
+        || { echo "FAIL: $label cap [$capv] deleted cache entries — validation must precede any rm" >&2; fail=1; }
+    printf '%s\n' "$out" | grep -q 'FATAL' \
+        || { echo "FAIL: $label cap [$capv] must say so loudly on stderr, got [$out]" >&2; fail=1; }
+}
+
+# A QML `property int` receiving cacheCapGb: 0.5 truncates to 0, and 0 bytes
+# reaches us as a well-formed instruction to delete everything unprotected.
+check_cap_rejected "zero"         1 0
+# Fractional byte counts are never legitimate.
+check_cap_rejected "fractional"   1 0.5
+# Previously died with `abc: unbound variable` — fail-safe but silent.
+check_cap_rejected "non-numeric"  1 abc
+check_cap_rejected "empty"        1 ""
+check_cap_rejected "negative"     1 -5
+# And with the real production floor in force, a sub-1-GiB cap is refused
+# even though it is a perfectly well-formed integer.
+check_cap_rejected "below-floor"  - 1000
+
+# A cap at or above the floor still works normally (the floor must not have
+# broken the happy path).
+rm -f "$cd_dir"/*__* ; : > "$AWWW_JOURNAL"
+mk "_w_small.gif__100x100_crop_Argb" 1000 1000
+set +e
+env -u AWWW_REAP_MIN_CAP "$REAP" $((1024 * 1024 * 1024)) >/dev/null 2>&1
+rc=$?
+set -e
+[[ $rc -eq 0 ]] || { echo "FAIL: a 1 GiB cap must be accepted (got rc=$rc)" >&2; fail=1; }
+[[ -f "$cd_dir/_w_small.gif__100x100_crop_Argb" ]] || { echo "FAIL: under-cap entry wrongly evicted" >&2; fail=1; }
 
 if [[ $fail -eq 0 ]]; then echo "PASS: awww-reap.sh"; else echo "TESTS FAILED" >&2; exit 1; fi
