@@ -6,6 +6,41 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-22
+
+#### Added
+- **touchpad toggle** (hypr/scripts + quickshell) — `Super + Shift + T` switches the
+  built-in trackpad off and on, mirrored by a new **Settings → Input** pane. Both
+  surfaces share one state file (`quickshell/touchpad-config.json`) and neither calls
+  `hyprctl` itself: they delegate to **`hypr/scripts/apply-touchpad.sh`**, the single
+  owner of `hyprctl keyword device[…]:enabled`, the same way `apply-keyboard.sh` owns
+  the `asusctl` command. `TouchpadConfig`'s `FileView` uses `watchChanges`, so
+  toggling from the keybind moves the Settings switch with no IPC between them.
+  - **Persistence** — the applier is wired into `autostart.conf` as **`exec =`** (not
+  `exec-once`), so it runs at login *and* on every config reload. `touchpad.conf`
+  always declares `enabled = true` as the boot default, so without it `Super+Shift+R`
+  would silently re-enable a touchpad you had turned off.
+  - **Fail-safe by construction** — the applier discovers touchpads from
+  `hyprctl -j devices` instead of hardcoding the ASUS device string, and exits 0 when
+  jq, hyprctl, the config, or a touchpad is missing. A corrupt config falls back to
+  *enabled*: a bad state file must never leave the user with no pointer.
+  - **jq gotcha, caught by the tests** — the first cut read state with
+  `jq '.enabled // true'`. `//` treats `false` as empty, so a disabled touchpad read
+  back as enabled and the toggle was a one-way street. Both scripts now use an
+  explicit `type == "boolean"` check, commented so it doesn't get "simplified" back.
+  - `hypr/scripts/test-touchpad-toggle.sh` — covers the round trip, both corrupt-config
+  fallbacks, device discovery (mice are never touched), the no-touchpad no-op, and
+  idempotency. Stubs `hyprctl`/`notify-send` on `PATH`, so it runs headless.
+
+#### Fixed
+- **cheatsheet keymap no longer drifts** (hypr/components/autostart.conf) — `Super + /`
+  showed a stale keymap after any bind change, because `gen-keymap.sh` was a manual
+  step nothing invoked (a known follow-up in the 2026-06-12 cheatsheet design doc). It
+  now runs from `autostart.conf` as `exec =` on every reload. It is deliberately
+  ordered **above** the quickshell relaunch line: `KeymapData` reads the JSON once at
+  startup with no file watching, so a shell that started first would keep showing the
+  previous keymap until the *next* reload.
+
 ### 2026-07-21
 
 #### Added
