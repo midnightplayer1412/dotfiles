@@ -1,6 +1,7 @@
 singleton Theme 0.0 Theme.qml
 singleton ThemeConfig 0.0 ThemeConfig.qml
 singleton KeyboardConfig 0.0 KeyboardConfig.qml
+singleton TouchpadConfig 0.0 TouchpadConfig.qml
 singleton BarConfig 0.0 BarConfig.qml
 singleton OverviewConfig 0.0 OverviewConfig.qml
 singleton LauncherState 0.0 LauncherState.qml

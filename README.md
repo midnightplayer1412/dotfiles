@@ -47,7 +47,8 @@ Hyprland compositor config split into modular files:
 - `components/autostart.conf` — startup services
 - `components/binds.conf` — keybindings
 - `components/input.conf` — keyboard/mouse/gesture settings
-- `touchpad.conf` — touchpad device settings
+- `touchpad.conf` — touchpad device settings (scroll/sensitivity, plus the
+  `enabled = true` boot default that `apply-touchpad.sh` overrides at runtime)
 
 **Monitors:** eDP-1 (1920x1080@144) + HDMI-A-1 (2560x1440@144)
 **Layout:** Dwindle
@@ -72,6 +73,7 @@ Hyprland compositor config split into modular files:
 | Super + Y | Lyrics strip (toggle) |
 | Super + Shift + Y | Full-screen karaoke lyrics |
 | Super + Backspace | Settings panel |
+| Super + Shift + T | Toggle touchpad |
 | Super + Escape | Lock screen (Quickshell) |
 | Super + Shift + Escape | Lock screen (hyprlock fallback) |
 
@@ -165,7 +167,11 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   (Hyprland, nvim, tmux, kitty, yazi) highlight each app's bound keys on a
   CSS-drawn keyboard; hover a key to see its binding in the detail bar.
   Keymaps are JSON files under `cheatsheet/keymaps/` (one per app); the
-  Hyprland map is generated from `binds.conf` by `hypr/scripts/gen-keymap.sh`.
+  Hyprland map is generated from `binds.conf` by `hypr/scripts/gen-keymap.sh`,
+  which runs from `autostart.conf` as `exec =` on every reload so the sheet
+  can't drift from the real binds. It is deliberately ordered *above* the
+  quickshell relaunch line: `KeymapData` reads the JSON once at startup with no
+  file watching, so a shell that started first would show the previous keymap.
 - **Lock Screen** — A dedicated, secure lock instance (`lock-screen.qml` →
   `qs -p … lock-screen.qml`) implementing the `ext-session-lock-v1` protocol
   (`WlSessionLock`) with real PAM authentication (`/etc/pam.d/login`). Themed
@@ -190,7 +196,10 @@ Qt6 QML-based UI shell. Entry point: `shell.qml`.
   edge sidebar / app grid, with a mockup of each) and its per-layout options,
   recents layout, and web-search engine. **Window Switcher** picks the overview layout (with a mini
   wireframe of each) and its per-layout options — Grid size/position, Side panel
-  edge and drag auto-scroll speed. **About** (pinned to the bottom of the sidebar) shows a
+  edge and drag auto-scroll speed. **Input** holds the touchpad master switch,
+  which shares its state file with the `Super + Shift + T` bind (see Touchpad
+  below), so toggling from the keyboard moves the switch live.
+  **About** (pinned to the bottom of the sidebar) shows a
   read-only system/hardware snapshot — OS, kernel, host, compositor, uptime,
   CPU, GPU(s), memory, disk — gathered live each time the panel opens. New
   categories drop into `settings/categories/`.
@@ -285,6 +294,38 @@ bash ~/dotfiles/grub/deploy.sh
 The deploy script compiles the Monaspace Neon font (size 24) to GRUB's `.pf2` format, copies all files to `/boot/grub/themes/custom/`, and runs `grub-mkconfig`.
 
 > `/boot` is on a separate FAT32 partition so symlinks from home are not possible — deploy script is used instead.
+
+---
+
+## Touchpad
+
+The built-in trackpad can be switched off from two places that share one state
+file, `quickshell/touchpad-config.json`:
+
+- **`Super + Shift + T`** → `hypr/scripts/toggle-touchpad.sh` — flips the state,
+  applies it, and fires a `notify-send` card
+- **Settings → Input** → `TouchpadConfig` — the same state via a `Ui.Toggle`
+
+Neither surface calls `hyprctl` itself. Both delegate to
+`hypr/scripts/apply-touchpad.sh`, the single owner of the
+`hyprctl keyword device[…]:enabled` command (the rule `apply-keyboard.sh`
+follows for `asusctl`). It discovers touchpads from `hyprctl -j devices` rather
+than hardcoding the ASUS device string, and no-ops safely when jq, hyprctl, the
+config, or a touchpad is missing — a corrupt config falls back to *enabled*, so
+a bad state file can never strand you without a pointer.
+
+**Persistence** is the `exec =` line in `autostart.conf` (not `exec-once`): it
+runs at login *and* on every config reload. `touchpad.conf` always declares
+`enabled = true` as the boot default, so without that line `Super + Shift + R`
+would silently re-enable a touchpad you had turned off.
+
+`hypr/scripts/test-touchpad-toggle.sh` covers the round trip, the corrupt-config
+fallbacks, device discovery, and idempotency, stubbing `hyprctl`/`notify-send`
+so it runs without a Hyprland session.
+
+> Note: `jq '.enabled // true'` is wrong here — `//` treats `false` as empty, so
+> a disabled touchpad reads back as enabled and the toggle becomes one-way. Both
+> scripts use an explicit `type == "boolean"` check instead.
 
 ---
 
