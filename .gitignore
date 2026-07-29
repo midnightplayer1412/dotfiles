@@ -14,6 +14,7 @@ quickshell/theme-config.json
 quickshell/bar-config.json
 quickshell/overview-config.json
 quickshell/widgets-config.json
+quickshell/keyboard-config.json
 quickshell/.qmlls.ini
 
 # Matugen-regenerated theme files (rebuilt on every wallpaper change)
