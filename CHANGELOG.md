@@ -20,6 +20,17 @@ grouped by date since this repo is unreleased / rolling.
   dropped rather than repointed. `image/png=gimp.desktop` was kept: it is an added
   association only, so GIMP appears under *Open With* while `imv-viewer.desktop`
   stays the default.
+- **dangling URL scheme handlers** (`mimeapps.list`) — both deep-link schemes pointed at
+  desktop-entry IDs that do not exist. `x-scheme-handler/anytype=anytype.desktop` →
+  `io.anytype.anytype.desktop`, the Flatpak's actual export, which declares
+  `MimeType=x-scheme-handler/anytype`. `x-scheme-handler/postman=Postman.desktop` →
+  `postman.desktop`; desktop-entry IDs are case-sensitive, so the capitalised form never
+  resolved. Postman needed a second fix beyond the filename: its entry declared no
+  `MimeType` and its `Exec` had no `%u`, so it could not have received a URL even once
+  the name was right. `~/.local/share/applications/postman.desktop` now carries
+  `MimeType=x-scheme-handler/postman;` and `Exec=/opt/Postman/Postman %u`. That file is
+  machine-local and not tracked here. Verified with `xdg-mime query default` for both
+  schemes; every handler referenced by `mimeapps.list` now resolves to a real entry.
 
 #### Changed
 - **`hypr/hyprlock.conf` is no longer tracked** — it is matugen output. `matugen/config.toml`
