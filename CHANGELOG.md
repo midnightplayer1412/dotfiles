@@ -6,6 +6,58 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-07-29
+
+#### Fixed
+- **broken mime associations** (`mimeapps.list`) — two entries resolved to handlers
+  that cannot run. `text/plain=libreoffice_calc.desktop` referenced a desktop file
+  that does not exist (LibreOffice is not installed); the working default,
+  `text/plain=nvim-kitty.desktop`, was never affected. `application/vnd.rar=unzip.desktop`
+  appeared in *both* `[Added Associations]` and `[Default Applications]`, but
+  `unzip.desktop` declares `MimeType=application/zip` and runs `unzip`, which cannot
+  read RAR — so double-clicking a `.rar` failed silently instead of falling through.
+  Nothing currently installed declares `application/vnd.rar`, so the association was
+  dropped rather than repointed. `image/png=gimp.desktop` was kept: it is an added
+  association only, so GIMP appears under *Open With* while `imv-viewer.desktop`
+  stays the default.
+
+#### Changed
+- **`hypr/hyprlock.conf` is no longer tracked** — it is matugen output. `matugen/config.toml`
+  defines seven `[templates.*]` entries; six of their outputs were already ignored and
+  hyprlock was the lone exception, so every wallpaper change dirtied the working tree.
+  With the cycle at 60s the input-ring colour churned three times over the course of one
+  session (`9dcbfc` → `e9c16c` → `92cef5` → `b7c4ff`), and the earlier commits
+  `4483ffc` / `10b50ff` ("refresh hyprlock input ring color") turn out to have been that
+  churn captured by hand rather than deliberate restyles. The generated file is identical
+  to `matugen/templates/hyprlock.conf` apart from three colour substitutions.
+  **To restyle the lock screen, edit the template** — the output regenerates on the next
+  wallpaper apply.
+- **`quickshell/keyboard-config.json` is no longer tracked** — it is Settings-mutated
+  runtime state, like the eight sibling `*-config.json` files already ignored (bar,
+  overview, widgets, lock, theme, hub, launcher, lyrics). It was left tracked when
+  `3081bc1` landed the Aura RGB pane, so each backlight tweak surfaced as a repo diff.
+  Untracking is lossless: `KeyboardConfig.qml`'s `FileView` has
+  `onLoadFailed → writeAdapter()` and its `JsonAdapter` defaults `brightness` to `"high"`,
+  which is exactly the value that had been committed. `touchpad-config.json` is in the
+  same position and is deliberately left alone for now.
+
+### 2026-07-28
+
+#### Fixed
+- **VA-API pointed at a driver that does not exist** (`hypr/hyprland.conf`) — the
+  compositor renders on the Intel iGPU (Optimus laptop, `gpu_mux_mode=1`, `eDP-2` wired
+  to the iGPU, aquamarine picking `card2`/i915 as primary DRM device), but
+  `LIBVA_DRIVER_NAME` was set to `nvidia`. `libva-nvidia-driver` is not installed, so
+  `/usr/lib/dri/nvidia_drv_video.so` was absent and every VA-API init failed with
+  `vaInitialize failed with error code -1` — hardware video decode had been silently
+  falling back to software. Switched to `iHD`, already present via `intel-media-driver`;
+  `vainfo` now reports 59 profiles with decode and encode for H264, HEVC (incl. Main10),
+  VP9 and AV1. `NVD_BACKEND` was dropped, as it only means anything to the absent nvidia
+  backend. Zen is a Flatpak and does not inherit host env, so it is unaffected by this
+  line — it reaches the dGPU through `flatpak override` instead.
+  **Note:** `env` lines apply at Hyprland startup, so this needs a re-login rather than
+  `hyprctl reload`.
+
 ### 2026-07-22
 
 #### Added
