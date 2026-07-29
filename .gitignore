@@ -22,6 +22,7 @@ quickshell/theme/colors.json
 tmux/colors.conf
 yazi/theme.toml
 kitty/theme.conf
+hypr/hyprlock.conf
 
 # Plugin manager output
 tmux/plugins/
