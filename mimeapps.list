@@ -2,6 +2,7 @@
 application/pdf=brave-2.desktop;
 application/zip=unzip.desktop;
 text/html=brave.desktop;
+image/png=gimp.desktop;
 
 [Default Applications]
 application/pdf=brave-2.desktop;
