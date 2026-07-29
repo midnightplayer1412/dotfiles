@@ -49,8 +49,16 @@ grouped by date since this repo is unreleased / rolling.
   `3081bc1` landed the Aura RGB pane, so each backlight tweak surfaced as a repo diff.
   Untracking is lossless: `KeyboardConfig.qml`'s `FileView` has
   `onLoadFailed → writeAdapter()` and its `JsonAdapter` defaults `brightness` to `"high"`,
-  which is exactly the value that had been committed. `touchpad-config.json` is in the
-  same position and is deliberately left alone for now.
+  which is exactly the value that had been committed.
+- **`quickshell/touchpad-config.json` is no longer tracked** — the last Settings-mutated
+  config still in the index. Toggling the trackpad from `Super + Shift + T` or
+  Settings → Input rewrote it, surfacing pointer state as a repo diff. Untracking also
+  fixes a latent bug: `TouchpadConfig.qml` defaults `enabled` to `true`, commented *"a
+  missing or unreadable config must never leave the user without a pointer"* — but the
+  value committed to the repo was `false`, so a fresh clone would have landed on a new
+  machine with the touchpad **disabled**, exactly what that default exists to prevent.
+  With the file untracked, `onLoadFailed → writeAdapter()` regenerates it as enabled.
+  **Every `quickshell/*-config.json` is now ignored**; all ten remain on disk untouched.
 
 ### 2026-07-28
 
