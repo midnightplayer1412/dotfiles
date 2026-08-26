@@ -6,6 +6,17 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-08-26
+
+#### Changed
+- **tap-to-click disabled on the touchpad** (`hypr/touchpad.conf`) — the device block
+  never declared `tap-to-click`, so it inherited Hyprland's default of `true` and a
+  light tap on the surface counted as a left click. Clicking is now a physical press
+  of the pad only. `clickfinger_behavior = true` still decides *which* button that
+  press sends (one finger left, two right, three middle). Note that libinput's
+  `tap-and-drag` requires tapping to be enabled, so dragging is now press-and-hold
+  while moving rather than double-tap-and-slide.
+
 ### 2026-07-29
 
 #### Fixed
