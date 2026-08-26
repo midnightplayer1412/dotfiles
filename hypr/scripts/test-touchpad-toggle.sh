@@ -119,11 +119,52 @@ rm -f "$cfg"
 "$APPLY"
 check "missing config -> no-op" "0" "$(wc -l < "$calls" | tr -d ' ')"
 
-# Applying twice in a row is idempotent (same call, no state drift).
+# Applying twice in a row is idempotent (same calls, no state drift). Each pad
+# gets two keyword calls per run — `enabled` and `tap-to-click`.
 : > "$calls"
 printf '{"enabled": false}\n' > "$cfg"
 "$APPLY"; "$APPLY"
-check "idempotent (2 runs, 1 unique call)" "1" "$(sort -u "$calls" | wc -l | tr -d ' ')"
+check "idempotent (2 runs, 2 unique calls)" "2" "$(sort -u "$calls" | wc -l | tr -d ' ')"
+
+# ── tap-to-click ─────────────────────────────────────────────────────────
+
+# Absent key -> the touchpad.conf default (false: physical press only). This is
+# the state a config written before the setting existed is in.
+: > "$calls"
+printf '{"enabled": true}\n' > "$cfg"
+"$APPLY"
+check "absent tapToClick defaults to false" "true" \
+  "$(grep -q 'keyword device\[asup1205:00-093a:2008-touchpad\]:tap-to-click false' "$calls" && echo true || echo false)"
+
+# Explicit true is honoured — this is the whole point of the Settings switch.
+: > "$calls"
+printf '{"enabled": true, "tapToClick": true}\n' > "$cfg"
+"$APPLY"
+check "tapToClick true applied" "true" \
+  "$(grep -q 'keyword device\[asup1205:00-093a:2008-touchpad\]:tap-to-click true' "$calls" && echo true || echo false)"
+
+# A non-boolean is a corrupt config: fall back to the conf default rather than
+# passing garbage to hyprctl.
+: > "$calls"
+printf '{"enabled": true, "tapToClick": "banana"}\n' > "$cfg"
+"$APPLY"
+check "corrupt tapToClick falls back to false" "true" \
+  "$(grep -q ':tap-to-click false' "$calls" && echo true || echo false)"
+
+# tap-to-click is applied independently of `enabled` — a disabled touchpad still
+# gets its tap state set, so re-enabling it does not need a second apply.
+: > "$calls"
+printf '{"enabled": false, "tapToClick": true}\n' > "$cfg"
+"$APPLY"
+check "tap-to-click applied even when disabled" "true" \
+  "$(grep -q ':tap-to-click true' "$calls" && echo true || echo false)"
+
+# The Super+Shift+T bind must not clobber the tap setting when it rewrites the
+# config — the two switches are independent.
+printf '{"enabled": true, "tapToClick": true}\n' > "$cfg"
+"$TOGGLE"
+check "toggle preserves tapToClick" "true" "$(jq -r '.tapToClick' "$cfg")"
+check "toggle still flips enabled" "false" "$(enabled_now)"
 
 if [[ $fail -eq 0 ]]; then
   echo "PASS: touchpad toggle"

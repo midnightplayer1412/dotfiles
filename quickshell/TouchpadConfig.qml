@@ -4,9 +4,9 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// Touchpad enabled/disabled state, persisted to
-// ~/.config/quickshell/touchpad-config.json and edited from Settings → Input
-// or the Super+Shift+T bind.
+// Touchpad runtime state (enabled, tap-to-click), persisted to
+// ~/.config/quickshell/touchpad-config.json and edited from Settings → Input.
+// The Super+Shift+T bind writes the `enabled` half of the same file.
 //
 // apply() funnels through hypr/scripts/apply-touchpad.sh — the single owner of
 // the `hyprctl keyword device[...]` call. The same script runs from
@@ -19,6 +19,7 @@ Singleton {
     id: cfg
 
     property alias enabled: adapter.enabled   // false = touchpad off
+    property alias tapToClick: adapter.tapToClick   // false = physical press only
 
     function save() { view.writeAdapter(); }
 
@@ -31,6 +32,8 @@ Singleton {
 
     function setEnabled(v) { cfg.enabled = v; save(); apply(); }
     function toggle() { cfg.setEnabled(!cfg.enabled); }
+
+    function setTapToClick(v) { cfg.tapToClick = v; save(); apply(); }
 
     Process { id: applyProc }
 
@@ -45,6 +48,10 @@ Singleton {
             // Defaults to on — a missing or unreadable config must never leave
             // the user without a pointer.
             property bool enabled: true
+            // Defaults to off, matching `tap-to-click = false` in
+            // hypr/touchpad.conf and the same default in apply-touchpad.sh.
+            // Keep the three in step if this ever changes.
+            property bool tapToClick: false
         }
     }
 }

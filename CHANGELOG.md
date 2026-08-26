@@ -8,6 +8,21 @@ grouped by date since this repo is unreleased / rolling.
 
 ### 2026-08-26
 
+#### Added
+- **Tap-to-click switch in Settings → Input** (`quickshell/settings/categories/InputPane.qml`,
+  `quickshell/TouchpadConfig.qml`, `hypr/scripts/apply-touchpad.sh`) — the setting
+  below is now toggleable from the panel instead of only by editing
+  `touchpad.conf`. It rides the existing touchpad plumbing: state lives as
+  `tapToClick` in `touchpad-config.json`, and `apply-touchpad.sh` — still the sole
+  owner of the `hyprctl keyword device[...]` calls — applies it alongside `enabled`
+  at login and on every reload. Missing or non-boolean values fall back to `false`
+  so a config written before this existed does not silently turn tapping back on.
+  `tap-to-click` is applied even when the pad is disabled, so re-enabling it never
+  needs a second apply. The pane's two rows now share an inline `ToggleRow`
+  component (same pattern as `LockScreenPane`). Covered by four new cases in
+  `hypr/scripts/test-touchpad-toggle.sh`, including that Super+Shift+T no longer
+  clobbers the tap setting when it rewrites the config.
+
 #### Changed
 - **tap-to-click disabled on the touchpad** (`hypr/touchpad.conf`) — the device block
   never declared `tap-to-click`, so it inherited Hyprland's default of `true` and a
