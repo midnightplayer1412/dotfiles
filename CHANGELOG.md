@@ -8,7 +8,27 @@ grouped by date since this repo is unreleased / rolling.
 
 ### 2026-08-30
 
+#### Removed
+- **The hyprlang config files** (`hypr/hyprland.conf`, `hypr/touchpad.conf`,
+  `hypr/components/{autostart,binds,input}.conf`) — kept one cycle as a rollback
+  while the Lua config was proven on the real paths (login, reload, binds,
+  cheatsheet, touchpad, resize submap). `git show HEAD~2:hypr/hyprland.conf`
+  still has them. `hypr/hyprlock.conf` stays as-is: hyprlock 0.9.6 has no Lua
+  support and is still hyprlang.
+
 #### Fixed
+- **Autostart no longer spawns a doomed first pass at login**
+  (`hypr/components/autostart.lua`) — `config.reloaded` turns out to fire on the
+  *initial* config load too, during parse, before the backend exists. At login
+  that spawned gen-keymap, quickshell and apply-touchpad into a compositor that
+  was not serving yet; all three died, and the `hyprland.start` handler then did
+  the real work a moment later. Harmless but wasteful. `config.reloaded` now
+  carries a compositor-readiness check (`#hl.get_monitors() > 0`, empty until
+  the backend is up), so the login-time pass is dropped and reloads still apply.
+  The check is deliberately *not* on `hyprland.start`, which runs unconditionally
+  — a readiness probe returning a false negative there would take autostart out
+  entirely, and it is already known to be late enough.
+
 - **Autostart runs from events, not from top-level `hl.exec_cmd`**
   (`hypr/components/autostart.lua`) — the first cut of the Lua migration mapped
   hyprlang's `exec` onto a top-level `hl.exec_cmd(...)`, reasoning that the
@@ -57,9 +77,11 @@ grouped by date since this repo is unreleased / rolling.
     sourced files. Lua locals do not cross files, so they moved to
     `components/programs.lua` and are `require`d where used.
   - `device { tap-to-click }` is spelled `tap_to_click` in Lua.
-  - The old `.conf` files are kept for one cycle as a rollback: Lua takes
-    precedence whenever `hyprland.lua` exists, and any `hyprland.conf` beside it
-    is ignored silently, so reverting is `mv hyprland.lua hyprland.lua.off`.
+  - The old `.conf` files were kept for one cycle as a rollback, then removed
+    once the login path was confirmed (see Removed, below). While they were
+    present the revert was `mv hyprland.lua hyprland.lua.off` — Lua takes
+    precedence whenever `hyprland.lua` exists, and a `hyprland.conf` beside it
+    is ignored silently.
 
   Verified with `Hyprland --verify-config`, and by executing `binds.lua` under a
   stubbed `hl` table: 88 binds register (71 main, 12 `altTab`, 5 `resize`),

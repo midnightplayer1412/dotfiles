@@ -17,13 +17,27 @@
 -- Hyprland's own example config uses to launch Wayland clients, so it is late
 -- enough; "config.reloaded" fires once per reload, after the file re-executes.
 --
--- Deliberately NOT de-duplicated with a "already ran this load" flag. If both
--- events ever fire for a single login, the cost is one redundant pass: the
--- quickshell line kills before starting, and both scripts are idempotent. A
--- flag would instead let a too-early first call block the good one, which is
--- exactly the failure this file is structured to avoid.
+-- Measured at login: "config.reloaded" DOES fire on the initial config load,
+-- during parse, before the backend exists — so it lands in the same too-early
+-- window. "hyprland.start" then fires after init and does the real work.
+--
+-- So the two handlers are guarded differently, and deliberately NOT by an
+-- "already ran this load" flag. A flag keyed on having run would let the early
+-- config.reloaded claim it and suppress the good hyprland.start pass — exactly
+-- the failure this file exists to avoid. The guard is on compositor READINESS
+-- instead, and only config.reloaded carries it: hyprland.start is known to be
+-- late enough (it is the event Hyprland's own example uses to launch Wayland
+-- clients), so it runs unconditionally and can never be gated off by a probe
+-- returning a false negative.
 
 local home = os.getenv("HOME")
+
+-- Empty until the backend is up, so this separates a reload (compositor live,
+-- act now) from the initial parse (nothing serving yet, wait for the event).
+local function compositorReady()
+    local ok, monitors = pcall(hl.get_monitors)
+    return ok and monitors ~= nil and #monitors > 0
+end
 
 -- `exec` equivalent — must survive a reload, not just a login.
 local function applyRuntimeState()
@@ -64,4 +78,9 @@ hl.on("hyprland.start", function()
     applyRuntimeState()
 end)
 
-hl.on("config.reloaded", applyRuntimeState)
+-- Reloads only. At login this fires during parse, before anything is serving;
+-- the readiness guard drops that pass so it does not spawn three processes that
+-- immediately die. The hyprland.start handler above covers the login case.
+hl.on("config.reloaded", function()
+    if compositorReady() then applyRuntimeState() end
+end)
