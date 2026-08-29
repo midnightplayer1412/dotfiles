@@ -21,7 +21,7 @@ calls="$tmp/hyprctl-calls"
 mkdir -p "$tmp/bin"
 
 # hyprctl stub: `-j devices` returns a fixture device list; every other
-# invocation (i.e. the `keyword device[...]` calls) is appended to $calls.
+# invocation (i.e. the `eval hl.device{...}` calls) is appended to $calls.
 cat > "$tmp/bin/hyprctl" <<EOF
 #!/usr/bin/env bash
 if [[ "\$1" == "-j" && "\$2" == "devices" ]]; then
@@ -80,7 +80,7 @@ check "second toggle enables" "true" "$(enabled_now)"
 # The toggle delegates to the applier, which must have issued a keyword call
 # carrying the new state.
 check "applier ran with new state" "true" \
-  "$(grep -q 'keyword device\[asup1205:00-093a:2008-touchpad\]:enabled true' "$calls" && echo true || echo false)"
+  "$(grep -q 'name = \[\[asup1205:00-093a:2008-touchpad\]\], enabled = true' "$calls" && echo true || echo false)"
 
 # Corrupt config must not crash the toggle, and must leave valid JSON behind.
 echo 'not json at all {{{' > "$cfg"
@@ -95,7 +95,7 @@ check "corrupt config -> still valid JSON" "true" \
 printf '{"enabled": false}\n' > "$cfg"
 "$APPLY"
 check "applies to touchpad" "true" \
-  "$(grep -q 'keyword device\[asup1205:00-093a:2008-touchpad\]:enabled false' "$calls" && echo true || echo false)"
+  "$(grep -q 'name = \[\[asup1205:00-093a:2008-touchpad\]\], enabled = false' "$calls" && echo true || echo false)"
 check "leaves the mouse alone" "false" \
   "$(grep -q 'g502' "$calls" && echo true || echo false)"
 
@@ -105,9 +105,9 @@ check "leaves the mouse alone" "false" \
 printf '{"enabled": "banana"}\n' > "$cfg"
 "$APPLY"
 check "corrupt value fails safe to enabled" "true" \
-  "$(grep -q ':enabled true' "$calls" && echo true || echo false)"
+  "$(grep -q 'enabled = true' "$calls" && echo true || echo false)"
 
-# No touchpad present -> no keyword calls at all, clean exit.
+# No touchpad present -> no eval calls at all, clean exit.
 : > "$calls"
 printf '{"enabled": false}\n' > "$cfg"
 TOUCHPAD_FIXTURE="$tmp/devices-nopad.json" "$APPLY"
@@ -120,44 +120,44 @@ rm -f "$cfg"
 check "missing config -> no-op" "0" "$(wc -l < "$calls" | tr -d ' ')"
 
 # Applying twice in a row is idempotent (same calls, no state drift). Each pad
-# gets two keyword calls per run — `enabled` and `tap-to-click`.
+# gets a single eval call per run, carrying both `enabled` and `tap_to_click`.
 : > "$calls"
 printf '{"enabled": false}\n' > "$cfg"
 "$APPLY"; "$APPLY"
-check "idempotent (2 runs, 2 unique calls)" "2" "$(sort -u "$calls" | wc -l | tr -d ' ')"
+check "idempotent (2 runs, 1 unique call)" "1" "$(sort -u "$calls" | wc -l | tr -d ' ')"
 
-# ── tap-to-click ─────────────────────────────────────────────────────────
+# ── tap_to_click ─────────────────────────────────────────────────────────
 
-# Absent key -> the touchpad.conf default (false: physical press only). This is
+# Absent key -> the touchpad.lua default (false: physical press only). This is
 # the state a config written before the setting existed is in.
 : > "$calls"
 printf '{"enabled": true}\n' > "$cfg"
 "$APPLY"
 check "absent tapToClick defaults to false" "true" \
-  "$(grep -q 'keyword device\[asup1205:00-093a:2008-touchpad\]:tap-to-click false' "$calls" && echo true || echo false)"
+  "$(grep -q 'name = \[\[asup1205:00-093a:2008-touchpad\]\].*tap_to_click = false' "$calls" && echo true || echo false)"
 
 # Explicit true is honoured — this is the whole point of the Settings switch.
 : > "$calls"
 printf '{"enabled": true, "tapToClick": true}\n' > "$cfg"
 "$APPLY"
 check "tapToClick true applied" "true" \
-  "$(grep -q 'keyword device\[asup1205:00-093a:2008-touchpad\]:tap-to-click true' "$calls" && echo true || echo false)"
+  "$(grep -q 'name = \[\[asup1205:00-093a:2008-touchpad\]\].*tap_to_click = true' "$calls" && echo true || echo false)"
 
-# A non-boolean is a corrupt config: fall back to the conf default rather than
+# A non-boolean is a corrupt config: fall back to the lua default rather than
 # passing garbage to hyprctl.
 : > "$calls"
 printf '{"enabled": true, "tapToClick": "banana"}\n' > "$cfg"
 "$APPLY"
 check "corrupt tapToClick falls back to false" "true" \
-  "$(grep -q ':tap-to-click false' "$calls" && echo true || echo false)"
+  "$(grep -q 'tap_to_click = false' "$calls" && echo true || echo false)"
 
-# tap-to-click is applied independently of `enabled` — a disabled touchpad still
+# tap_to_click is applied independently of `enabled` — a disabled touchpad still
 # gets its tap state set, so re-enabling it does not need a second apply.
 : > "$calls"
 printf '{"enabled": false, "tapToClick": true}\n' > "$cfg"
 "$APPLY"
-check "tap-to-click applied even when disabled" "true" \
-  "$(grep -q ':tap-to-click true' "$calls" && echo true || echo false)"
+check "tap_to_click applied even when disabled" "true" \
+  "$(grep -q 'tap_to_click = true' "$calls" && echo true || echo false)"
 
 # The Super+Shift+T bind must not clobber the tap setting when it rewrites the
 # config — the two switches are independent.

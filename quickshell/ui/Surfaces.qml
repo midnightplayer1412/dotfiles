@@ -19,7 +19,7 @@ Singleton {
     readonly property bool isGlass: preset === "glass"
 
     // Namespace stamped on glass-bearing PanelWindows so Hyprland layerrules can
-    // target them for real backdrop blur. The static layerrule in hyprland.conf
+    // target them for real backdrop blur. The static layer rule in hyprland.lua
     // matches "quickshell-glass"; returning "quickshell" (a non-matching name)
     // is how the Glass preset with blur OFF, or the Solid preset, opts out.
     readonly property string blurNamespace:

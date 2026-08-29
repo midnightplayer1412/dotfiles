@@ -6,6 +6,50 @@ grouped by date since this repo is unreleased / rolling.
 
 ## [Unreleased]
 
+### 2026-08-30
+
+#### Changed
+- **Hyprland config migrated from hyprlang to Lua** (`hypr/*.lua`) — hyprlang has
+  been deprecated since Hyprland 0.55 and is dropped in 0.57, so `hyprland.conf`
+  and its sourced files are replaced by `hyprland.lua`, `touchpad.lua` and
+  `components/{autostart,binds,input,programs}.lua`. See
+  [the announcement](https://hypr.land/news/26_lua/).
+
+  Notes on the translation:
+  - `exec-once` → a `hl.on("hyprland.start", ...)` handler; `exec` → a top-level
+    `hl.exec_cmd(...)`, which re-runs because the config file itself is
+    re-executed on every reload. Autostart is now required *after* the env block:
+    hyprlang applied every `env` before running any `exec`, but a top-level
+    `hl.exec_cmd` fires as the file executes, so anything spawned above an
+    `hl.env` would not inherit it.
+  - `$terminal`/`$fileManager`/`$menu` were hyprlang globals shared across
+    sourced files. Lua locals do not cross files, so they moved to
+    `components/programs.lua` and are `require`d where used.
+  - `device { tap-to-click }` is spelled `tap_to_click` in Lua.
+  - The old `.conf` files are kept for one cycle as a rollback: Lua takes
+    precedence whenever `hyprland.lua` exists, and any `hyprland.conf` beside it
+    is ignored silently, so reverting is `mv hyprland.lua hyprland.lua.off`.
+
+  Verified with `Hyprland --verify-config`, and by executing `binds.lua` under a
+  stubbed `hl` table: 88 binds register (71 main, 12 `altTab`, 5 `resize`),
+  matching the hyprlang session's `hyprctl binds -j` exactly, and the generated
+  cheatsheet is byte-identical to the committed one.
+
+- **Cheatsheet keymap now comes from the compositor, not the config text**
+  (`hypr/scripts/gen-keymap.sh`) — each bind carries a
+  `desc = "<Category>: <Text>"`, which Hyprland exposes as `.description` in
+  `hyprctl binds -j`. The generator reads that instead of scraping `# @cheat`
+  trailing comments, so the map is built from the binds actually registered.
+  It now also refuses to overwrite the tracked JSON when the compositor reports
+  no descriptions at all — otherwise a reload under a non-Lua config would
+  quietly flatten every entry to a dispatcher fallback ("Run command").
+
+- **`apply-touchpad.sh` drives the compositor via `hyprctl eval`** — the
+  Lua-config equivalent of `hyprctl keyword device[...]:<k> <v>` is
+  `hyprctl eval 'hl.device{...}'`, one call per pad carrying both `enabled` and
+  `tap_to_click`. (`apply-keyboard.sh` is unaffected; it drives `asusctl`, not
+  Hyprland.)
+
 ### 2026-08-26
 
 #### Added

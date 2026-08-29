@@ -10,7 +10,7 @@ import QtQuick
 //
 // apply() funnels through hypr/scripts/apply-touchpad.sh — the single owner of
 // the `hyprctl keyword device[...]` call. The same script runs from
-// autostart.conf as `exec =`, so the state survives login and config reloads.
+// autostart.lua as a top-level exec, so the state survives login and reloads.
 //
 // watchChanges is what keeps the two control surfaces in sync: the keybind
 // script writes this file directly, and the Settings switch follows without any
@@ -49,7 +49,7 @@ Singleton {
             // the user without a pointer.
             property bool enabled: true
             // Defaults to off, matching `tap-to-click = false` in
-            // hypr/touchpad.conf and the same default in apply-touchpad.sh.
+            // hypr/touchpad.lua and the same default in apply-touchpad.sh.
             // Keep the three in step if this ever changes.
             property bool tapToClick: false
         }

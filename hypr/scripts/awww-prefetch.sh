@@ -162,7 +162,7 @@ for wxh in "${resolutions[@]}"; do
     fi
 
     # Force the resolution — the headless default is 1920x1080. This keyword
-    # is runtime-only and is not written to hyprland.conf.
+    # is runtime-only and is not written to hyprland.lua.
     #
     # NOT swallowed: if this fails, awww decodes at 1920x1080 while we log
     # that we warmed at $wxh. That burns 74-300s of CPU producing an entry

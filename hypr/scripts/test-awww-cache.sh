@@ -119,14 +119,14 @@ fi
 #     awww_current_format and falls through to the /proc probe — assert
 #     that fallback against a FABRICATED daemon (never the live one), so
 #     this assertion's result depends on this fixture, not on whatever
-#     --format flag production's autostart.conf happens to carry today. ---
+#     --format flag production's autostart.lua happens to carry today. ---
 reset_proc_root
 mk_proc 100 "awww-daemon"
 assert_eq "$(AWWW_FORMAT='' AWWW_PROC_ROOT="$proc_root" awww_current_format || echo UNPROBEABLE)" "Argb"
 
 # Symmetric: a --format bgr daemon must resolve to Bgr through the same
 # AWWW_FORMAT='' fallthrough — this is what would have failed the moment
-# the format-transition logic started mattering (next login, per autostart.conf).
+# the format-transition logic started mattering (next login, per autostart.lua).
 reset_proc_root
 mk_proc 100 "awww-daemon" "--format" "bgr"
 assert_eq "$(AWWW_FORMAT='' AWWW_PROC_ROOT="$proc_root" awww_current_format || echo UNPROBEABLE)" "Bgr"

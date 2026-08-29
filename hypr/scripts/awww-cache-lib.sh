@@ -22,7 +22,7 @@ set -euo pipefail
 # false-yes and the prefetcher silently no-ops across the whole rotation.
 #
 # Derived from the daemon's own argv (/proc/<pid>/cmdline) rather than from a
-# literal here or from autostart.conf, both of which can disagree with what is
+# literal here or from autostart.lua, both of which can disagree with what is
 # actually running (e.g. autostart edited but the session not yet restarted).
 #
 # Exit status is the contract: 0 + token on stdout when the daemon was probed
