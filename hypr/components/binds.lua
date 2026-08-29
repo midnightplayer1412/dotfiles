@@ -30,11 +30,17 @@ hl.bind(mainMod .. " + F",        dsp.window.fullscreen(),            { desc = "
 
 -- Resize the window size using SUPER + R
 hl.bind(mainMod .. " + R", dsp.submap("resize"), { desc = "Window: Resize mode (h/j/k/l)" })
+-- `relative = true` is load-bearing: without it hl.dsp.window.resize treats
+-- x/y as an ABSOLUTE target size, so these would try to make the window 30x0
+-- and fail at runtime with "Invalid size". hyprlang's `resizeactive 30 0` was
+-- a delta by default and `resizeactive exact W H` was the absolute form; lua
+-- inverts that default. Verified against a floating window: with the flag,
+-- 800x600 + {x=30} -> 830x600; without it, 800x600 -> 200x100 for {x=200,y=100}.
 hl.define_submap("resize", function()
-    hl.bind("l",      dsp.window.resize({ x =  30, y =   0 }))
-    hl.bind("h",      dsp.window.resize({ x = -30, y =   0 }))
-    hl.bind("k",      dsp.window.resize({ x =   0, y = -30 }))
-    hl.bind("j",      dsp.window.resize({ x =   0, y =  30 }))
+    hl.bind("l",      dsp.window.resize({ x =  30, y =   0, relative = true }))
+    hl.bind("h",      dsp.window.resize({ x = -30, y =   0, relative = true }))
+    hl.bind("k",      dsp.window.resize({ x =   0, y = -30, relative = true }))
+    hl.bind("j",      dsp.window.resize({ x =   0, y =  30, relative = true }))
     hl.bind("Return", dsp.submap("reset"))
 end)
 

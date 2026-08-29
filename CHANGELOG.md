@@ -8,6 +8,37 @@ grouped by date since this repo is unreleased / rolling.
 
 ### 2026-08-30
 
+#### Fixed
+- **Autostart runs from events, not from top-level `hl.exec_cmd`**
+  (`hypr/components/autostart.lua`) — the first cut of the Lua migration mapped
+  hyprlang's `exec` onto a top-level `hl.exec_cmd(...)`, reasoning that the
+  config file re-executes on every reload. It does, but it executes *far too
+  early*: the three commands ran at `hyprland.log` lines 16-20, before the
+  compositor served Wayland clients or answered hyprctl. Quickshell exited
+  immediately with no display to connect to, `apply-touchpad.sh` never applied
+  the saved state, and `gen-keymap.sh` got no bind table (its guard correctly
+  kept the committed keymap rather than flattening it). Both `exec` commands now
+  run from a function invoked by `hl.on("hyprland.start", ...)` and
+  `hl.on("config.reloaded", ...)`. Measured over repeated reloads: handlers do
+  not accumulate — Hyprland rebuilds the Lua state, firing each exactly once.
+
+- **`hl.dsp.window.resize` needs `relative = true` for a delta**
+  (`hypr/components/binds.lua`) — lua inverts hyprlang's default. `resizeactive
+  30 0` was a delta with `exact` opting into absolute; `resize({x=30,y=0})` is
+  *absolute*, so the resize submap was trying to make the window 30x0 and
+  failing at runtime with "Invalid size". Verified against a floating window:
+  `{x=200,y=100}` sets exactly 200x100, while `{x=30,relative=true}` turns
+  800x600 into 830x600.
+
+- **Cheatsheet no longer derives labels from dispatchers**
+  (`hypr/scripts/gen-keymap.sh`) — under the Lua config every bind reports its
+  dispatcher as the opaque `__lua`, so the dispatcher-to-label fallback map was
+  dead code that could never match; the one undescribed bind rendered as a
+  literal `"__lua"`. Undescribed binds are now skipped and listed on stderr.
+  This drops one row (66, was 67): the alt-tab submap-enter, which shares its
+  chord with the described bind beside it and was only ever shown because the
+  old awk fallback filled something in.
+
 #### Changed
 - **Hyprland config migrated from hyprlang to Lua** (`hypr/*.lua`) — hyprlang has
   been deprecated since Hyprland 0.55 and is dropped in 0.57, so `hyprland.conf`

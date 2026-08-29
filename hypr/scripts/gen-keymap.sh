@@ -17,6 +17,13 @@
 # (Before the lua migration this text-scraped `# @cheat` comments out of
 # binds.conf. hyprlang is deprecated since 0.55 and dropped in 0.57.)
 #
+# A bind with no description is skipped rather than given a derived label: under
+# the lua config EVERY bind reports its dispatcher as the opaque "__lua", so
+# there is nothing left to derive one from, and an undescribed bind is one the
+# author did not mean to document (the alt-tab submap-enter, say, which shares
+# its chord with the described bind next to it). Skipped chords are listed on
+# stderr so a genuine oversight is visible rather than silent.
+#
 # Binds inside a submap (e.g. the resize / altTab modes) are skipped so the
 # transient mode keys don't pollute the main map. Mouse binds are skipped too.
 set -euo pipefail
@@ -41,6 +48,25 @@ read_binds() {
   fi
 }
 
+# List main-map binds that carry no description, so an oversight in binds.lua is
+# visible instead of silently missing from the sheet.
+report_skipped() {
+  read_binds | jq -r '
+    .[]
+    | select(.submap == "" and .mouse != true)
+    | select((.key // "") != "")
+    | select((.key | test("mouse")) | not)
+    | select((.description // "") == "")
+    | "  \(.key) (modmask \(.modmask))"
+  ' | {
+    mapfile -t rows
+    if (( ${#rows[@]} )); then
+      printf 'gen-keymap: %d bind(s) have no desc and are not in the sheet:\n' "${#rows[@]}" >&2
+      printf '%s\n' "${rows[@]}" >&2
+    fi
+  }
+}
+
 generate() {
   read_binds | jq -r '
     # modmask bits, emitted in the order the old config wrote them
@@ -51,35 +77,14 @@ generate() {
       (if (($m /  8) | floor) % 2 == 1 then "ALT"   else empty end)
     ];
 
-    # label for a bind that carries no description
-    def fallback($d):
-      { killactive:      "Close active window",
-        exit:            "Exit Hyprland",
-        togglefloating:  "Toggle floating",
-        fullscreen:      "Toggle fullscreen",
-        pseudo:          "Toggle pseudotile",
-        workspace:       "Switch workspace",
-        movetoworkspace: "Move window to workspace",
-        movefocus:       "Move focus",
-        swapwindow:      "Swap window",
-        resizeactive:    "Resize window",
-        layoutmsg:       "Layout command",
-        togglesplit:     "Toggle split",
-        submap:          "Enter mode",
-        global:          "Shell action",
-        exec:            "Run command"
-      }[$d] // $d;
-
     [ .[]
       | select(.submap == "")            # transient mode keys stay out of the map
       | select(.mouse != true)
       | select((.key // "") != "")
       | select((.key | test("mouse")) | not)
+      | select((.description // "") != "")
       | . as $b
-      | (if (.description // "") != ""
-         then (.description | split(": ")) | { cat: .[0], desc: (.[1:] | join(": ")) }
-         else { cat: "", desc: fallback($b.dispatcher) }
-         end) as $d
+      | ((.description | split(": ")) | { cat: .[0], desc: (.[1:] | join(": ")) }) as $d
       | "    { \"key\": " + ($b.key | tojson)
         + ", \"mods\": [" + ((mods($b.modmask) | map(tojson)) | join(", ")) + "]"
         + ", \"category\": " + ($d.cat | tojson)
@@ -92,6 +97,8 @@ generate() {
     printf '  ]\n}\n'
   }
 }
+
+report_skipped
 
 if [[ "$OUT" == "-" ]]; then
   generate

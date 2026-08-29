@@ -52,10 +52,10 @@ hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 hl.env("WLR_NO_HARDWARE_CURSORS", "1")
 hl.env("ADW_DEBUG_COLOR_SCHEME", "prefer-dark")
 
--- NOTE: autostart is required AFTER the env block on purpose. hyprlang applied
--- every `env` at parse time and only then ran `exec`, so source order did not
--- matter; in lua a top-level hl.exec_cmd fires as the file is executed, so the
--- spawned processes only inherit the vars set above this line.
+-- Autostart only registers event handlers; nothing is spawned while this file
+-- executes (see the header of components/autostart.lua for why that matters).
+-- Still required after the env block so every hl.env above is in place well
+-- before "hyprland.start" fires and the handlers actually launch anything.
 require("components.autostart")
 
 

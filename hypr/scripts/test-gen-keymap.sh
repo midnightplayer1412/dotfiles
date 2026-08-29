@@ -55,8 +55,9 @@ assert_absent() {
 
 # Described bind: category + desc split out of .description
 assert_contains '"key": "RETURN", "mods": ["SUPER"], "category": "Apps", "desc": "Open terminal"'
-# Undescribed bind: dispatcher fallback label
-assert_contains '"key": "Q", "mods": ["SUPER"], "category": "", "desc": "Close active window"'
+# Undescribed bind is skipped entirely — under the lua config every bind reports
+# its dispatcher as "__lua", so there is no label to derive.
+assert_absent '"key": "Q"'
 # Multiple modifiers, in SUPER-first order
 assert_contains '"mods": ["SUPER", "SHIFT"], "category": "Screenshot", "desc": "Region screenshot"'
 # Media key with no modifiers
@@ -68,6 +69,13 @@ assert_absent 'resizeactive'
 assert_absent 'quickshell:x'
 # Mouse bind is skipped
 assert_absent 'mouse'
+
+# The skipped bind is reported on stderr so oversights stay visible
+warn="$(BINDS_JSON="$tmp/binds.json" $GEN - 2>&1 >/dev/null)"
+if ! grep -qF 'have no desc' <<<"$warn"; then
+  echo "FAIL: expected a stderr warning naming skipped binds" >&2
+  fail=1
+fi
 
 # Output must be valid JSON
 if command -v python3 >/dev/null 2>&1; then
