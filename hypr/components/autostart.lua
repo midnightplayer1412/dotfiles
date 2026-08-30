@@ -75,6 +75,23 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("cursor-clip --daemon")
 
+    -- polkit authentication agent. Without one, polkitd is running but nothing
+    -- can ever draw a password prompt: pkexec and every GUI privilege escalation
+    -- fail outright rather than asking. polkit-kde-agent is the only agent
+    -- installed here (hyprpolkitagent is in extra, but was never pulled in), and
+    -- its binary lives in /usr/lib and is NOT on PATH, hence the absolute path.
+    --
+    -- The package also ships plasma-polkit-agent.service, but it is unusable in
+    -- this session: it is `static` (no [Install] section, so it cannot be
+    -- enabled) and is ordered After=plasma-core.target, a target that never
+    -- exists outside Plasma. Launching the binary directly is the route that
+    -- works under Hyprland.
+    --
+    -- Belongs in exec-once, not applyRuntimeState: the agent claims the D-Bus
+    -- name org.kde.polkit-kde-authentication-agent-1, so a second copy spawned by
+    -- a config reload would only fail to register and exit.
+    hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
+
     applyRuntimeState()
 end)
 
