@@ -56,7 +56,6 @@ QtObject {
         { name: "/lock",      icon: "system-lock-screen",       comment: "Lock the screen",           match: "lock" },
         { name: "/logout",    icon: "system-log-out",           comment: "Exit the Hyprland session", match: "logout" },
         { name: "/suspend",   icon: "system-suspend",           comment: "Suspend to RAM",            match: "suspend" },
-        { name: "/hibernate", icon: "system-suspend-hibernate", comment: "Hibernate to disk",         match: "hibernate" },
         { name: "/reboot",    icon: "system-reboot",            comment: "Restart the system",        match: "reboot" },
         { name: "/shutdown",  icon: "system-shutdown",          comment: "Power off the system",      match: "shutdown" },
     ]
@@ -129,8 +128,6 @@ QtObject {
             Quickshell.execDetached(["hyprctl", "dispatch", "exit"]);
         } else if (cmd === "suspend") {
             Quickshell.execDetached(["systemctl", "suspend"]);
-        } else if (cmd === "hibernate") {
-            Quickshell.execDetached(["systemctl", "hibernate"]);
         } else if (cmd === "reboot") {
             Quickshell.execDetached(["systemctl", "reboot"]);
         } else if (cmd === "shutdown") {
