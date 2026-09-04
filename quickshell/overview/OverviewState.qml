@@ -88,17 +88,17 @@ Singleton {
         const w = highlightedWindow;
         const addr = w?.address ? _addr(w.address) : "";
         // Commit is driven from QML (Super-release) while the Hyprland submap is
-        // still active, so leave the submap AND focus the target in one batch
-        // (two separate _run calls would clobber the shared Process).
+        // still active, so leave the submap AND focus the target in one call
+        // (two separate _dispatch calls would clobber the shared Process).
         if (addr)
-            _run(["--batch", `dispatch focuswindow address:${addr} ; dispatch submap reset`]);
+            _dispatch(`hl.dsp.focus({ window = "address:${addr}" }), hl.dsp.submap("reset")`);
         else
-            _run(["dispatch", "submap", "reset"]);
+            _dispatch(`hl.dsp.submap("reset")`);
         close();
     }
 
     function altTabCancel() {
-        _run(["dispatch", "submap", "reset"]);  // no-op if not in a submap
+        _dispatch(`hl.dsp.submap("reset")`);  // no-op if not in a submap
         close();
     }
 
@@ -275,12 +275,22 @@ Singleton {
     // Shell out to hyprctl. Hyprland.dispatch() via IPC silently no-ops for
     // commands with comma-separated args (verified empirically: log shows the
     // dispatch fires but the window doesn't move), so use the CLI as a workaround.
+    //
+    // The Hyprland config is Lua (hypr/hyprland.lua), so `hyprctl dispatch ARG`
+    // evaluates `return hl.dispatch(ARG)` as Lua. The old hyprlang argument
+    // forms ("workspace 3", "focuswindow address:0x…") are Lua syntax errors —
+    // hyprctl exits 7 and the compositor never sees them — so every call below
+    // passes a Lua dispatcher expression instead. hl.dispatch() accepts several
+    // dispatchers comma-separated, so a two-step commit still costs one process.
     Process { id: hyprctlProc }
 
-    function _run(args) {
-        hyprctlProc.command = ["hyprctl"].concat(args);
+    function _dispatch(lua) {
+        hyprctlProc.command = ["hyprctl", "dispatch", lua];
         hyprctlProc.running = true;
     }
+
+    // Lua window selector for a Hyprland address, quoted for embedding above.
+    function _sel(address) { return `"address:${_addr(address)}"`; }
 
     // After movetoworkspacesilent across monitors, Hyprland repositions the
     // window but doesn't push a position-changed event to live IPC listeners
@@ -293,16 +303,18 @@ Singleton {
     }
 
     function moveWindow(address, wsId) {
-        _run(["dispatch", "movetoworkspacesilent", `${wsId},address:${_addr(address)}`]);
+        // follow = false is the Lua spelling of movetoworkspacesilent: the window
+        // moves but the view stays put, so the overview doesn't jump workspaces.
+        _dispatch(`hl.dsp.window.move({ workspace = ${wsId}, window = ${_sel(address)}, follow = false })`);
         refreshTimer.restart();
     }
     function focusWindow(address) {
-        _run(["dispatch", "focuswindow", `address:${_addr(address)}`]);
+        _dispatch(`hl.dsp.focus({ window = ${_sel(address)} })`);
     }
     function killWindow(address) {
-        _run(["dispatch", "killwindow", `address:${_addr(address)}`]);
+        _dispatch(`hl.dsp.window.close({ window = ${_sel(address)} })`);
     }
     function focusWorkspace(wsId) {
-        _run(["dispatch", "workspace", `${wsId}`]);
+        _dispatch(`hl.dsp.focus({ workspace = ${wsId} })`);
     }
 }

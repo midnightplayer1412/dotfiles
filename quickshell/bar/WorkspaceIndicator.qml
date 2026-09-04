@@ -47,6 +47,8 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: Hyprland.dispatch("workspace " + workspaceId)
+        // Lua config: the dispatch argument is evaluated as Lua, so the old
+        // hyprlang "workspace N" form is a syntax error and never fires.
+        onClicked: Hyprland.dispatch("hl.dsp.focus({ workspace = " + workspaceId + " })")
     }
 }

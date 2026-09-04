@@ -125,7 +125,7 @@ QtObject {
             Quickshell.execDetached(["qs", "-p",
                 Quickshell.env("HOME") + "/.config/quickshell/lock-screen.qml", "-d", "-n"]);
         } else if (cmd === "logout") {
-            Quickshell.execDetached(["hyprctl", "dispatch", "exit"]);
+            Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.exit()"]);
         } else if (cmd === "suspend") {
             Quickshell.execDetached(["systemctl", "suspend"]);
         } else if (cmd === "reboot") {
